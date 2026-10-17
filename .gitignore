@@ -1,0 +1,71 @@
+# Node dependencies
+node_modules/
+**/node_modules/
+.pnpm-store/
+
+# Local environment files & secrets
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
+# Build output
+dist/
+**/dist/
+build/
+**/build/
+*.log
+**/*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Uploads directory
+uploads/
+**/uploads/
+
+# OS / IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary scratch, artifacts & coverage
+scratch/
+artifacts/
+.tempmediaStorage/
+coverage/
+.cache/
+**/scratch_*.*
+**/temp_*.*
+temp_*.*
+**/update_*.cjs
+**/update_*.js
+**/update_*.py
+
+# Local database files & backups
+*.sqlite
+*.sqlite3
+*.db
+*.bak
+
+# Temporary one-off development patch and scratch scripts (root level)
+patch_*.*
+fix_*.*
+clean_*.*
+cleanup_*.*
+replace_*.*
+test_mysql.js
+test_query.*
+test_skill*.*
+query.js
+query_tables.js
+get_token.cjs
+remove_header.js
+add_resumes_route.js
+
+
