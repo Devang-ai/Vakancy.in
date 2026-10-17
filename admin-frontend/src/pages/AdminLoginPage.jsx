@@ -1,37 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Shield, Lock, Mail, AlertCircle, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const AdminLoginPage = () => {
-  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const qEmail = searchParams.get('email');
-    const qPass = searchParams.get('password');
-    if (qEmail && qPass) {
-      setEmail(qEmail);
-      setPassword(qPass);
-      setLoading(true);
-      const target = searchParams.get('redirect') || '/dashboard';
-      login(qEmail, qPass)
-        .then(() => {
-          navigate(target);
-        })
-        .catch((err) => {
-          setError(err.message || 'Invalid admin credentials or unauthorized account.');
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    }
-  }, [searchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
