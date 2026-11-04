@@ -61,13 +61,7 @@ jobs:
           local-dir: admin-frontend/dist/
           dangerous-clean-slate: false
 
-      # 5. Create Backend Production .env if configured in secrets
-      - name: Create Backend Production .env
-        if: "${{ secrets.BACKEND_ENV != '' }}"
-        run: |
-          echo "${{ secrets.BACKEND_ENV }}" > backend/.env
-
-      # 6. Deploy Backend API (public_html/api)
+      # 5. Deploy Backend API (public_html/api)
       - name: Deploy Backend to Hostinger (public_html/api)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
