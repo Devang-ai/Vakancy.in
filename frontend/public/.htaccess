@@ -1,6 +1,10 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+
+  # Forward any legacy relative /api calls directly to Node.js backend
+  RewriteRule ^api/(.*)$ https://api.vakancy.in/api/$1 [R=307,L]
+
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
