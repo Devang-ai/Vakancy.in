@@ -43,8 +43,8 @@ jobs:
       - name: Deploy Frontend to Hostinger (public_html)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.HOSTINGER_FTP_SERVER }}
-          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          server: 46.202.161.94
+          username: u777632951.vakancy.in
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
           server-dir: public_html/
           local-dir: frontend/dist/
@@ -54,8 +54,8 @@ jobs:
       - name: Deploy Admin to Hostinger (public_html/admin)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.HOSTINGER_FTP_SERVER }}
-          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          server: 46.202.161.94
+          username: u777632951.vakancy.in
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
           server-dir: public_html/admin/
           local-dir: admin-frontend/dist/
@@ -65,8 +65,8 @@ jobs:
       - name: Deploy Backend to Hostinger (public_html/api)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.HOSTINGER_FTP_SERVER }}
-          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          server: 46.202.161.94
+          username: u777632951.vakancy.in
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
           server-dir: public_html/api/
           local-dir: backend/
