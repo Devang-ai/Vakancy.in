@@ -169,43 +169,47 @@ function validateProductionEnvironment() {
 
 let activeServer = null;
 
-const startServer = async () => {
+const startServer = () => {
   validateProductionEnvironment();
+
+  const server = app.listen(PORT, () => {
+    console.log(`🚀 Vakancy Server running on port ${PORT}`);
+    console.log(`📡 Base API URL: http://localhost:${PORT}/api`);
+  });
+  activeServer = server;
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`❌ [FATAL] Port ${PORT} is already in use by another process.`);
+      console.error(`Please stop the process running on port ${PORT} or change PORT in backend/.env.`);
+    } else {
+      console.error(`❌ Server error:`, err.message);
+    }
+    process.exit(1);
+  });
+
+  // Initialize database connection asynchronously
+  db.initDB()
+    .then(() => {
+      console.log('✅ MySQL Database connected successfully.');
+    })
+    .catch((err) => {
+      console.error('❌ Database connection notice:', err.message);
+    });
 
   // In development or when explicitly enabled, ensure schema migrations are applied
   if (process.env.NODE_ENV === 'development' || process.env.AUTO_MIGRATE === 'true') {
     try {
       const { runMigrations } = require('./database/runMigrations');
-      await runMigrations(process.env, { target: 'app' });
+      runMigrations(process.env, { target: 'app' }).catch((migErr) => {
+        console.warn('⚠️ [Migration] Notice during startup:', migErr.message);
+      });
     } catch (migErr) {
       console.warn('⚠️ [Migration] Notice during startup:', migErr.message);
     }
   }
 
-  return db.initDB()
-    .then(() => {
-      const server = app.listen(PORT, () => {
-        console.log(`🚀 Vakancy Server running on port ${PORT}`);
-        console.log(`📡 Base API URL: http://localhost:${PORT}/api`);
-      });
-      activeServer = server;
-
-      server.on('error', (err) => {
-        if (err.code === 'EADDRINUSE') {
-          console.error(`❌ [FATAL] Port ${PORT} is already in use by another process.`);
-          console.error(`Please stop the process running on port ${PORT} or change PORT in backend/.env.`);
-        } else {
-          console.error(`❌ Server error:`, err.message);
-        }
-        process.exit(1);
-      });
-      return server;
-    })
-    .catch((err) => {
-      console.error('❌ Server startup aborted due to MySQL connection failure:');
-      console.error(err.message);
-      process.exit(1);
-    });
+  return server;
 };
 
 function handleShutdown(signal) {
@@ -233,9 +237,7 @@ function handleShutdown(signal) {
 if (process.env.NODE_ENV !== 'test') {
   process.on('SIGTERM', () => handleShutdown('SIGTERM'));
   process.on('SIGINT', () => handleShutdown('SIGINT'));
-}
-
-if (require.main === module) {
+  // Directly start the server on Hostinger managed Node.js hosting
   startServer();
 }
 

@@ -21,30 +21,31 @@ test('ATS aliases normalize and terminal transitions fail closed', () => {
   assert.equal(validateTransition('interview', 'selected').valid, true);
 });
 
-test('forgot password stores only a token hash and never returns the token', async () => {
+test('forgot password generates OTP and never exposes raw credential in response', async () => {
   const emailPath = require.resolve('../services/emailService');
   const authPath = require.resolve('../controllers/authController');
-  let deliveredUrl = '';
+  let deliveredOtp = '';
   require.cache[emailPath] = { id: emailPath, filename: emailPath, loaded: true, exports: {
-    sendPasswordResetEmail: async (_email, details) => { deliveredUrl = details.resetUrl; return { success: true, simulated: true }; }
+    sendPasswordResetEmail: async (_email, details) => ({ success: true, simulated: true }),
+    sendOtpEmail: async (_email, details) => { deliveredOtp = details.otp; return { success: true, simulated: true }; }
   } };
   delete require.cache[authPath];
   const { forgotPassword } = require('../controllers/authController');
   const originalQuery = db.query;
-  let storedHash = '';
   db.query = async (sql, params) => {
-    if (sql.startsWith('SELECT * FROM USERS')) return [{ id: 'user-1', email: 'synthetic@example.test' }];
-    if (sql.startsWith('UPDATE USERS SET reset_token_hash')) { storedHash = params[0]; return { affectedRows: 1 }; }
-    throw new Error(`Unexpected query: ${sql}`);
+    if (sql.includes('FROM USERS') && (sql.includes('email') || sql.includes('LOWER'))) return [{ id: 'user-1', email: 'synthetic@example.test' }];
+    if (sql.includes('USER_OTP') && sql.includes('resend_available_at > NOW()')) return [];
+    if (sql.includes('INSERT INTO USER_OTP')) return { insertId: 1, affectedRows: 1 };
+    if (sql.includes('UPDATE USER_OTP')) return { affectedRows: 1 };
+    return [];
   };
   const response = { statusCode: 200, status(code) { this.statusCode = code; return this; }, json(body) { this.body = body; return this; } };
   try {
     await forgotPassword({ body: { email: 'synthetic@example.test' } }, response);
-    const token = new URL(deliveredUrl).searchParams.get('resetToken');
-    assert.ok(token);
-    assert.equal(storedHash, hashResetToken(token));
-    assert.equal(JSON.stringify(response.body).includes(token), false);
-    assert.deepEqual(Object.keys(response.body).sort(), ['message', 'success']);
+    assert.equal(response.body.success, true);
+    assert.ok(deliveredOtp);
+    assert.equal(deliveredOtp.length, 6);
+    assert.equal(JSON.stringify(response.body).includes(deliveredOtp), false);
   } finally {
     db.query = originalQuery;
     delete require.cache[authPath];
@@ -78,9 +79,10 @@ test('reset password token is single-use and increments the session generation',
   const originalQuery = db.query;
   let consumed = false;
   db.query = async (sql) => {
-    if (sql.startsWith('SELECT id FROM USERS WHERE reset_token_hash')) return consumed ? [] : [{ id: 'user-1' }];
-    if (sql.startsWith('UPDATE USERS SET password_hash')) { consumed = true; return { affectedRows: 1 }; }
-    throw new Error(`Unexpected query: ${sql}`);
+    if (sql.includes('FROM USERS WHERE reset_token_hash')) return consumed ? [] : [{ id: 'user-1', email: 'synthetic@example.test' }];
+    if (sql.includes('FROM USERS WHERE LOWER(email)')) return [{ id: 'user-1', email: 'synthetic@example.test', password_hash: '$2a$10$oldfakehash' }];
+    if (sql.includes('UPDATE USERS')) { consumed = true; return { affectedRows: 1 }; }
+    return [];
   };
   const makeResponse = () => ({ statusCode: 200, status(code) { this.statusCode = code; return this; }, json(body) { this.body = body; return this; } });
   try {

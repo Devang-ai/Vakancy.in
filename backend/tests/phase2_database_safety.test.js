@@ -38,6 +38,10 @@ test('migration identifiers are unique and ordered', () => {
     '006_executive_search_enquiry_jobs',
     '007_google_auth',
     '008_email_otp_recovery',
-    '009_executive_search_shortlists'
+    '009_executive_search_shortlists',
+    '010_recruitment_team_hierarchy',
+    '011_job_candidate_shortlist',
+    '012_job_specific_callbacks',
+    '013_executive_share_verification_and_support_email'
   ]);
 });

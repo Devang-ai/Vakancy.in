@@ -84,5 +84,10 @@ fetch_chatgpt.js
 !backend/tests/test_logo.png
 test_*.html
 
+# Hostinger CLI configuration
+.hostinger/
+**/.hostinger/
+
+
 
 
