@@ -1,0 +1,87 @@
+name: Deploy Vakancy.in to Hostinger
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy to Hostinger
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 1. Main Frontend Build
+      - name: Install Frontend Dependencies & Build Production Assets
+        env:
+          VITE_API_BASE_URL: https://api.vakancy.in/api
+          VITE_GOOGLE_CLIENT_ID: 15631312508-0r23i2q9aaor4teum3sehvk0j65v3qi9.apps.googleusercontent.com
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+      # 2. Admin Frontend Build
+      - name: Install Admin Frontend Dependencies & Build Production Assets
+        env:
+          VITE_API_BASE_URL: https://api.vakancy.in/api
+        run: |
+          cd admin-frontend
+          npm ci
+          npm run build
+
+      # 3. Deploy Main Frontend (public_html)
+      - name: Deploy Frontend to Hostinger (public_html)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          server-dir: public_html/
+          local-dir: frontend/dist/
+          dangerous-clean-slate: false
+
+      # 4. Deploy Admin Frontend (public_html/admin)
+      - name: Deploy Admin to Hostinger (public_html/admin)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          server-dir: public_html/admin/
+          local-dir: admin-frontend/dist/
+          dangerous-clean-slate: false
+
+      # 5. Create Backend Production .env if configured in secrets
+      - name: Create Backend Production .env
+        if: "${{ secrets.BACKEND_ENV != '' }}"
+        run: |
+          echo "${{ secrets.BACKEND_ENV }}" > backend/.env
+
+      # 6. Deploy Backend API (public_html/api)
+      - name: Deploy Backend to Hostinger (public_html/api)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          server-dir: public_html/api/
+          local-dir: backend/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/tests/**
+            **/uploads/**
+            database.sqlite
+            .env.test.example
+            .env.example
