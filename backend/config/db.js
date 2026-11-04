@@ -1042,6 +1042,95 @@ const INITIAL_BENEFITS = [
   }
 }
 
+function splitSqlStatements(sql) {
+  const statements = [];
+  let inQuote = false;
+  let quoteChar = '';
+  let curr = [];
+
+  for (let i = 0; i < sql.length; i++) {
+    const char = sql[i];
+    if ((char === "'" || char === '"') && !inQuote) {
+      inQuote = true;
+      quoteChar = char;
+      curr.push(char);
+    } else if (inQuote && char === quoteChar && sql[i - 1] !== '\\') {
+      inQuote = false;
+      curr.push(char);
+    } else if (char === ';' && !inQuote) {
+      const stmt = curr.join('').trim();
+      if (stmt && !stmt.startsWith('/*')) {
+        statements.push(stmt);
+      }
+      curr = [];
+    } else {
+      curr.push(char);
+    }
+  }
+  if (curr.length > 0) {
+    const stmt = curr.join('').trim();
+    if (stmt && !stmt.startsWith('/*')) {
+      statements.push(stmt);
+    }
+  }
+  return statements;
+}
+
+async function autoMigrateTables(connection) {
+  try {
+    await connection.query('SET FOREIGN_KEY_CHECKS = 0');
+
+    // 1. Execute schema.sql
+    const schemaPath = path.join(__dirname, '../database/schema.sql');
+    if (fs.existsSync(schemaPath)) {
+      const schemaSql = fs.readFileSync(schemaPath, 'utf8');
+      const statements = splitSqlStatements(schemaSql);
+      for (const stmt of statements) {
+        try {
+          await connection.query(stmt);
+        } catch (err) {
+          console.warn('[DB Auto-Init] Schema statement notice:', err.message);
+        }
+      }
+      console.log('[DB Auto-Init] Schema tables created successfully.');
+    }
+
+    // 2. Execute seed.sql
+    const seedPath = path.join(__dirname, '../database/seed.sql');
+    if (fs.existsSync(seedPath)) {
+      const seedSql = fs.readFileSync(seedPath, 'utf8');
+      const seedStmts = splitSqlStatements(seedSql);
+      for (const stmt of seedStmts) {
+        try {
+          await connection.query(stmt);
+        } catch (err) {
+          if (!err.message.includes('Duplicate entry')) {
+            console.warn('[DB Auto-Init] Seed statement notice:', err.message);
+          }
+        }
+      }
+      console.log('[DB Auto-Init] Seed records inserted successfully.');
+    }
+
+    // 3. Populate default location master data if missing
+    try {
+      const { relationalSeed } = require('../database/seedLocationData');
+      if (relationalSeed && relationalSeed.countries) {
+        for (const c of relationalSeed.countries) {
+          await connection.query('INSERT IGNORE INTO `COUNTRY` (`id`, `name`, `iso2`, `iso3`, `phone_code`) VALUES (?, ?, ?, ?, ?)', [c.id, c.name, c.iso2, c.iso3, c.phone_code]).catch(() => {});
+        }
+      }
+    } catch (locErr) {
+      // ignore
+    }
+
+    await connection.query('SET FOREIGN_KEY_CHECKS = 1');
+    console.log('✅ [DB Auto-Init] Database auto-initialization completed successfully!');
+  } catch (error) {
+    console.error('❌ [DB Auto-Init] Error during auto-initialization:', error.message);
+  }
+}
+
 async function initDB() {
   let host, port, user, password, database;
 
@@ -1080,9 +1169,22 @@ async function initDB() {
     pool = mysql.createPool(poolConfig);
     const connection = await pool.getConnection();
     await connection.query('SELECT 1');
+
+    if (process.env.NODE_ENV !== 'test') {
+      try {
+        const [jobTable] = await connection.query("SHOW TABLES LIKE 'JOB'");
+        if (!jobTable || jobTable.length === 0) {
+          console.log(`[DB Auto-Init] Table 'JOB' missing in ${database}. Automatically creating 39 tables and initial seed data...`);
+          await autoMigrateTables(connection);
+        }
+      } catch (migErr) {
+        console.warn('[DB Auto-Init] Table check notice:', migErr.message);
+      }
+    }
+
     connection.release();
     isUsingFallback = false;
-    console.log(`Connected to the configured MySQL database: ${database} (schema unchanged).`);
+    console.log(`Connected to the configured MySQL database: ${database}.`);
     return true;
   } catch (err) {
     if (process.env.USE_IN_MEMORY_DB === 'true') {
@@ -1307,6 +1409,7 @@ module.exports = {
   withTransaction,
   query,
   initDB,
+  autoMigrateTables,
   memoryDb,
   isFallback: () => isUsingFallback,
   getPool: () => pool

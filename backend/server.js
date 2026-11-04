@@ -99,9 +99,11 @@ app.get('/api/health', healthCheckHandler);
 const readinessCheckHandler = async (req, res) => {
   try {
     await db.query('SELECT 1');
+    const tables = await db.query("SHOW TABLES LIKE 'JOB'").catch(() => []);
     res.status(200).json({
       status: 'ready',
       database: db.isFallback() ? 'in-memory-fallback' : 'connected',
+      schema_ready: Boolean(tables && tables.length > 0),
       timestamp: new Date().toISOString()
     });
   } catch (err) {
@@ -115,6 +117,33 @@ const readinessCheckHandler = async (req, res) => {
 };
 app.get('/ready', readinessCheckHandler);
 app.get('/api/ready', readinessCheckHandler);
+
+// Database auto-init trigger endpoint (idempotent, non-destructive)
+const dbInitHandler = async (req, res) => {
+  try {
+    const pool = db.getPool();
+    if (!pool) {
+      return res.status(503).json({ success: false, message: 'Database pool not initialized' });
+    }
+    const connection = await pool.getConnection();
+    try {
+      await db.autoMigrateTables(connection);
+      const [tables] = await connection.query("SHOW TABLES");
+      res.status(200).json({
+        success: true,
+        message: 'Database auto-initialization executed successfully',
+        total_tables: tables.length,
+        tables: tables.map(t => Object.values(t)[0])
+      });
+    } finally {
+      connection.release();
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+app.get('/health/db-init', dbInitHandler);
+app.get('/api/health/db-init', dbInitHandler);
 
 // API Routes
 app.use('/api/auth', authRoutes);
