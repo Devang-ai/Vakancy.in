@@ -1,5 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const db = require('../config/db');
+const PAID_ENTITLEMENTS_ENABLED = false;
 
 // List active subscription plans
 const getPlans = async (req, res) => {
@@ -33,6 +34,13 @@ const createPlan = async (req, res) => {
 
 // Unlock Candidate Contact Information for Employer
 const unlockCandidate = async (req, res) => {
+  if (!PAID_ENTITLEMENTS_ENABLED) {
+    return res.status(503).json({
+      success: false,
+      code: 'PAYMENTS_UNAVAILABLE',
+      message: 'Payments and paid feature activation are temporarily unavailable.'
+    });
+  }
   try {
     const { candidate_id } = req.body;
     const userId = req.user.id;

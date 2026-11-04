@@ -15,7 +15,8 @@ const generateToken = (user) => {
     {
       id: user.id,
       email: user.email,
-      role: user.role
+      role: user.role,
+      tokenVersion: Number(user.token_version || 0)
     },
     JWT_SECRET,
     { expiresIn: JWT_EXPIRES_IN }

@@ -162,9 +162,9 @@ const uploadCompanyLogo = async (req, res) => {
     }
 
     // Validate MIME type
-    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedMimeTypes.includes(req.file.mimetype)) {
-      return res.status(400).json({ success: false, message: 'Invalid image format. Allowed: JPG, PNG, GIF, WEBP, SVG.' });
+      return res.status(400).json({ success: false, message: 'Invalid image format. Allowed: JPG, PNG, WEBP.' });
     }
 
     const userId = req.user.id;
@@ -2002,14 +2002,43 @@ const getEmployerJobApplicants = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Access denied: You can only view applicants for your own jobs.' });
     }
 
-    // 1. Fetch direct applicants
+    // Enforce Job-Wise Candidate Access policy (Part 1)
+    if (!isStaffAdmin && (job.allow_candidate_access === 0 || job.allow_candidate_access === false)) {
+      const existingCb = await db.query(
+        `SELECT id, status, created_at, internal_notes FROM CALLBACK_REQUEST 
+         WHERE job_id = ? AND employer_id = ? AND status IN ('NEW', 'ASSIGNED', 'IN_PROGRESS')
+         ORDER BY created_at DESC LIMIT 1`,
+        [jobId, employer.id]
+      );
+
+      return res.status(403).json({
+        success: false,
+        code: 'CANDIDATE_ACCESS_DISABLED',
+        message: 'Candidate access for this job is currently disabled by administration. You may request a callback to review candidate profiles.',
+        candidate_access_allowed: false,
+        job: {
+          id: job.id,
+          title: job.title,
+          department: job.department || 'General',
+          location: job.location || 'Hybrid',
+          status: job.status,
+          allow_candidate_access: 0
+        },
+        callback_pending: existingCb.length > 0,
+        callback_request: existingCb.length > 0 ? existingCb[0] : null
+      });
+    }
+
+    // 1. Fetch direct applicants for this specific job
     const apps = await db.query(`
       SELECT 
         a.id, a.job_id, a.candidate_id, a.status, a.applied_at,
         c.name as candidate_name, c.professional_headline, c.current_location,
-        c.total_experience, c.profile_type,
+        c.total_experience, c.profile_type, c.professional_summary,
+        c.preferred_location, c.current_organization, c.current_designation,
         u.email as candidate_email, u.phone as candidate_phone,
-        r.id as resume_id, r.resume_title, r.file_name as resume_file_name
+        r.id as resume_id, r.resume_title, r.file_name as resume_file_name,
+        r.file_url as resume_file_url
       FROM APPLICATION a
       JOIN CANDIDATES c ON a.candidate_id = c.id
       JOIN USERS u ON c.user_id = u.id
@@ -2019,15 +2048,16 @@ const getEmployerJobApplicants = async (req, res) => {
     `, [jobId]);
 
     // 2. Fetch approved candidates shared specifically for this job (Module 6)
-    // Requires status = 'APPROVED' and candidate_consent = 1
     const shared = await db.query(`
       SELECT 
         cs.id as share_id, cs.job_id, cs.candidate_id, cs.status as share_status,
         cs.candidate_consent, cs.created_at as shared_at,
         c.name as candidate_name, c.professional_headline, c.current_location,
-        c.total_experience, c.profile_type,
+        c.total_experience, c.profile_type, c.professional_summary,
+        c.preferred_location, c.current_organization, c.current_designation,
         u.email as candidate_email, u.phone as candidate_phone,
-        r.id as resume_id, r.resume_title, r.file_name as resume_file_name
+        r.id as resume_id, r.resume_title, r.file_name as resume_file_name,
+        r.file_url as resume_file_url
       FROM CANDIDATE_SHARING cs
       JOIN CANDIDATES c ON cs.candidate_id = c.id
       JOIN USERS u ON c.user_id = u.id
@@ -2036,6 +2066,88 @@ const getEmployerJobApplicants = async (req, res) => {
         AND (cs.expires_at IS NULL OR cs.expires_at > CURRENT_TIMESTAMP)
       ORDER BY cs.created_at DESC
     `, [jobId]);
+
+    // Gather candidate IDs for relational skills, education, and experience queries
+    const candidateIds = [...new Set([...apps.map(a => a.candidate_id), ...shared.map(s => s.candidate_id)])];
+    const skillsByCandidate = {};
+    const educationByCandidate = {};
+    const experienceByCandidate = {};
+    const resumesByCandidate = {};
+
+    if (candidateIds.length > 0) {
+      try {
+        const skillsRows = await db.query(`
+          SELECT cs.candidate_id, s.name 
+          FROM CANDIDATE_SKILL cs
+          JOIN SKILL s ON cs.skill_id = s.id
+          WHERE cs.candidate_id IN (?)
+        `, [candidateIds]);
+        skillsRows.forEach(row => {
+          if (!skillsByCandidate[row.candidate_id]) skillsByCandidate[row.candidate_id] = [];
+          skillsByCandidate[row.candidate_id].push(row.name);
+        });
+      } catch (skErr) {
+        console.warn('Skills retrieval error:', skErr.message);
+      }
+
+      try {
+        const eduRows = await db.query(`
+          SELECT * FROM CANDIDATE_EDUCATION 
+          WHERE candidate_id IN (?) 
+          ORDER BY year DESC
+        `, [candidateIds]);
+        eduRows.forEach(row => {
+          if (!educationByCandidate[row.candidate_id]) educationByCandidate[row.candidate_id] = [];
+          educationByCandidate[row.candidate_id].push({
+            id: row.id,
+            degree: row.degree,
+            institution: row.institution,
+            specialization: row.specialization || null,
+            year: row.year || null,
+            cgpa: row.cgpa || null
+          });
+        });
+      } catch (eduErr) {
+        console.warn('Education retrieval error:', eduErr.message);
+      }
+
+      try {
+        const expRows = await db.query(`
+          SELECT * FROM CANDIDATE_EXPERIENCE 
+          WHERE candidate_id IN (?) 
+          ORDER BY from_date DESC
+        `, [candidateIds]);
+        expRows.forEach(row => {
+          if (!experienceByCandidate[row.candidate_id]) experienceByCandidate[row.candidate_id] = [];
+          experienceByCandidate[row.candidate_id].push({
+            id: row.id,
+            organization: row.organization,
+            designation: row.designation,
+            from_date: row.from_date,
+            to_date: row.to_date,
+            is_currently_working: Boolean(row.is_currently_working),
+            key_achievements: row.key_achievements || null
+          });
+        });
+      } catch (expErr) {
+        console.warn('Experience retrieval error:', expErr.message);
+      }
+
+      try {
+        const resumeRows = await db.query(`
+          SELECT id, candidate_id, resume_title, file_name, file_url, is_primary 
+          FROM CANDIDATE_RESUME 
+          WHERE candidate_id IN (?)
+          ORDER BY is_primary DESC, created_at DESC
+        `, [candidateIds]);
+        resumeRows.forEach(row => {
+          if (!resumesByCandidate[row.candidate_id]) resumesByCandidate[row.candidate_id] = [];
+          resumesByCandidate[row.candidate_id].push(row);
+        });
+      } catch (resErr) {
+        console.warn('Resumes retrieval error:', resErr.message);
+      }
+    }
 
     let enquiries = [];
     try {
@@ -2050,6 +2162,24 @@ const getEmployerJobApplicants = async (req, res) => {
       enquiriesByApp[enq.application_id].push(enq);
     });
 
+    const maskEmail = (email) => {
+      if (!email) return 'Locked';
+      const parts = email.split('@');
+      if (parts.length < 2) return email;
+      const userPart = parts[0];
+      const visible = userPart.substring(0, Math.min(2, userPart.length));
+      return `${visible}***@${parts[1]}`;
+    };
+
+    const maskPhone = (phone) => {
+      if (!phone) return 'Locked';
+      const clean = phone.replace(/[^0-9+]/g, '');
+      if (clean.length > 5) {
+        return clean.substring(0, clean.length - 5) + '*****';
+      }
+      return clean;
+    };
+
     const safeApplicants = apps.map((app, index) => {
       const appEnquiries = enquiriesByApp[app.id] || [];
       const refSuffix = app.id.replace(/-/g, '').substring(0, 6).toUpperCase();
@@ -2057,15 +2187,28 @@ const getEmployerJobApplicants = async (req, res) => {
 
       return {
         id: app.id,
+        application_id: app.id,
         candidate_id: app.candidate_id,
         candidate_name: app.candidate_name,
-        professional_headline: app.professional_headline,
-        current_location: app.current_location,
-        total_experience: app.total_experience,
-        profile_type: app.profile_type,
+        applied_job_title: job.title,
+        professional_headline: app.professional_headline || 'Professional',
+        total_experience: app.total_experience || '0',
+        current_location: app.current_location || 'Not specified',
+        profile_type: app.profile_type || 'standard',
+        professional_summary: app.professional_summary || '',
+        current_organization: app.current_organization || '',
+        current_designation: app.current_designation || '',
+        skills: skillsByCandidate[app.candidate_id] || [],
+        education: educationByCandidate[app.candidate_id] || [],
+        work_history: experienceByCandidate[app.candidate_id] || [],
+        resumes: resumesByCandidate[app.candidate_id] || [],
+        resume_id: app.resume_id || null,
+        resume_file_name: app.resume_file_name || null,
+        resume_authorized: Boolean(app.resume_id),
         candidate_email: app.candidate_email,
         candidate_phone: app.candidate_phone,
-        resume_id: app.resume_id,
+        masked_email: maskEmail(app.candidate_email),
+        masked_phone: maskPhone(app.candidate_phone),
         reference_number: referenceNumber,
         source: 'DIRECT_APPLICATION',
         job_id: app.job_id,
@@ -2084,15 +2227,28 @@ const getEmployerJobApplicants = async (req, res) => {
 
       return {
         id: s.share_id,
+        application_id: s.share_id,
         candidate_id: s.candidate_id,
         candidate_name: s.candidate_name,
-        professional_headline: s.professional_headline,
-        current_location: s.current_location,
-        total_experience: s.total_experience,
-        profile_type: s.profile_type,
+        applied_job_title: job.title,
+        professional_headline: s.professional_headline || 'Professional',
+        total_experience: s.total_experience || '0',
+        current_location: s.current_location || 'Not specified',
+        profile_type: s.profile_type || 'standard',
+        professional_summary: s.professional_summary || '',
+        current_organization: s.current_organization || '',
+        current_designation: s.current_designation || '',
+        skills: skillsByCandidate[s.candidate_id] || [],
+        education: educationByCandidate[s.candidate_id] || [],
+        work_history: experienceByCandidate[s.candidate_id] || [],
+        resumes: resumesByCandidate[s.candidate_id] || [],
+        resume_id: s.resume_id || null,
+        resume_file_name: s.resume_file_name || null,
+        resume_authorized: Boolean(s.resume_id),
         candidate_email: s.candidate_email,
         candidate_phone: s.candidate_phone,
-        resume_id: s.resume_id,
+        masked_email: maskEmail(s.candidate_email),
+        masked_phone: maskPhone(s.candidate_phone),
         reference_number: referenceNumber,
         source: 'VAKANCY_RECOMMENDED',
         job_id: s.job_id,
@@ -2121,6 +2277,7 @@ const getEmployerJobApplicants = async (req, res) => {
 
     res.json({
       success: true,
+      candidate_access_allowed: true,
       job: {
         id: job.id,
         title: job.title,
@@ -2129,7 +2286,8 @@ const getEmployerJobApplicants = async (req, res) => {
         location: job.location || 'Hybrid',
         workplace_type: job.workplace_type || 'On-site',
         employment_type: job.employment_type || 'Full-time Permanent',
-        status: job.status
+        status: job.status,
+        allow_candidate_access: job.allow_candidate_access !== undefined ? job.allow_candidate_access : 1
       },
       metrics,
       applicants: combinedList,
@@ -2145,20 +2303,31 @@ const getEmployerCandidateResume = async (req, res) => {
   try {
     const userId = req.user.id;
     const resumeId = req.params.id;
+    if (req.user.role !== 'employer') {
+      return res.status(403).json({
+        success: false,
+        code: 'EMPLOYER_RESUME_ROUTE_REQUIRED',
+        message: 'Internal staff must use the scoped application resume endpoint.'
+      });
+    }
     const employer = await getOrCreateEmployerForUser(userId, req.user.role, req.user.name);
     if (!employer) return res.status(404).json({ success: false, message: 'Employer profile not found.' });
 
     let resumes = await db.query('SELECT * FROM CANDIDATE_RESUME WHERE id = ? OR candidate_id = ? ORDER BY is_primary DESC LIMIT 1', [resumeId, resumeId]);
     let targetCandidateId = resumes.length > 0 ? resumes[0].candidate_id : resumeId;
 
-    // Multi-tenant check: Has this candidate applied to ANY job belonging to this employer,
-    // OR has this candidate been approved & shared with this employer for an authorized job?
+    // Authorization Rule 1: Check direct job applications where employer owns the job AND allow_candidate_access = 1
     const appCheck = await db.query(`
-      SELECT a.id FROM APPLICATION a
+      SELECT a.id as application_id, a.job_id, j.title as job_title, j.allow_candidate_access
+      FROM APPLICATION a
       JOIN JOB j ON a.job_id = j.id
-      WHERE a.candidate_id = ? AND (j.employer_id = ? OR j.client_id = ?)
-    `, [targetCandidateId, employer.id, employer.id]);
+      WHERE (a.candidate_id = ? OR a.id = ?)
+        AND (j.employer_id = ? OR j.client_id = ?)
+    `, [targetCandidateId, resumeId, employer.id, employer.id]);
 
+    const hasJobApplicantAccess = appCheck.some(r => r.allow_candidate_access === 1 || r.allow_candidate_access === true);
+
+    // Authorization Rule 2: Check approved and consented candidate sharing
     const shareCheck = await db.query(`
       SELECT cs.id FROM CANDIDATE_SHARING cs
       LEFT JOIN JOB j ON cs.job_id = j.id
@@ -2167,10 +2336,20 @@ const getEmployerCandidateResume = async (req, res) => {
         AND (cs.client_id = ? OR j.employer_id = ? OR j.client_id = ?)
     `, [targetCandidateId, employer.id, employer.id, employer.id]);
 
-    if (appCheck.length === 0 && shareCheck.length === 0 && req.user.role !== 'admin') {
+    const hasShareAccess = shareCheck.length > 0;
+
+    if (!hasJobApplicantAccess && !hasShareAccess) {
+      if (appCheck.length > 0) {
+        return res.status(403).json({
+          success: false,
+          code: 'CANDIDATE_ACCESS_DISABLED',
+          message: 'Candidate access and resume viewing for this job requisition are currently locked by administration. Request a callback to unlock.'
+        });
+      }
       return res.status(403).json({
         success: false,
-        message: 'Access Denied: You do not have authorization to view this candidate resume.'
+        code: 'RESUME_RESTRICTED',
+        message: 'Access Denied: You do not have authorization to view this candidate resume. Request an introduction.'
       });
     }
 
@@ -2180,17 +2359,120 @@ const getEmployerCandidateResume = async (req, res) => {
 
     const resume = resumes[0];
 
-    if (resume.file_url) {
-      return res.json({
-        success: true,
-        file_url: resume.file_url,
-        file_name: resume.file_name || 'candidate_resume.pdf'
-      });
+    if (!resume.cloudinary_public_id) {
+      return res.status(503).json({ success: false, message: 'Secure resume delivery is temporarily unavailable.' });
     }
-    res.status(404).json({ success: false, message: 'Resume file not available.' });
+
+    const { cloudinary } = require('../services/cloudinaryService');
+    const resourceType = resume.file_url && resume.file_url.includes('/raw/upload/') ? 'raw' : 'image';
+    const deliveryType = resume.file_url && resume.file_url.includes('/authenticated/') ? 'authenticated' : 'upload';
+    const signedUrl = cloudinary.utils.url(resume.cloudinary_public_id, {
+      type: deliveryType,
+      resource_type: resourceType,
+      sign_url: true,
+      secure: true,
+      format: resourceType === 'image' ? 'pdf' : undefined
+    });
+
+    try {
+      await db.query(`
+        INSERT INTO RECRUITMENT_ACTIVITY (id, performed_by, action_type, entity_type, entity_id, related_job_id, description)
+        VALUES (?, ?, 'VIEW_RESUME', 'RESUME', ?, ?, ?)
+      `, [
+        uuidv4(),
+        userId,
+        resume.id,
+        appCheck.length > 0 ? appCheck[0].job_id : null,
+        `Employer ${employer.company_name} accessed candidate resume: ${resume.file_name}`
+      ]);
+    } catch (auditError) {
+      console.warn('Candidate resume access audit notice:', auditError.message);
+    }
+
+    return res.json({
+      success: true,
+      file_url: signedUrl,
+      file_name: resume.file_name || 'candidate_resume.pdf'
+    });
   } catch (error) {
     console.error('getEmployerCandidateResume error:', error);
     res.status(500).json({ success: false, message: 'Error retrieving resume.', error: error.message });
+  }
+};
+
+const getEmployerJobApplicantResume = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { jobId, appId } = req.params;
+    const employer = await getOrCreateEmployerForUser(userId, req.user.role, req.user.name);
+    if (!employer) return res.status(404).json({ success: false, message: 'Employer profile not found.' });
+
+    const jobs = await db.query('SELECT * FROM JOB WHERE id = ?', [jobId]);
+    if (jobs.length === 0) return res.status(404).json({ success: false, message: 'Job not found.' });
+    const job = jobs[0];
+
+    const isOwner = (job.employer_id && String(job.employer_id) === String(employer.id)) ||
+                    (job.client_id && String(job.client_id) === String(employer.id));
+    if (!isOwner && !['admin', 'main_admin', 'director'].includes(req.user.role)) {
+      return res.status(403).json({ success: false, message: 'Access denied: You can only access applicants for your own jobs.' });
+    }
+
+    if (job.allow_candidate_access === 0 || job.allow_candidate_access === false) {
+      return res.status(403).json({
+        success: false,
+        code: 'CANDIDATE_ACCESS_DISABLED',
+        message: 'Candidate access for this job is currently disabled. Please request a callback.'
+      });
+    }
+
+    const apps = await db.query('SELECT * FROM APPLICATION WHERE id = ? AND job_id = ?', [appId, jobId]);
+    if (apps.length === 0) {
+      return res.status(404).json({ success: false, message: 'Applicant record not found for this job.' });
+    }
+    const app = apps[0];
+
+    let resumes = await db.query('SELECT * FROM CANDIDATE_RESUME WHERE candidate_id = ? ORDER BY is_primary DESC LIMIT 1', [app.candidate_id]);
+    if (resumes.length === 0) {
+      return res.status(404).json({ success: false, message: 'Resume document not found for candidate.' });
+    }
+    const resume = resumes[0];
+
+    if (!resume.cloudinary_public_id) {
+      return res.status(503).json({ success: false, message: 'Secure resume delivery is temporarily unavailable.' });
+    }
+
+    const { cloudinary } = require('../services/cloudinaryService');
+    const resourceType = resume.file_url && resume.file_url.includes('/raw/upload/') ? 'raw' : 'image';
+    const deliveryType = resume.file_url && resume.file_url.includes('/authenticated/') ? 'authenticated' : 'upload';
+    const signedUrl = cloudinary.utils.url(resume.cloudinary_public_id, {
+      type: deliveryType,
+      resource_type: resourceType,
+      sign_url: true,
+      secure: true,
+      format: resourceType === 'image' ? 'pdf' : undefined
+    });
+
+    try {
+      await db.query(`
+        INSERT INTO RECRUITMENT_ACTIVITY (id, performed_by, action_type, entity_type, entity_id, related_job_id, description)
+        VALUES (?, ?, 'VIEW_APPLICANT_RESUME', 'RESUME', ?, ?, ?)
+      `, [
+        uuidv4(),
+        userId,
+        resume.id,
+        jobId,
+        `Employer ${employer.company_name} previewed applicant resume: ${resume.file_name}`
+      ]);
+    } catch (_) {}
+
+    return res.json({
+      success: true,
+      file_url: signedUrl,
+      file_name: resume.file_name || 'candidate_resume.pdf'
+    });
+  } catch (error) {
+    console.error('getEmployerJobApplicantResume error:', error);
+    res.status(500).json({ success: false, message: 'Error retrieving applicant resume.', error: error.message });
   }
 };
 
@@ -2295,6 +2577,27 @@ const createEmployerApplicationEnquiry = async (req, res) => {
       }).catch(err => {
         console.warn('⚠️ [Async Email] Internal enquiry alert email error:', err.message);
       });
+
+      // Notify candidate if inboundEmail notification preference is enabled
+      try {
+        const candUsers = await db.query(
+          'SELECT c.user_id, c.name, u.email FROM CANDIDATES c JOIN USERS u ON c.user_id = u.id WHERE c.id = ?',
+          [app.candidate_id]
+        );
+        if (candUsers.length > 0 && candUsers[0].user_id && candUsers[0].email) {
+          const { canSendInboundEmail } = require('../services/notificationPreferenceService');
+          const { sendRecruiterMessageNotificationEmail } = require('../services/emailService');
+          if (await canSendInboundEmail(candUsers[0].user_id)) {
+            sendRecruiterMessageNotificationEmail(candUsers[0].email, {
+              recipientName: candUsers[0].name || 'Candidate',
+              senderName: employer.company_name || 'Hiring Recruiter',
+              jobTitle: job.title
+            }).catch(e => console.warn('Candidate enquiry notice email error:', e.message));
+          }
+        }
+      } catch (candNotifErr) {
+        console.warn('⚠️ [Candidate Enquiry Notice Warning]:', candNotifErr.message);
+      }
     } catch (emailErr) {
       console.warn('⚠️ [Email Trigger Error] Non-blocking enquiry emails failed:', emailErr.message);
     }
@@ -2442,6 +2745,395 @@ const updateEmployerOnboarding = async (req, res) => {
   }
 };
 
+const requestEmployerCallback = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const jobId = req.params.id;
+    const { reason, callback_reason, preferred_time, notes, contact_phone } = req.body;
+    const actualReason = callback_reason || reason || null;
+
+    const employer = await getOrCreateEmployerForUser(userId, req.user.role, req.user.name);
+    if (!employer) return res.status(404).json({ success: false, message: 'Employer profile not found.' });
+
+    const jobs = await db.query('SELECT * FROM JOB WHERE id = ?', [jobId]);
+    if (jobs.length === 0) return res.status(404).json({ success: false, message: 'Job not found.' });
+
+    const job = jobs[0];
+    const isOwner = (job.employer_id && String(job.employer_id) === String(employer.id)) ||
+                    (job.client_id && String(job.client_id) === String(employer.id));
+    if (!isOwner && !['admin', 'main_admin', 'director'].includes(req.user.role)) {
+      return res.status(403).json({ success: false, message: 'Access denied: You can only request callbacks for your own jobs.' });
+    }
+
+    // Duplicate prevention: check for existing open request (NEW, ASSIGNED, IN_PROGRESS)
+    const existing = await db.query(
+      `SELECT * FROM CALLBACK_REQUEST 
+       WHERE job_id = ? AND employer_id = ? AND status IN ('NEW', 'ASSIGNED', 'IN_PROGRESS')
+       ORDER BY created_at DESC LIMIT 1`,
+      [jobId, employer.id]
+    );
+
+    if (existing && existing.length > 0) {
+      if (notes || contact_phone || preferred_time || actualReason) {
+        await db.query(
+          `UPDATE CALLBACK_REQUEST 
+           SET internal_notes = CONCAT(COALESCE(internal_notes, ''), '\n[Employer Update]: ', ?),
+               updated_at = NOW()
+           WHERE id = ?`,
+          [notes || `Employer re-requested callback (Reason: ${actualReason || 'Access request'}, Phone: ${contact_phone || 'same'}, Pref Time: ${preferred_time || 'any'})`, existing[0].id]
+        );
+      }
+      return res.status(400).json({
+        success: false,
+        code: 'CALLBACK_PENDING',
+        message: 'A callback request is already active for this mandate. Our team will contact you shortly.',
+        callback_request: existing[0],
+        is_existing: true
+      });
+    }
+
+    const callbackId = uuidv4();
+    const formattedNotes = [
+      actualReason ? `Reason: ${actualReason}` : null,
+      preferred_time ? `Preferred Time: ${preferred_time}` : null,
+      contact_phone ? `Direct Phone: ${contact_phone}` : null,
+      notes ? `Notes: ${notes}` : null
+    ].filter(Boolean).join('\n');
+
+    const directors = await db.query(
+      "SELECT id FROM USERS WHERE role = 'director' OR is_main_admin = 1"
+    );
+
+    await db.withTransaction(async (tx) => {
+      await tx.query(`
+        INSERT INTO CALLBACK_REQUEST (
+          id, job_id, employer_id, requested_by_user_id, status, source, internal_notes
+        ) VALUES (?, ?, ?, ?, 'NEW', 'JOB_APPLICANTS', ?)
+      `, [callbackId, jobId, employer.id, userId, formattedNotes || 'Employer requested candidate access callback']);
+
+      // Notify Directors through in-app NOTIFICATION mechanism
+      for (const dir of directors) {
+        await tx.query(
+          `INSERT INTO NOTIFICATION (id, user_id, type, title, message, reference_type, reference_id)
+           VALUES (?, ?, 'callback_request', 'New Employer Callback Request', ?, 'CALLBACK_REQUEST', ?)`,
+          [
+            uuidv4(),
+            dir.id,
+            `Employer ${employer.company_name} requested a callback for job "${job.title}" regarding candidate access.`,
+            callbackId
+          ]
+        );
+      }
+
+      // Log recruitment activity
+      await tx.query(`
+        INSERT INTO RECRUITMENT_ACTIVITY (id, performed_by, action_type, entity_type, entity_id, related_job_id, description)
+        VALUES (?, ?, 'CREATE_CALLBACK_REQUEST', 'CALLBACK_REQUEST', ?, ?, ?)
+      `, [
+        uuidv4(),
+        userId,
+        callbackId,
+        jobId,
+        `Employer ${employer.company_name} submitted a callback request for job: ${job.title}`
+      ]);
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Callback request registered successfully. Our Director and recruitment team have been notified.',
+      callback_id: callbackId
+    });
+  } catch (error) {
+    console.error('requestEmployerCallback error:', error);
+    res.status(500).json({ success: false, message: 'Error submitting callback request.', error: error.message });
+  }
+};
+
+const getEmployerCandidateDatabase = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const isStaffAdmin = ['admin', 'main_admin', 'director'].includes(req.user.role);
+
+    let employer = null;
+    if (!isStaffAdmin) {
+      employer = await getOrCreateEmployerForUser(userId, req.user.role, req.user.name);
+      if (!employer) {
+        return res.status(404).json({ success: false, message: 'Employer profile not found.' });
+      }
+    }
+
+    // Dedicated Access check: Decoupled from account approval and job status
+    const accessGranted = isStaffAdmin || (employer && (employer.candidate_access_enabled === 1 || employer.candidate_access_enabled === true));
+    
+    if (!accessGranted) {
+      let existingCallback = null;
+      if (employer?.id) {
+        const rows = await db.query(
+          `SELECT id, status, created_at FROM CALLBACK_REQUEST 
+           WHERE employer_id = ? AND status IN ('NEW', 'ASSIGNED', 'IN_PROGRESS')
+           ORDER BY created_at DESC LIMIT 1`,
+          [employer.id]
+        );
+        if (rows && rows.length > 0) {
+          existingCallback = rows[0];
+        }
+      }
+
+      return res.json({
+        success: true,
+        access_enabled: false,
+        candidate_access_enabled: false,
+        approval_status: employer?.approval_status || 'pending',
+        callback_pending: Boolean(existingCallback),
+        callback_status: existingCallback?.status || null,
+        callback_id: existingCallback?.id || null,
+        message: 'Candidate database access is governed by Vakancy.in. Request access callback below.',
+        employer: employer ? {
+          company_name: employer.company_name,
+          contact_person_name: employer.contact_person_name,
+          contact_email: employer.contact_email || employer.official_email || req.user.email,
+          contact_phone: employer.contact_phone || employer.official_phone || req.user.phone
+        } : null
+      });
+    }
+
+    // When access is enabled:
+    const { search, location, profile_type, page = 1, limit = 20 } = req.query;
+    const offset = (Number(page) - 1) * Number(limit);
+
+    // Filter legitimate, active candidates who have completed onboarding or have completed profile details
+    const whereClauses = [
+      'u.is_active = 1',
+      '(c.is_onboarding_completed = 1 OR (c.professional_headline IS NOT NULL AND c.current_location IS NOT NULL) OR c.id IN (SELECT candidate_id FROM CANDIDATE_SHARING WHERE status = "APPROVED" AND candidate_consent = 1))'
+    ];
+    const queryParams = [];
+
+    if (search && search.trim()) {
+      const term = `%${search.trim().toLowerCase()}%`;
+      whereClauses.push(`(LOWER(c.name) LIKE ? OR LOWER(c.professional_headline) LIKE ? OR LOWER(c.current_organization) LIKE ? OR LOWER(c.professional_summary) LIKE ?)`);
+      queryParams.push(term, term, term, term);
+    }
+
+    if (location && location.trim()) {
+      whereClauses.push(`(LOWER(c.current_location) LIKE ? OR LOWER(c.preferred_location) LIKE ?)`);
+      const locTerm = `%${location.trim().toLowerCase()}%`;
+      queryParams.push(locTerm, locTerm);
+    }
+
+    if (profile_type && profile_type.trim()) {
+      whereClauses.push(`c.profile_type = ?`);
+      queryParams.push(profile_type.trim().toLowerCase());
+    }
+
+    const whereSql = `WHERE ${whereClauses.join(' AND ')}`;
+
+    const countSql = `
+      SELECT COUNT(DISTINCT c.id) as total 
+      FROM CANDIDATES c 
+      JOIN USERS u ON c.user_id = u.id 
+      ${whereSql}
+    `;
+    const countRows = await db.query(countSql, queryParams);
+    const total = Number(countRows[0]?.total || 0);
+
+    const candidates = await db.query(`
+      SELECT 
+        c.id, c.name, c.current_location, c.profile_type,
+        c.professional_headline, c.current_organization, c.current_designation,
+        c.total_experience, c.preferred_location, c.professional_summary,
+        c.is_premium, c.created_at,
+        MAX(r.id) as primary_resume_id
+      FROM CANDIDATES c
+      JOIN USERS u ON c.user_id = u.id
+      LEFT JOIN CANDIDATE_RESUME r ON c.id = r.candidate_id AND r.is_primary = 1
+      ${whereSql}
+      GROUP BY c.id
+      ORDER BY c.created_at DESC
+      LIMIT ? OFFSET ?
+    `, [...queryParams, Number(limit), offset]);
+
+    // Fetch candidate skills properly with JOIN to SKILL table
+    const candidateIds = candidates.map(c => c.id);
+    let skillsMap = {};
+    if (candidateIds.length > 0) {
+      try {
+        const skillsRows = await db.query(`
+          SELECT cs.candidate_id, s.name as skill_name 
+          FROM CANDIDATE_SKILL cs
+          JOIN SKILL s ON cs.skill_id = s.id
+          WHERE cs.candidate_id IN (?)
+        `, [candidateIds]);
+        skillsRows.forEach(s => {
+          if (!skillsMap[s.candidate_id]) skillsMap[s.candidate_id] = [];
+          skillsMap[s.candidate_id].push(s.skill_name);
+        });
+      } catch (skillsErr) {
+        console.warn('Skills fetch warning in candidate database:', skillsErr.message);
+      }
+    }
+
+    // Check employer-specific candidate authorizations (CANDIDATE_UNLOCK or approved CANDIDATE_SHARING)
+    let authorizedCandidateIds = new Set();
+    if (employer?.id && candidateIds.length > 0) {
+      try {
+        const unlockRows = await db.query(
+          `SELECT candidate_id FROM CANDIDATE_UNLOCK 
+           WHERE employer_id = ? AND candidate_id IN (?) AND (expires_at IS NULL OR expires_at > NOW())`,
+          [employer.id, candidateIds]
+        );
+        unlockRows.forEach(u => authorizedCandidateIds.add(u.candidate_id));
+
+        const shareRows = await db.query(
+          `SELECT cs.candidate_id 
+           FROM CANDIDATE_SHARING cs
+           LEFT JOIN JOB j ON cs.job_id = j.id
+           WHERE cs.candidate_id IN (?)
+             AND cs.status = 'APPROVED'
+             AND cs.candidate_consent = 1
+             AND (cs.expires_at IS NULL OR cs.expires_at > NOW())
+             AND (cs.client_id = ? OR j.employer_id = ?)`,
+          [candidateIds, employer.id, employer.id]
+        );
+        shareRows.forEach(s => authorizedCandidateIds.add(s.candidate_id));
+      } catch (authCheckErr) {
+        console.warn('Authorization check warning:', authCheckErr.message);
+      }
+    }
+
+    // Return privacy-preserving candidate profiles (PII strictly protected unless authorized)
+    const sanitizedCandidates = candidates.map(c => {
+      const isAuthorized = isStaffAdmin || authorizedCandidateIds.has(c.id);
+      return {
+        id: c.id,
+        name: c.name,
+        professional_headline: c.professional_headline || 'Experienced Professional',
+        current_location: c.current_location || 'India',
+        profile_type: c.profile_type || 'experienced',
+        total_experience: c.total_experience || 0,
+        current_organization: c.current_organization || 'Confidential',
+        current_designation: c.current_designation || 'Specialist',
+        professional_summary: c.professional_summary || '',
+        is_premium: Boolean(c.is_premium),
+        skills: skillsMap[c.id] || [],
+        is_authorized_share: isAuthorized,
+        contact_masked: !isAuthorized,
+        masked_email: 'c****@vakancy.in',
+        masked_phone: '+91 *******' + (c.id.substring(0, 3)),
+        resume_available: Boolean(c.primary_resume_id),
+        resume_authorized: isAuthorized && Boolean(c.primary_resume_id),
+        resume_locked: !isAuthorized
+      };
+    });
+
+    return res.json({
+      success: true,
+      access_enabled: true,
+      approval_status: employer ? employer.approval_status : 'approved',
+      candidates: sanitizedCandidates,
+      pagination: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(total / Number(limit))
+      }
+    });
+  } catch (error) {
+    console.error('getEmployerCandidateDatabase error:', error);
+    res.status(500).json({ success: false, message: 'Error querying candidate database.', error: error.message });
+  }
+};
+
+const requestEmployerDatabaseCallback = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { notes, contact_phone } = req.body;
+
+    const employer = await getOrCreateEmployerForUser(userId, req.user.role, req.user.name);
+    if (!employer) return res.status(404).json({ success: false, message: 'Employer profile not found.' });
+
+    // Prevent duplicate rapid submissions: Check if an open callback request exists for this employer
+    const existing = await db.query(
+      `SELECT * FROM CALLBACK_REQUEST 
+       WHERE employer_id = ? AND status IN ('NEW', 'ASSIGNED', 'IN_PROGRESS')
+       ORDER BY created_at DESC LIMIT 1`,
+      [employer.id]
+    );
+
+    if (existing && existing.length > 0) {
+      return res.status(200).json({
+        success: true,
+        already_requested: true,
+        code: 'CALLBACK_PENDING',
+        status: existing[0].status,
+        message: `A callback request is already active for your account (Status: ${existing[0].status}). Our recruitment director and operations team will contact you shortly.`,
+        callback_request: existing[0],
+        callback_id: existing[0].id,
+        is_existing: true
+      });
+    }
+
+    const callbackId = uuidv4();
+    const phoneToUse = contact_phone || employer.contact_phone || employer.official_phone || req.user.phone || 'N/A';
+    const emailToUse = employer.contact_email || employer.official_email || req.user.email;
+    const contactName = employer.contact_person_name || req.user.name || 'Employer Representative';
+
+    const formattedNotes = [
+      `Source: Candidate Talent Database Access Gate`,
+      `Employer: ${employer.company_name}`,
+      `Contact: ${contactName} (${emailToUse})`,
+      `Phone: ${phoneToUse}`,
+      notes ? `Notes: ${notes}` : null
+    ].filter(Boolean).join('\n');
+
+    const directors = await db.query(
+      "SELECT id FROM USERS WHERE role = 'director' OR is_main_admin = 1"
+    );
+
+    await db.withTransaction(async (tx) => {
+      await tx.query(`
+        INSERT INTO CALLBACK_REQUEST (
+          id, job_id, employer_id, requested_by_user_id, status, internal_notes, source
+        ) VALUES (?, NULL, ?, ?, 'NEW', ?, 'CANDIDATE_DATABASE')
+      `, [callbackId, employer.id, userId, formattedNotes]);
+
+      // In-app NOTIFICATION for directors
+      for (const dir of directors) {
+        await tx.query(
+          `INSERT INTO NOTIFICATION (id, user_id, type, title, message, reference_type, reference_id)
+           VALUES (?, ?, 'callback_request', 'Candidate Database Access Callback Request', ?, 'CALLBACK_REQUEST', ?)`,
+          [
+            uuidv4(),
+            dir.id,
+            `Employer ${employer.company_name} requested a callback to unlock Candidate Talent Database access.`,
+            callbackId
+          ]
+        );
+      }
+
+      // Log recruitment activity
+      await tx.query(`
+        INSERT INTO RECRUITMENT_ACTIVITY (id, performed_by, action_type, entity_type, entity_id, description)
+        VALUES (?, ?, 'CREATE_CALLBACK_REQUEST', 'CALLBACK_REQUEST', ?, ?)
+      `, [
+        uuidv4(),
+        userId,
+        callbackId,
+        `Employer ${employer.company_name} requested a callback for Candidate Database access`
+      ]);
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Callback request registered successfully. Our Director and recruitment operations team have been notified.',
+      callback_id: callbackId,
+      status: 'NEW'
+    });
+  } catch (error) {
+    console.error('requestEmployerDatabaseCallback error:', error);
+    res.status(500).json({ success: false, message: 'Error submitting callback request.', error: error.message });
+  }
+};
+
 module.exports = {
   getEmployerProfile,
   uploadCompanyLogo,
@@ -2461,5 +3153,9 @@ module.exports = {
   getEmployerJobApplicants,
   getEmployerCandidateResume,
   createEmployerApplicationEnquiry,
-  getEmployerApplicationEnquiries
+  getEmployerApplicationEnquiries,
+  requestEmployerCallback,
+  getEmployerCandidateDatabase,
+  requestEmployerDatabaseCallback,
+  getEmployerJobApplicantResume
 };

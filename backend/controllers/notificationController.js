@@ -155,11 +155,11 @@ const deleteJobAlert = async (req, res) => {
   }
 };
 
-// Candidate Notification Preferences
+// Notification Preferences (Both Candidate and Employer supported)
 const getNotificationPreferences = async (req, res) => {
   try {
-    if (req.user.role !== 'candidate') {
-      return res.status(403).json({ success: false, message: 'Access denied: Preferences are only accessible to candidates.' });
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ success: false, message: 'Authentication required.' });
     }
 
     const prefs = await db.query('SELECT * FROM NOTIFICATION_PREFERENCE WHERE user_id = ?', [req.user.id]);
@@ -174,13 +174,13 @@ const getNotificationPreferences = async (req, res) => {
     };
     const p = prefs.length > 0 ? prefs[0] : {};
     const formatted = {
-      stageWhatsapp: p.stageWhatsapp !== undefined ? Boolean(p.stageWhatsapp) : defaults.stageWhatsapp,
-      stageEmail: p.stageEmail !== undefined ? Boolean(p.stageEmail) : defaults.stageEmail,
-      stageSms: p.stageSms !== undefined ? Boolean(p.stageSms) : defaults.stageSms,
-      inboundWhatsapp: p.inboundWhatsapp !== undefined ? Boolean(p.inboundWhatsapp) : defaults.inboundWhatsapp,
-      inboundEmail: p.inboundEmail !== undefined ? Boolean(p.inboundEmail) : defaults.inboundEmail,
-      digestWhatsapp: p.digestWhatsapp !== undefined ? Boolean(p.digestWhatsapp) : defaults.digestWhatsapp,
-      digestEmail: p.digestEmail !== undefined ? Boolean(p.digestEmail) : defaults.digestEmail,
+      stageWhatsapp: p.stageWhatsapp !== undefined && p.stageWhatsapp !== null ? Boolean(p.stageWhatsapp) : defaults.stageWhatsapp,
+      stageEmail: p.stageEmail !== undefined && p.stageEmail !== null ? Boolean(p.stageEmail) : defaults.stageEmail,
+      stageSms: p.stageSms !== undefined && p.stageSms !== null ? Boolean(p.stageSms) : defaults.stageSms,
+      inboundWhatsapp: p.inboundWhatsapp !== undefined && p.inboundWhatsapp !== null ? Boolean(p.inboundWhatsapp) : defaults.inboundWhatsapp,
+      inboundEmail: p.inboundEmail !== undefined && p.inboundEmail !== null ? Boolean(p.inboundEmail) : defaults.inboundEmail,
+      digestWhatsapp: p.digestWhatsapp !== undefined && p.digestWhatsapp !== null ? Boolean(p.digestWhatsapp) : defaults.digestWhatsapp,
+      digestEmail: p.digestEmail !== undefined && p.digestEmail !== null ? Boolean(p.digestEmail) : defaults.digestEmail,
     };
 
     res.json({
@@ -194,24 +194,28 @@ const getNotificationPreferences = async (req, res) => {
 
 const updateNotificationPreferences = async (req, res) => {
   try {
-    if (req.user.role !== 'candidate') {
-      return res.status(403).json({ success: false, message: 'Access denied: Preferences are only accessible to candidates.' });
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ success: false, message: 'Authentication required.' });
     }
 
-    const existing = await db.query('SELECT id FROM NOTIFICATION_PREFERENCE WHERE user_id = ?', [req.user.id]);
+    const existing = await db.query('SELECT * FROM NOTIFICATION_PREFERENCE WHERE user_id = ?', [req.user.id]);
     const prefsData = req.body || {};
+    const prev = existing.length > 0 ? existing[0] : {};
+
+    // Preserve stageSms if omitted from payload (since SMS Reminders toggle is removed from UI)
+    const stageSmsVal = prefsData.stageSms !== undefined ? (prefsData.stageSms ? 1 : 0) : (prev.stageSms ? 1 : 0);
 
     if (existing.length > 0) {
       await db.query(
         'UPDATE NOTIFICATION_PREFERENCE SET stageWhatsapp = ?, stageEmail = ?, stageSms = ?, inboundWhatsapp = ?, inboundEmail = ?, digestWhatsapp = ?, digestEmail = ? WHERE user_id = ?',
         [
-          prefsData.stageWhatsapp ? 1 : 0,
-          prefsData.stageEmail ? 1 : 0,
-          prefsData.stageSms ? 1 : 0,
-          prefsData.inboundWhatsapp ? 1 : 0,
-          prefsData.inboundEmail ? 1 : 0,
-          prefsData.digestWhatsapp ? 1 : 0,
-          prefsData.digestEmail ? 1 : 0,
+          prefsData.stageWhatsapp !== undefined ? (prefsData.stageWhatsapp ? 1 : 0) : (prev.stageWhatsapp ? 1 : 0),
+          prefsData.stageEmail !== undefined ? (prefsData.stageEmail ? 1 : 0) : 1,
+          stageSmsVal,
+          prefsData.inboundWhatsapp !== undefined ? (prefsData.inboundWhatsapp ? 1 : 0) : (prev.inboundWhatsapp ? 1 : 0),
+          prefsData.inboundEmail !== undefined ? (prefsData.inboundEmail ? 1 : 0) : 1,
+          prefsData.digestWhatsapp !== undefined ? (prefsData.digestWhatsapp ? 1 : 0) : (prev.digestWhatsapp ? 1 : 0),
+          prefsData.digestEmail !== undefined ? (prefsData.digestEmail ? 1 : 0) : 1,
           req.user.id
         ]
       );
@@ -223,12 +227,12 @@ const updateNotificationPreferences = async (req, res) => {
           id,
           req.user.id,
           prefsData.stageWhatsapp ? 1 : 0,
-          prefsData.stageEmail ? 1 : 0,
-          prefsData.stageSms ? 1 : 0,
+          prefsData.stageEmail !== undefined ? (prefsData.stageEmail ? 1 : 0) : 1,
+          stageSmsVal,
           prefsData.inboundWhatsapp ? 1 : 0,
-          prefsData.inboundEmail ? 1 : 0,
+          prefsData.inboundEmail !== undefined ? (prefsData.inboundEmail ? 1 : 0) : 1,
           prefsData.digestWhatsapp ? 1 : 0,
-          prefsData.digestEmail ? 1 : 0
+          prefsData.digestEmail !== undefined ? (prefsData.digestEmail ? 1 : 0) : 1
         ]
       );
     }

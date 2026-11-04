@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/authMiddleware');
+const { checkPermission } = require('../middleware/rbacMiddleware');
+const { publicReadLimiter } = require('../middleware/securityMiddleware');
+
+router.use(publicReadLimiter);
 const {
   getIndustries,
   getCompanyTypes,
@@ -31,9 +35,9 @@ router.get('/countries', getCountries);
 router.get('/states', getStates);
 router.get('/cities', getCities);
 router.get('/skills', getSkills);
-router.post('/skills', authenticateToken, createSkill);
+router.post('/skills', authenticateToken, checkPermission('settings', 'edit'), createSkill);
 router.get('/benefits', getBenefits);
-router.post('/benefits', authenticateToken, createBenefit);
+router.post('/benefits', authenticateToken, checkPermission('settings', 'edit'), createBenefit);
 router.get('/languages', getLanguages);
 
 module.exports = router;

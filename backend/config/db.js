@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const dotenv = require('dotenv');
 
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 let pool = null;
 let isUsingFallback = false;
@@ -50,7 +50,8 @@ const memoryDb = {
   COUNTRY: [],
   STATE_REGION: [],
   CITY: [],
-  SAVED_JOBS: []
+  SAVED_JOBS: [],
+  USER_OTP: []
 };
 
 const { relationalSeed } = require('../database/seedLocationData');
@@ -157,7 +158,9 @@ function loadMemorySeed() {
   }
 }
 
-async function initDB() {
+// Legacy bootstrap retained for reference only. It is deliberately not called by
+// server startup; schema changes belong in explicit, versioned migrations.
+async function legacySchemaBootstrap() {
   console.log('Starting Vakancy server database initialization...');
   console.log('Connecting to MySQL...');
 
@@ -168,7 +171,7 @@ async function initDB() {
   const database = process.env.DB_NAME || 'vakancy_main_db';
 
   try {
-    pool = mysql.createPool({
+    const poolConfig = {
       host,
       user,
       password,
@@ -177,7 +180,13 @@ async function initDB() {
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0
-    });
+    };
+    if (process.env.DB_SSL === 'true' || process.env.DB_SSL === 'required') {
+      poolConfig.ssl = {
+        rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false'
+      };
+    }
+    pool = mysql.createPool(poolConfig);
 
     const connection = await pool.getConnection();
     console.log('✅ Connected to MySQL database successfully.');
@@ -673,12 +682,194 @@ const INITIAL_BENEFITS = [
       try {
         await connection.query("ALTER TABLE `USERS` ADD COLUMN `reset_token_expires` DATETIME NULL");
       } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `USERS` ADD COLUMN `reset_token_hash` CHAR(64) NULL");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `USERS` ADD COLUMN `token_version` INT NOT NULL DEFAULT 0");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `USERS` ADD COLUMN `password_changed_at` DATETIME NULL");
+      } catch (_) {}
 
-      // 9. Seed the 4 Initial Roles
+      // 12. Safely support Interview stage and fields on APPLICATION
+      try {
+        await connection.query("ALTER TABLE `APPLICATION` MODIFY COLUMN `status` ENUM('applied', 'reviewing', 'shortlisted', 'interview', 'rejected', 'hired') DEFAULT 'applied'");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `APPLICATION` ADD COLUMN `interview_date` DATETIME NULL");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `APPLICATION` ADD COLUMN `interview_status` VARCHAR(50) DEFAULT 'SCHEDULED'");
+      } catch (_) {}
+
+      // 13. INTERVIEWS Table (For scheduled candidate-client interviews)
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS \`INTERVIEWS\` (
+          \`id\` VARCHAR(36) PRIMARY KEY,
+          \`application_id\` VARCHAR(36) NULL,
+          \`candidate_id\` VARCHAR(36) NOT NULL,
+          \`job_id\` VARCHAR(36) NOT NULL,
+          \`employer_id\` VARCHAR(36) NULL,
+          \`interview_date\` DATETIME NOT NULL,
+          \`round_name\` VARCHAR(100) DEFAULT 'Technical & Culture Round',
+          \`status\` ENUM('SCHEDULED', 'COMPLETED', 'CANCELLED', 'RESCHEDULED', 'NO_SHOW') DEFAULT 'SCHEDULED',
+          \`interviewer_user_id\` VARCHAR(36) NULL,
+          \`meeting_link\` VARCHAR(500) NULL,
+          \`notes\` TEXT NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          INDEX \`idx_int_date\` (\`interview_date\`),
+          INDEX \`idx_int_status\` (\`status\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+      `);
+
+      // 14. EMAIL_LOGS Table (For tracking delivery health, bounce rates, and safe audit)
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS \`EMAIL_LOGS\` (
+          \`id\` VARCHAR(36) PRIMARY KEY,
+          \`recipient_email\` VARCHAR(255) NOT NULL,
+          \`subject\` VARCHAR(255) NOT NULL,
+          \`template_type\` VARCHAR(100) DEFAULT 'GENERAL',
+          \`status\` ENUM('sent', 'failed', 'bounced', 'simulated') DEFAULT 'sent',
+          \`provider\` VARCHAR(50) DEFAULT 'resend',
+          \`provider_message_id\` VARCHAR(255) NULL,
+          \`error_message\` TEXT NULL,
+          \`sent_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          INDEX \`idx_email_status\` (\`status\`),
+          INDEX \`idx_email_sent_at\` (\`sent_at\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+      `);
+
+      // 15. Module 2: Job Management, Archive, Candidate Access, Application Snapshots, Callbacks
+      try {
+        await connection.query("ALTER TABLE `JOB` ADD COLUMN `is_recommended` TINYINT(1) DEFAULT 0");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `JOB` ADD COLUMN `allow_candidate_access` TINYINT(1) DEFAULT 1");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `JOB` ADD COLUMN `is_archived` TINYINT(1) DEFAULT 0");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `JOB` ADD COLUMN `archive_reason` TEXT NULL");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `JOB` ADD COLUMN `archived_at` TIMESTAMP NULL");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `JOB` ADD COLUMN `restored_at` TIMESTAMP NULL");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `JOB` ADD COLUMN `restore_note` TEXT NULL");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `JOB` ADD COLUMN `manual_company_name` VARCHAR(255) NULL");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `JOB` ADD COLUMN `manual_contact_person` VARCHAR(255) NULL");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `JOB` ADD COLUMN `manual_contact_phone` VARCHAR(50) NULL");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `JOB` ADD COLUMN `manual_contact_email` VARCHAR(255) NULL");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `JOB` ADD COLUMN `manual_company_website` VARCHAR(255) NULL");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `JOB` ADD COLUMN `last_updated_by_user_id` VARCHAR(36) NULL");
+      } catch (_) {}
+
+      // Safe enhancements for APPLICATION
+      try {
+        await connection.query("ALTER TABLE `APPLICATION` MODIFY COLUMN `status` ENUM('applied', 'reviewing', 'under_review', 'shortlisted', 'interview', 'selected', 'hired', 'rejected', 'on_hold') DEFAULT 'applied'");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `APPLICATION` ADD COLUMN `resume_id` VARCHAR(36) NULL");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `APPLICATION` ADD COLUMN `resume_url` VARCHAR(500) NULL");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `APPLICATION` ADD COLUMN `resume_filename` VARCHAR(255) NULL");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `APPLICATION` ADD COLUMN `candidate_snapshot` TEXT NULL");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `APPLICATION` ADD COLUMN `rejection_reason` TEXT NULL");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `APPLICATION` ADD COLUMN `status_updated_by_user_id` VARCHAR(36) NULL");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `APPLICATION` ADD COLUMN `status_updated_at` TIMESTAMP NULL");
+      } catch (_) {}
+
+      // Safe enhancements for CANDIDATE_SHARING (Access code security)
+      try {
+        await connection.query("ALTER TABLE `CANDIDATE_SHARING` ADD COLUMN `access_code_encrypted` VARCHAR(255) NULL");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `CANDIDATE_SHARING` ADD COLUMN `access_code_hash` VARCHAR(128) NULL");
+      } catch (_) {}
+
+      // Safe enhancements for RECRUITMENT_ACTIVITY
+      try {
+        await connection.query("ALTER TABLE `RECRUITMENT_ACTIVITY` ADD COLUMN `changed_field` VARCHAR(100) NULL");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `RECRUITMENT_ACTIVITY` ADD COLUMN `previous_value` TEXT NULL");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `RECRUITMENT_ACTIVITY` ADD COLUMN `new_value` TEXT NULL");
+      } catch (_) {}
+
+      // 16. CALLBACK_REQUEST Table (For employer callback requests when candidate access is OFF)
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS \`CALLBACK_REQUEST\` (
+          \`id\` VARCHAR(36) PRIMARY KEY,
+          \`job_id\` VARCHAR(36) NOT NULL,
+          \`employer_id\` VARCHAR(36) NULL,
+          \`requested_by_user_id\` VARCHAR(36) NOT NULL,
+          \`assigned_to_user_id\` VARCHAR(36) NULL,
+          \`status\` ENUM('NEW', 'ASSIGNED', 'IN_PROGRESS', 'RESOLVED', 'New', 'Assigned', 'In Progress', 'Resolved') DEFAULT 'NEW',
+          \`follow_up_date\` DATE NULL,
+          \`internal_notes\` TEXT NULL,
+          \`resolution_outcome\` TEXT NULL,
+          \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX \`idx_cb_job\` (\`job_id\`),
+          INDEX \`idx_cb_employer\` (\`employer_id\`),
+          INDEX \`idx_cb_assigned\` (\`assigned_to_user_id\`),
+          INDEX \`idx_cb_status\` (\`status\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+      `);
+
+      try {
+        await connection.query(`
+          ALTER TABLE \`CALLBACK_REQUEST\` 
+          MODIFY COLUMN \`status\` ENUM('NEW', 'ASSIGNED', 'IN_PROGRESS', 'RESOLVED', 'New', 'Assigned', 'In Progress', 'Resolved') DEFAULT 'NEW'
+        `);
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `CALLBACK_REQUEST` MODIFY COLUMN `job_id` VARCHAR(36) NULL");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `CALLBACK_REQUEST` ADD COLUMN `source` VARCHAR(50) DEFAULT 'JOB_APPLICANTS'");
+      } catch (_) {}
+      try {
+        await connection.query("ALTER TABLE `EMPLOYERS` ADD COLUMN `candidate_access_enabled` TINYINT(1) DEFAULT 0");
+      } catch (_) {}
+
+      // 9. Seed the Initial Roles
       const INITIAL_ROLES = [
         { key: 'director', name: 'Director (Main Admin)', desc: 'Full authority across all modules, final candidate sharing approval, permission configuration', sys: 1 },
+        { key: 'bd', name: 'Business Development (BD)', desc: 'Manage verified business development company leads, follow-ups, and mandate conversion', sys: 1 },
         { key: 'bd_lead', name: 'BD Lead', desc: 'Manage business development leads, follow-ups, contact history, and handover to TL Coordinator', sys: 1 },
         { key: 'tl_coordinator', name: 'TL / Client Coordinator', desc: 'Oversee assigned clients, allocate recruitment tasks, track interviews, manage enquiries and coordinate candidate submissions', sys: 1 },
+        { key: 'team_manager', name: 'Team Manager', desc: 'Supervises recruitment team, coordinates recruiters, allocates mandates, tracks candidate sourcing and team performance', sys: 1 },
         { key: 'recruiter', name: 'Recruiter', desc: 'Source and screen candidates for assigned jobs, log candidate activity, submit recommendations for review', sys: 1 }
       ];
 
@@ -689,10 +880,10 @@ const INITIAL_BENEFITS = [
         );
       }
 
-      // 10. Seed Permissions for the 4 Initial Roles
+      // 10. Seed Permissions for the Initial Roles
       const ALL_MODULES = [
         'dashboard', 'candidates', 'jobs', 'applications', 'candidate_sharing',
-        'enquiries', 'employers', 'leads', 'team', 'roles', 'activity_log'
+        'enquiries', 'employers', 'leads', 'team', 'roles', 'activity_log', 'callbacks'
       ];
       const ALL_ACTIONS = ['view', 'create', 'edit', 'delete', 'assign', 'approve', 'share', 'export'];
 
@@ -706,7 +897,7 @@ const INITIAL_BENEFITS = [
         }
       }
 
-      // BD Lead permissions
+      // BD Lead and BD permissions
       const BD_PERMS = [
         { mod: 'dashboard', act: 'view' },
         { mod: 'leads', act: 'view' },
@@ -718,17 +909,22 @@ const INITIAL_BENEFITS = [
       for (const p of BD_PERMS) {
         await connection.query(
           'INSERT IGNORE INTO ROLE_PERMISSIONS (id, role_key, module, action, is_granted) VALUES (?, ?, ?, ?, 1)',
-          ['perm-bd-' + p.mod + '-' + p.act, 'bd_lead', p.mod, p.act]
+          ['perm-bdlead-' + p.mod + '-' + p.act, 'bd_lead', p.mod, p.act]
+        );
+        await connection.query(
+          'INSERT IGNORE INTO ROLE_PERMISSIONS (id, role_key, module, action, is_granted) VALUES (?, ?, ?, ?, 1)',
+          ['perm-bd-' + p.mod + '-' + p.act, 'bd', p.mod, p.act]
         );
       }
 
-      // TL Coordinator permissions
+      // TL Coordinator & Team Manager permissions
       const TL_PERMS = [
         { mod: 'dashboard', act: 'view' },
         { mod: 'candidates', act: 'view' },
         { mod: 'candidates', act: 'edit' },
         { mod: 'jobs', act: 'view' },
         { mod: 'jobs', act: 'assign' },
+        { mod: 'jobs', act: 'edit' },
         { mod: 'applications', act: 'view' },
         { mod: 'applications', act: 'edit' },
         { mod: 'candidate_sharing', act: 'view' },
@@ -737,12 +933,19 @@ const INITIAL_BENEFITS = [
         { mod: 'enquiries', act: 'edit' },
         { mod: 'enquiries', act: 'assign' },
         { mod: 'employers', act: 'view' },
+        { mod: 'team', act: 'view' },
+        { mod: 'team', act: 'create' },
+        { mod: 'team', act: 'edit' },
         { mod: 'activity_log', act: 'view' }
       ];
       for (const p of TL_PERMS) {
         await connection.query(
           'INSERT IGNORE INTO ROLE_PERMISSIONS (id, role_key, module, action, is_granted) VALUES (?, ?, ?, ?, 1)',
           ['perm-tl-' + p.mod + '-' + p.act, 'tl_coordinator', p.mod, p.act]
+        );
+        await connection.query(
+          'INSERT IGNORE INTO ROLE_PERMISSIONS (id, role_key, module, action, is_granted) VALUES (?, ?, ?, ?, 1)',
+          ['perm-tm-' + p.mod + '-' + p.act, 'team_manager', p.mod, p.act]
         );
       }
 
@@ -757,6 +960,10 @@ const INITIAL_BENEFITS = [
         { mod: 'applications', act: 'edit' },
         { mod: 'candidate_sharing', act: 'view' },
         { mod: 'candidate_sharing', act: 'create' },
+        { mod: 'enquiries', act: 'view' },
+        { mod: 'enquiries', act: 'edit' },
+        { mod: 'callbacks', act: 'view' },
+        { mod: 'callbacks', act: 'edit' },
         { mod: 'activity_log', act: 'view' }
       ];
       for (const p of REC_PERMS) {
@@ -831,6 +1038,59 @@ const INITIAL_BENEFITS = [
       return false;
     }
 
+    throw new Error(`MySQL Connection Failure: ${err.message}`);
+  }
+}
+
+async function initDB() {
+  let host, port, user, password, database;
+
+  if (process.env.NODE_ENV === 'test' && process.env.DATABASE_TEST_MODE === 'isolated-mysql') {
+    const { getIsolatedTestConfig } = require('./testDatabaseSafety');
+    const testConfig = getIsolatedTestConfig(process.env);
+    host = testConfig.host;
+    port = testConfig.port;
+    user = testConfig.user;
+    password = testConfig.password;
+    database = testConfig.database;
+  } else {
+    host = process.env.DB_HOST || 'localhost';
+    port = process.env.DB_PORT || 3306;
+    user = process.env.DB_USER || 'root';
+    password = process.env.DB_PASSWORD !== undefined ? process.env.DB_PASSWORD : '';
+    database = process.env.DB_NAME || 'vakancy_main_db';
+  }
+
+  try {
+    const poolConfig = {
+      host,
+      user,
+      password,
+      database,
+      port,
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0
+    };
+    if (process.env.DB_SSL === 'true' || process.env.DB_SSL === 'required') {
+      poolConfig.ssl = {
+        rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false'
+      };
+    }
+    pool = mysql.createPool(poolConfig);
+    const connection = await pool.getConnection();
+    await connection.query('SELECT 1');
+    connection.release();
+    isUsingFallback = false;
+    console.log(`Connected to the configured MySQL database: ${database} (schema unchanged).`);
+    return true;
+  } catch (err) {
+    if (process.env.USE_IN_MEMORY_DB === 'true') {
+      console.warn('Explicit USE_IN_MEMORY_DB=true enabled; using the in-memory fallback.');
+      isUsingFallback = true;
+      loadMemorySeed();
+      return false;
+    }
     throw new Error(`MySQL Connection Failure: ${err.message}`);
   }
 }
@@ -1004,9 +1264,50 @@ function executeInMemoryQuery(sql, params = []) {
 }
 
 // Database initialization managed by server startup
+async function withTransaction(callback) {
+  if (isUsingFallback || !pool) {
+    return await callback({
+      query: (sql, params) => executeInMemoryQuery(sql, params)
+    });
+  }
+  const connection = await pool.getConnection();
+  await connection.beginTransaction();
+  try {
+    const tx = {
+      query: async (sql, params = []) => {
+        const [rows] = await connection.query(sql, params);
+        return rows;
+      },
+      connection
+    };
+    const result = await callback(tx);
+    await connection.commit();
+    return result;
+  } catch (error) {
+    try {
+      await connection.rollback();
+    } catch (rbErr) {
+      console.warn('Rollback notice:', rbErr.message);
+    }
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+async function closeDB() {
+  if (pool) {
+    await pool.end();
+    pool = null;
+  }
+}
+
 module.exports = {
+  closeDB,
+  withTransaction,
   query,
   initDB,
   memoryDb,
-  isFallback: () => isUsingFallback
+  isFallback: () => isUsingFallback,
+  getPool: () => pool
 };

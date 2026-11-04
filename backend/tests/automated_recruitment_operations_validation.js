@@ -340,6 +340,28 @@ async function runSuite() {
     const hasVerifyLog = activities.some(a => a.action_type === 'VERIFY_COMMERCIAL_PAYMENT');
     assert(hasVerifyLog, 'RECRUITMENT_ACTIVITY tracks VERIFY_COMMERCIAL_PAYMENT');
 
+    // 11. Automated Test Isolation & Teardown
+    console.log('\nStep 10: Cleaning up test artifacts for test isolation...');
+    try {
+      const db = require('../config/db');
+      await db.initDB();
+      if (testJobId) {
+        await db.query('DELETE FROM JOB_KEYWORD WHERE job_id = ?', [testJobId]);
+        await db.query('DELETE FROM RECRUITMENT_COMMERCIALS WHERE job_id = ?', [testJobId]);
+        await db.query('DELETE FROM APPLICATION WHERE job_id = ?', [testJobId]);
+        await db.query('DELETE FROM JOB WHERE id = ?', [testJobId]);
+      }
+      if (createdEnquiryId) {
+        await db.query('DELETE FROM EMPLOYER_ENQUIRY WHERE id = ?', [createdEnquiryId]);
+      }
+      if (commercialId) {
+        await db.query('DELETE FROM RECRUITMENT_COMMERCIALS WHERE id = ?', [commercialId]);
+      }
+      console.log('  ✓ PASS: Automated test teardown completed successfully');
+    } catch (cleanErr) {
+      console.warn('Notice during test teardown:', cleanErr.message);
+    }
+
     console.log('\n====================================================');
     console.log(`TEST SUITE COMPLETE: ${passedTests} PASSED, ${failedTests} FAILED`);
     console.log('====================================================');

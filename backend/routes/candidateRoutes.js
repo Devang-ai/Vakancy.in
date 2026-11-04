@@ -73,7 +73,7 @@ router.delete('/me/languages/:id', authenticateToken, authorizeRoles('candidate'
 
 // Resumes
 router.get('/me/resumes', authenticateToken, authorizeRoles('candidate'), getResumes);
-router.post('/me/resumes', authenticateToken, authorizeRoles('candidate'), upload.single('resume'), uploadResume);
+router.post('/me/resumes', authenticateToken, authorizeRoles('candidate'), upload.forPurpose('resume').single('resume'), upload.validate('resume'), uploadResume);
 router.get('/me/resumes/:id/view', authenticateToken, authorizeRoles('candidate'), viewResume);
 router.put('/me/resumes/:id/set-primary', authenticateToken, authorizeRoles('candidate'), setPrimaryResume);
 router.delete('/me/resumes/:id', authenticateToken, authorizeRoles('candidate'), deleteResume);

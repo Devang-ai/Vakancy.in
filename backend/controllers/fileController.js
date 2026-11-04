@@ -1,5 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const db = require('../config/db');
+const { getUserScope } = require('../middleware/rbacMiddleware');
 const {
   uploadBufferToCloudinary,
   deleteFromCloudinary,
@@ -23,18 +24,87 @@ const isEmployerAuthorizedForCandidateFile = async (employerUserId, candidateId,
     );
     if (jobApps && jobApps.length > 0) return true;
 
-    // 3. Check if candidate is unlocked/shared via candidate unlock or pipeline share
-    const unlocks = await db.query(
-      'SELECT cu.id FROM CANDIDATE_UNLOCK cu JOIN EMPLOYER_SUBSCRIPTION es ON cu.subscription_id = es.id WHERE cu.candidate_id = ? AND es.employer_id = ?',
-      [candidateId, employerId]
-    );
-    if (unlocks && unlocks.length > 0) return true;
+    // 3. Candidate sharing requires explicit consent and an approved, unexpired share.
+    const shares = await db.query(`
+      SELECT cs.id FROM CANDIDATE_SHARING cs
+      LEFT JOIN JOB j ON cs.job_id = j.id
+      WHERE cs.candidate_id = ? AND cs.status = 'APPROVED' AND cs.candidate_consent = 1
+        AND (cs.expires_at IS NULL OR cs.expires_at > CURRENT_TIMESTAMP)
+        AND (cs.client_id = ? OR j.employer_id = ? OR j.client_id = ?)
+      LIMIT 1
+    `, [candidateId, employerId, employerId, employerId]);
+    if (shares && shares.length > 0) return true;
 
     return false;
   } catch (err) {
     console.error('Error verifying employer candidate file access authorization:', err);
     return false;
   }
+};
+
+const hasPermission = async (role, moduleName, actionName) => {
+  const rows = await db.query(
+    'SELECT is_granted FROM ROLE_PERMISSIONS WHERE role_key = ? AND module = ? AND action = ? LIMIT 1',
+    [role, moduleName, actionName]
+  );
+  return Boolean(rows?.[0]?.is_granted);
+};
+
+const isInternalAuthorizedForFile = async (user, file) => {
+  const role = String(user.role || '').toLowerCase();
+  if (role === 'director' || role === 'main_admin' || user.is_main_admin === 1) return true;
+  if (!await hasPermission(role, 'applications', 'view')) return false;
+
+  const scope = await getUserScope(user.id, role);
+  if (scope.isGlobal && role === 'admin') return true;
+
+  let jobId = null;
+  if (file.application_id) {
+    const applications = await db.query('SELECT job_id, candidate_id FROM APPLICATION WHERE id = ? LIMIT 1', [file.application_id]);
+    if (!applications.length || (file.candidate_id && String(applications[0].candidate_id) !== String(file.candidate_id))) return false;
+    jobId = applications[0].job_id;
+  } else if (file.candidate_id) {
+    const applications = await db.query('SELECT job_id FROM APPLICATION WHERE candidate_id = ?', [file.candidate_id]);
+    return applications.some((application) => scope.jobIds.includes(application.job_id));
+  }
+
+  return Boolean(jobId && scope.jobIds.includes(jobId));
+};
+
+const validateUploadAssociations = async (user, associations) => {
+  const role = String(user.role || '').toLowerCase();
+  const { candidate_id, employer_id, application_id } = associations;
+
+  if (!candidate_id && !employer_id && !application_id) return true;
+
+  if (role === 'candidate') {
+    const candidates = await db.query('SELECT id FROM CANDIDATES WHERE user_id = ? LIMIT 1', [user.id]);
+    const ownCandidateId = candidates?.[0]?.id;
+    if (candidate_id && String(candidate_id) !== String(ownCandidateId)) return false;
+    if (employer_id) return false;
+    if (application_id) {
+      const apps = await db.query('SELECT id FROM APPLICATION WHERE id = ? AND candidate_id = ? LIMIT 1', [application_id, ownCandidateId]);
+      if (!apps.length) return false;
+    }
+    return true;
+  }
+
+  if (role === 'employer') {
+    const employers = await db.query('SELECT id FROM EMPLOYERS WHERE user_id = ? LIMIT 1', [user.id]);
+    const ownEmployerId = employers?.[0]?.id;
+    if (employer_id && String(employer_id) !== String(ownEmployerId)) return false;
+    if (candidate_id) return false;
+    if (application_id) {
+      const apps = await db.query(`
+        SELECT a.id FROM APPLICATION a JOIN JOB j ON a.job_id = j.id
+        WHERE a.id = ? AND j.employer_id = ? LIMIT 1
+      `, [application_id, ownEmployerId]);
+      if (!apps.length) return false;
+    }
+    return true;
+  }
+
+  return isInternalAuthorizedForFile(user, { candidate_id, employer_id, application_id });
 };
 
 /**
@@ -52,6 +122,15 @@ const uploadFile = async (req, res) => {
 
     const { file_type = 'general', candidate_id, employer_id, application_id } = req.body;
     const userId = req.user.id;
+
+    const associationsAuthorized = await validateUploadAssociations(req.user, { candidate_id, employer_id, application_id });
+    if (!associationsAuthorized) {
+      return res.status(403).json({
+        success: false,
+        code: 'FILE_ASSOCIATION_FORBIDDEN',
+        message: 'You are not authorized to associate a file with the supplied record.'
+      });
+    }
 
     // Determine Cloudinary folder structure
     let folder = 'vakancy/general';
@@ -77,40 +156,21 @@ const uploadFile = async (req, res) => {
 
     const safePublicId = `${Date.now()}_${Math.round(Math.random() * 1e6)}`;
 
-    // Upload buffer to Cloudinary
+    const isPrivateDocument = Boolean(candidate_id || application_id || ['resume', 'document'].includes(file_type));
+
+    // Sensitive documents use authenticated delivery. Public upload URLs are
+    // acceptable only for non-sensitive assets such as company logos.
     const cloudinaryResult = await uploadBufferToCloudinary(req.file.buffer, {
       folder,
       public_id: safePublicId,
-      resource_type: resourceType
+      resource_type: resourceType,
+      type: isPrivateDocument ? 'authenticated' : 'upload'
     });
 
     const fileId = uuidv4();
     const secureUrl = cloudinaryResult.secure_url;
     const publicId = cloudinaryResult.public_id;
     const assetId = cloudinaryResult.asset_id || null;
-
-    // Ensure FILES table exists before insertion
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS \`FILES\` (
-        \`id\` VARCHAR(36) PRIMARY KEY,
-        \`owner_user_id\` VARCHAR(36) NOT NULL,
-        \`candidate_id\` VARCHAR(36),
-        \`employer_id\` VARCHAR(36),
-        \`application_id\` VARCHAR(36),
-        \`file_type\` VARCHAR(50) NOT NULL,
-        \`file_name\` VARCHAR(255) NOT NULL,
-        \`mime_type\` VARCHAR(100) NOT NULL,
-        \`file_size\` INT NOT NULL,
-        \`cloudinary_asset_id\` VARCHAR(255),
-        \`cloudinary_public_id\` VARCHAR(255) NOT NULL,
-        \`resource_type\` VARCHAR(50) DEFAULT 'auto',
-        \`delivery_type\` VARCHAR(50) DEFAULT 'upload',
-        \`secure_url\` TEXT NOT NULL,
-        \`folder\` VARCHAR(255),
-        \`created_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    `);
 
     // Insert metadata record into FILES
     await db.query(
@@ -144,8 +204,7 @@ const uploadFile = async (req, res) => {
         mime_type: req.file.mimetype,
         file_size: req.file.size,
         file_type,
-        secure_url: secureUrl,
-        cloudinary_public_id: publicId
+        access: isPrivateDocument ? 'authenticated' : 'owner'
       }
     });
   } catch (error) {
@@ -176,12 +235,12 @@ const getFileById = async (req, res) => {
 
     // Authorization check
     let authorized = false;
-    if (userRole === 'admin' || userRole === 'main_admin' || userRole === 'recruiter' || userRole === 'hr_manager' || userRole === 'hr_executive') {
-      authorized = true;
-    } else if (file.owner_user_id === userId) {
+    if (file.owner_user_id === userId) {
       authorized = true;
     } else if (userRole === 'employer' && file.candidate_id) {
       authorized = await isEmployerAuthorizedForCandidateFile(userId, file.candidate_id, file.application_id);
+    } else {
+      authorized = await isInternalAuthorizedForFile(req.user, file);
     }
 
     if (!authorized) {
@@ -190,6 +249,9 @@ const getFileById = async (req, res) => {
 
     // Do NOT expose Cloudinary API secrets
     delete file.cloudinary_asset_id;
+    delete file.cloudinary_public_id;
+    delete file.secure_url;
+    delete file.folder;
 
     res.json({
       success: true,
@@ -218,12 +280,12 @@ const downloadFile = async (req, res) => {
     const userId = req.user.id;
 
     let authorized = false;
-    if (userRole === 'admin' || userRole === 'main_admin' || userRole === 'recruiter' || userRole === 'hr_manager' || userRole === 'hr_executive') {
-      authorized = true;
-    } else if (file.owner_user_id === userId) {
+    if (file.owner_user_id === userId) {
       authorized = true;
     } else if (userRole === 'employer' && file.candidate_id) {
       authorized = await isEmployerAuthorizedForCandidateFile(userId, file.candidate_id, file.application_id);
+    } else {
+      authorized = await isInternalAuthorizedForFile(req.user, file);
     }
 
     if (!authorized) {
@@ -236,6 +298,10 @@ const downloadFile = async (req, res) => {
       type: file.delivery_type || 'upload',
       expires_in: 3600 // 1 hour expiry
     });
+
+    if (!signedUrl && (file.candidate_id || file.application_id || ['resume', 'document'].includes(file.file_type))) {
+      return res.status(503).json({ success: false, message: 'Secure file delivery is temporarily unavailable.' });
+    }
 
     res.json({
       success: true,
@@ -269,9 +335,9 @@ const deleteFile = async (req, res) => {
     const userId = req.user.id;
 
     let authorized = false;
-    if (userRole === 'admin' || userRole === 'main_admin' || userRole === 'recruiter' || userRole === 'hr_manager') {
+    if (file.owner_user_id === userId) {
       authorized = true;
-    } else if (file.owner_user_id === userId) {
+    } else if (userRole === 'director' || userRole === 'main_admin' || req.user.is_main_admin === 1) {
       authorized = true;
     }
 
@@ -296,5 +362,9 @@ module.exports = {
   uploadFile,
   getFileById,
   downloadFile,
-  deleteFile
+  deleteFile,
+  __test: {
+    validateUploadAssociations,
+    isInternalAuthorizedForFile
+  }
 };

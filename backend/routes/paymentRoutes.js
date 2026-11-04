@@ -1,10 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { createRazorpayOrder, verifyPayment, getPaymentHistory } = require('../controllers/paymentController');
+const { getPaymentHistory } = require('../controllers/paymentController');
 const { authenticateToken } = require('../middleware/authMiddleware');
+const { paymentUnavailable } = require('../middleware/securityMiddleware');
 
-router.post('/create-order', authenticateToken, createRazorpayOrder);
-router.post('/verify-payment', authenticateToken, verifyPayment);
+// Paid checkout is intentionally disabled. Keep historical records readable to their owner.
+router.post('/create-order', paymentUnavailable);
+router.post('/verify-payment', paymentUnavailable);
 router.get('/history', authenticateToken, getPaymentHistory);
 
 module.exports = router;

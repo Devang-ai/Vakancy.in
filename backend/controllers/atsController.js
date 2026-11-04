@@ -100,17 +100,20 @@ const assignToPipeline = async (req, res) => {
     }
 
     const pipId = uuidv4();
-    await db.query(
-      'INSERT INTO CANDIDATE_PIPELINE (id, candidate_id, job_id, client_id, stage_id, recruiter_id) VALUES (?, ?, ?, ?, ?, ?)',
-      [pipId, candidate_id, job_id || null, client_id || null, stage, recruiterId]
-    );
-
-    // Log pipeline stage history
     const histId = uuidv4();
-    await db.query(
-      'INSERT INTO PIPELINE_STAGE_HISTORY (id, pipeline_id, to_stage_id, moved_by, remarks) VALUES (?, ?, ?, ?, "Assigned candidate to job pipeline.")',
-      [histId, pipId, stage, recruiterId]
-    );
+
+    await db.withTransaction(async (tx) => {
+      await tx.query(
+        'INSERT INTO CANDIDATE_PIPELINE (id, candidate_id, job_id, client_id, stage_id, recruiter_id) VALUES (?, ?, ?, ?, ?, ?)',
+        [pipId, candidate_id, job_id || null, client_id || null, stage, recruiterId]
+      );
+
+      // Log pipeline stage history
+      await tx.query(
+        'INSERT INTO PIPELINE_STAGE_HISTORY (id, pipeline_id, to_stage_id, moved_by, remarks) VALUES (?, ?, ?, ?, "Assigned candidate to job pipeline.")',
+        [histId, pipId, stage, recruiterId]
+      );
+    });
 
     res.status(201).json({ success: true, message: 'Candidate assigned to ATS pipeline.', pipeline_id: pipId });
   } catch (error) {
@@ -131,16 +134,17 @@ const moveCandidateStage = async (req, res) => {
 
     const pipeline = pipelines[0];
     const fromStageId = pipeline.stage_id;
-
-    // Update pipeline stage
-    await db.query('UPDATE CANDIDATE_PIPELINE SET stage_id = ?, recruiter_id = ? WHERE id = ?', [to_stage_id, movedBy, pipeline_id]);
-
-    // Log history record as required by ERD PIPELINE_STAGE_HISTORY
     const histId = uuidv4();
-    await db.query(
-      'INSERT INTO PIPELINE_STAGE_HISTORY (id, pipeline_id, from_stage_id, to_stage_id, moved_by, remarks) VALUES (?, ?, ?, ?, ?, ?)',
-      [histId, pipeline_id, fromStageId, to_stage_id, movedBy, remarks || null]
-    );
+
+    // Update pipeline stage and log history record atomically
+    await db.withTransaction(async (tx) => {
+      await tx.query('UPDATE CANDIDATE_PIPELINE SET stage_id = ?, recruiter_id = ? WHERE id = ?', [to_stage_id, movedBy, pipeline_id]);
+
+      await tx.query(
+        'INSERT INTO PIPELINE_STAGE_HISTORY (id, pipeline_id, from_stage_id, to_stage_id, moved_by, remarks) VALUES (?, ?, ?, ?, ?, ?)',
+        [histId, pipeline_id, fromStageId, to_stage_id, movedBy, remarks || null]
+      );
+    });
 
     res.json({ success: true, message: 'Candidate stage updated successfully.' });
   } catch (error) {
@@ -240,6 +244,24 @@ const addCandidateNote = async (req, res) => {
       'INSERT INTO CANDIDATE_NOTE (id, candidate_id, author_id, pipeline_id, note) VALUES (?, ?, ?, ?, ?)',
       [id, candidate_id, req.user.id, pipeline_id || null, note]
     );
+
+    // Check if candidate exists and has inboundEmail notification preference enabled
+    try {
+      const candRows = await db.query('SELECT c.user_id, c.name, u.email FROM CANDIDATES c JOIN USERS u ON c.user_id = u.id WHERE c.id = ?', [candidate_id]);
+      if (candRows.length > 0 && candRows[0].user_id && candRows[0].email) {
+        const { canSendInboundEmail } = require('../services/notificationPreferenceService');
+        const { sendRecruiterMessageNotificationEmail } = require('../services/emailService');
+        if (await canSendInboundEmail(candRows[0].user_id)) {
+          sendRecruiterMessageNotificationEmail(candRows[0].email, {
+            recipientName: candRows[0].name || 'Candidate',
+            senderName: req.user?.name || 'Recruitment Team',
+            jobTitle: 'Your Candidate Profile'
+          }).catch(e => console.warn('Recruiter note notice email error:', e.message));
+        }
+      }
+    } catch (candNotifErr) {
+      console.warn('⚠️ [Candidate Note Notice Warning]:', candNotifErr.message);
+    }
 
     res.status(201).json({ success: true, message: 'Note added successfully.', id });
   } catch (error) {

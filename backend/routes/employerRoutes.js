@@ -19,7 +19,11 @@ const {
   getEmployerJobApplicants,
   getEmployerCandidateResume,
   createEmployerApplicationEnquiry,
-  getEmployerApplicationEnquiries
+  getEmployerApplicationEnquiries,
+  requestEmployerCallback,
+  getEmployerCandidateDatabase,
+  requestEmployerDatabaseCallback,
+  getEmployerJobApplicantResume
 } = require('../controllers/employerController');
 const { authenticateToken } = require('../middleware/authMiddleware');
 const { authorizeRoles } = require('../middleware/roleMiddleware');
@@ -28,12 +32,13 @@ const upload = require('../middleware/uploadMiddleware');
 router.get('/profile', authenticateToken, authorizeRoles('employer', 'recruiter', 'admin'), getEmployerProfile);
 router.put('/profile', authenticateToken, authorizeRoles('employer', 'recruiter', 'admin'), updateEmployerProfile);
 router.put('/onboarding', authenticateToken, authorizeRoles('employer', 'recruiter', 'admin'), updateEmployerOnboarding);
-router.post('/profile/logo', authenticateToken, authorizeRoles('employer', 'recruiter', 'admin'), upload.single('logo'), uploadCompanyLogo);
+router.post('/profile/logo', authenticateToken, authorizeRoles('employer', 'recruiter', 'admin'), upload.forPurpose('logo').single('logo'), upload.validate('logo'), uploadCompanyLogo);
 
 router.get('/dashboard-stats', authenticateToken, authorizeRoles('employer', 'recruiter', 'admin'), getEmployerDashboardStats);
 router.get('/jobs', authenticateToken, authorizeRoles('employer', 'recruiter', 'admin'), getEmployerJobs);
 router.get('/jobs/:id', authenticateToken, authorizeRoles('employer', 'recruiter', 'admin'), getEmployerJobById);
 router.get('/jobs/:id/applicants', authenticateToken, authorizeRoles('employer', 'recruiter', 'admin'), getEmployerJobApplicants);
+router.get('/jobs/:jobId/applicants/:appId/resume', authenticateToken, authorizeRoles('employer', 'recruiter', 'admin'), getEmployerJobApplicantResume);
 router.get('/resumes/:id', authenticateToken, authorizeRoles('employer', 'recruiter', 'admin'), getEmployerCandidateResume);
 router.post('/jobs', authenticateToken, authorizeRoles('employer', 'recruiter', 'admin'), createEmployerJob);
 router.post('/jobs/generate-jd', authenticateToken, authorizeRoles('employer', 'recruiter', 'admin'), generateEmployerJobDescription);
@@ -47,5 +52,8 @@ router.patch('/jobs/:id/status', authenticateToken, authorizeRoles('employer', '
 router.put('/jobs/:id/status', authenticateToken, authorizeRoles('employer', 'recruiter', 'admin'), toggleEmployerJobStatus);
 router.post('/applications/:id/enquiry', authenticateToken, authorizeRoles('employer', 'recruiter', 'admin'), createEmployerApplicationEnquiry);
 router.get('/applications/:id/enquiries', authenticateToken, authorizeRoles('employer', 'recruiter', 'admin'), getEmployerApplicationEnquiries);
+router.post('/jobs/:id/callback', authenticateToken, authorizeRoles('employer', 'recruiter', 'admin', 'director'), requestEmployerCallback);
+router.get('/candidate-database', authenticateToken, authorizeRoles('employer', 'recruiter', 'admin', 'director'), getEmployerCandidateDatabase);
+router.post('/candidate-database/callback', authenticateToken, authorizeRoles('employer', 'recruiter', 'admin', 'director'), requestEmployerDatabaseCallback);
 
 module.exports = router;

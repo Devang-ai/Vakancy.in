@@ -25,8 +25,8 @@ router.post('/alerts', authenticateToken, authorizeRoles('candidate'), createJob
 router.put('/alerts/:id/toggle', authenticateToken, authorizeRoles('candidate'), toggleJobAlert);
 router.delete('/alerts/:id', authenticateToken, authorizeRoles('candidate'), deleteJobAlert);
 
-// Candidate Delivery Preferences
-router.get('/preferences', authenticateToken, authorizeRoles('candidate'), getNotificationPreferences);
-router.put('/preferences', authenticateToken, authorizeRoles('candidate'), updateNotificationPreferences);
+// Notification Delivery Preferences (Candidate & Employer self-service, user-scoped)
+router.get('/preferences', authenticateToken, authorizeRoles('candidate', 'employer'), getNotificationPreferences);
+router.put('/preferences', authenticateToken, authorizeRoles('candidate', 'employer'), updateNotificationPreferences);
 
 module.exports = router;

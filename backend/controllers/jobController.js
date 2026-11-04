@@ -239,15 +239,21 @@ const getJobs = async (req, res) => {
     let whereClauses = [];
     let queryParams = [];
 
-    // 1. Published / Public status enforcement: drafts never appear in candidate search or employer-facing general search
+    // 1. Published / Public status enforcement: drafts and archived jobs never appear in candidate search or employer-facing general search
     if (!isInternalStaff) {
-      whereClauses.push("(j.status = 'open' OR j.status = 'active') AND (j.is_internal_only IS NULL OR j.is_internal_only = 0)");
-    } else if (status) {
-      whereClauses.push("j.status = ?");
-      queryParams.push(status);
+      whereClauses.push("(j.status = 'open' OR j.status = 'active') AND (j.is_internal_only IS NULL OR j.is_internal_only = 0) AND (j.is_archived IS NULL OR j.is_archived = 0)");
+    } else {
+      if (status && status !== 'all') {
+        if (status === 'archived') {
+          whereClauses.push("j.is_archived = 1");
+        } else {
+          whereClauses.push("j.status = ? AND (j.is_archived IS NULL OR j.is_archived = 0)");
+          queryParams.push(status);
+        }
+      }
     }
 
-    // 1b. Recommended Jobs filter — Phase 7: return only jobs genuinely marked as Vakancy.in-recommended
+    // 1b. Recommended Jobs filter — Return only jobs explicitly marked as recommended
     const isRecFilterRequested = Boolean(
       recommended === 'true' ||
       recommended === true ||
@@ -257,7 +263,7 @@ const getJobs = async (req, res) => {
       is_recommended === '1'
     );
     if (isRecFilterRequested) {
-      whereClauses.push("(j.priority = 'recommended' OR (j.priority != 'not_recommended' AND (j.created_by_type = 'INTERNAL_STAFF' OR j.source_type IN ('EXECUTIVE_SEARCH', 'Vakancy Recruitment'))))");
+      whereClauses.push("(j.is_recommended = 1 OR j.priority = 'recommended')");
     }
 
     if (employer_id) {
@@ -547,15 +553,15 @@ const getJobs = async (req, res) => {
         j.created_by_type,
         j.source_type,
         (CASE 
+          WHEN j.is_recommended = 1 THEN 1
           WHEN j.priority = 'recommended' THEN 1 
-          WHEN j.priority = 'not_recommended' THEN 0 
-          WHEN (j.created_by_type = 'INTERNAL_STAFF' OR j.source_type IN ('EXECUTIVE_SEARCH', 'Vakancy Recruitment')) THEN 1 
           ELSE 0 
         END) AS is_rec,
+        j.is_recommended,
         j.created_at,
         j.updated_at,
-        COALESCE(e.company_name, c.name, 'Vakancy Client') AS company_name,
-        e.website AS company_website,
+        COALESCE(e.company_name, c.name, j.manual_company_name, 'Vakancy Client') AS company_name,
+        COALESCE(e.website, j.manual_company_website) AS company_website,
         e.logo_url AS company_logo
       FROM JOB j
       LEFT JOIN EMPLOYERS e ON j.employer_id = e.id
@@ -682,8 +688,8 @@ const getJobById = async (req, res) => {
         j.source_type,
         j.created_at,
         j.updated_at,
-        COALESCE(e.company_name, c.name, 'Vakancy Client') AS company_name,
-        e.website AS company_website,
+        COALESCE(e.company_name, c.name, j.manual_company_name, 'Vakancy Client') AS company_name,
+        COALESCE(e.website, j.manual_company_website) AS company_website,
         e.logo_url AS company_logo,
         e.industry AS company_industry,
         e.company_size,
@@ -703,8 +709,8 @@ const getJobById = async (req, res) => {
 
     const isStaff = req.user && ['recruiter', 'admin', 'director', 'tl_coordinator', 'bd_lead'].includes(req.user.role);
 
-    // Strictly protect internal-only jobs from candidates, public, and employers
-    if (job.is_internal_only && !isStaff) {
+    // Strictly protect archived jobs and internal-only jobs from candidates, public, and employers
+    if ((job.is_internal_only || job.is_archived === 1) && !isStaff) {
       return res.status(404).json({ success: false, message: 'Job not found or is no longer accepting applications.' });
     }
 

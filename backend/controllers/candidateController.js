@@ -102,15 +102,41 @@ const getCandidateProfile = async (req, res) => {
 
 const updateCandidateProfile = async (req, res) => {
   try {
-    const { name, dob, current_location, profile_type } = req.body;
-    const candidates = await db.query('SELECT id FROM CANDIDATES WHERE user_id = ?', [req.user.id]);
+    const { name, dob, current_location, profile_type, phone } = req.body;
+    const candidates = await db.query('SELECT * FROM CANDIDATES WHERE user_id = ?', [req.user.id]);
     if (candidates.length === 0) return res.status(404).json({ success: false, message: 'Candidate not found.' });
 
-    await db.query(
-      'UPDATE CANDIDATES SET name = ?, dob = ?, current_location = ?, profile_type = ? WHERE id = ?',
-      [name, dob || null, current_location, profile_type || 'experienced', candidates[0].id]
-    );
-    res.json({ success: true, message: 'Profile updated successfully.' });
+    // Handle Phone Number update in USERS table
+    if (phone !== undefined) {
+      const cleanPhone = phone ? String(phone).trim() : null;
+      if (cleanPhone) {
+        const digits = cleanPhone.replace(/\D/g, '');
+        if (digits.length < 10 || digits.length > 15) {
+          return res.status(400).json({ success: false, message: 'Please enter a valid mobile number (10 to 15 digits).' });
+        }
+      }
+      await db.query('UPDATE USERS SET phone = ? WHERE id = ?', [cleanPhone, req.user.id]);
+    }
+
+    // Only update CANDIDATES fields if any are provided
+    if (name !== undefined || dob !== undefined || current_location !== undefined || profile_type !== undefined) {
+      const cand = candidates[0];
+      const newName = name !== undefined ? name : cand.name;
+      const newDob = dob !== undefined ? (dob || null) : cand.dob;
+      const newLoc = current_location !== undefined ? current_location : cand.current_location;
+      const newType = profile_type !== undefined ? (profile_type || 'experienced') : cand.profile_type;
+
+      await db.query(
+        'UPDATE CANDIDATES SET name = ?, dob = ?, current_location = ?, profile_type = ? WHERE id = ?',
+        [newName, newDob, newLoc, newType, cand.id]
+      );
+    }
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully.',
+      phone: phone !== undefined ? (phone ? String(phone).trim() : null) : undefined
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error updating profile.', error: error.message });
   }
@@ -409,16 +435,6 @@ const uploadResume = async (req, res) => {
     const folder = `vakancy/candidates/${candidateId}/resumes`;
     const safePublicId = `resume_${Date.now()}`;
 
-    const { cloudinary } = require('../services/cloudinaryService');
-    const runtimeConfig = cloudinary.config();
-    console.log('--- RUNTIME CLOUDINARY CONFIG ---');
-    console.log('Cloud Name:', runtimeConfig.cloud_name);
-    console.log('API Key:', runtimeConfig.api_key);
-    console.log('API Secret exists?', !!runtimeConfig.api_secret);
-    console.log('File Size:', req.file.size);
-    console.log('File Mime:', req.file.mimetype);
-    console.log('---------------------------------');
-
     // Upload as 'image' resource type so Cloudinary handles PDF correctly for browser preview.
     // Use 'authenticated' type to restrict public delivery of sensitive resumes.
     const cloudinaryResult = await uploadBufferToCloudinary(req.file.buffer, { 
@@ -444,7 +460,7 @@ const uploadResume = async (req, res) => {
       [id, candidateId, title, req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, ''), cloudinaryResult.asset_id || null, cloudinaryResult.public_id, cloudinaryResult.secure_url, req.file.mimetype, req.file.size, isPrimary]
     );
 
-    res.status(201).json({ success: true, message: 'Resume uploaded successfully.', resume: { id, file_url: cloudinaryResult.secure_url } });
+    res.status(201).json({ success: true, message: 'Resume uploaded successfully.', resume: { id, access: 'authenticated' } });
   } catch (error) {
     console.error('Resume Upload Error:', error);
     res.status(500).json({ success: false, message: 'Error uploading resume. Check server logs for details.' });
@@ -518,25 +534,17 @@ const viewResume = async (req, res) => {
     const resourceType = resume.file_url.includes('/raw/upload/') ? 'raw' : 'image';
     const deliveryType = resume.file_url.includes('/authenticated/') ? 'authenticated' : 'upload';
     
-    let deliveryUrl = resume.file_url;
-    
-    if (deliveryType === 'authenticated') {
-      deliveryUrl = cloudinary.utils.url(resume.cloudinary_public_id, {
-        type: 'authenticated',
-        resource_type: resourceType,
-        sign_url: true,
-        secure: true,
-        format: resourceType === 'image' ? 'pdf' : undefined
-      });
-    } else if (resourceType === 'image' && !resume.file_url.endsWith('.pdf')) {
-      // For old non-authenticated image PDFs, ensure the URL ends with .pdf
-      deliveryUrl = cloudinary.utils.url(resume.cloudinary_public_id, {
-        type: 'upload',
-        resource_type: 'image',
-        secure: true,
-        format: 'pdf'
-      });
+    if (!resume.cloudinary_public_id) {
+      return res.status(503).json({ success: false, message: 'Secure resume delivery is temporarily unavailable.' });
     }
+
+    const deliveryUrl = cloudinary.utils.url(resume.cloudinary_public_id, {
+      type: deliveryType,
+      resource_type: resourceType,
+      sign_url: true,
+      secure: true,
+      format: resourceType === 'image' ? 'pdf' : undefined
+    });
 
     res.json({ success: true, url: deliveryUrl });
   } catch(error) {
@@ -736,7 +744,7 @@ const getDashboard = async (req, res) => {
     const appStats = await db.query(`
       SELECT 
         COUNT(*) as total,
-        SUM(CASE WHEN status IN ('applied', 'in_review') THEN 1 ELSE 0 END) as underReview,
+        SUM(CASE WHEN status IN ('applied', 'reviewing', 'under_review') THEN 1 ELSE 0 END) as underReview,
         SUM(CASE WHEN status = 'shortlisted' THEN 1 ELSE 0 END) as shortlisted,
         SUM(CASE WHEN status = 'interview' THEN 1 ELSE 0 END) as interview,
         SUM(CASE WHEN status = 'selected' THEN 1 ELSE 0 END) as selected,

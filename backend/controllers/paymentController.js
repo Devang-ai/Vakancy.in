@@ -2,9 +2,19 @@ const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../config/db');
 const { razorpayInstance, key_id, key_secret } = require('../config/razorpay');
+const PAYMENTS_ENABLED = false;
+
+const disabledPaymentResponse = (res) => res.status(503).json({
+  success: false,
+  code: 'PAYMENTS_UNAVAILABLE',
+  message: 'Payments and paid feature activation are temporarily unavailable.'
+});
 
 // Create Razorpay Order
 const createRazorpayOrder = async (req, res) => {
+  if (!PAYMENTS_ENABLED) {
+    return disabledPaymentResponse(res);
+  }
   try {
     const { amount, payment_type, plan_id } = req.body;
     const userId = req.user.id;
@@ -73,6 +83,9 @@ const createRazorpayOrder = async (req, res) => {
 
 // Verify Payment & Activate Features
 const verifyPayment = async (req, res) => {
+  if (!PAYMENTS_ENABLED) {
+    return disabledPaymentResponse(res);
+  }
   try {
     const { payment_id, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
     const userId = req.user.id;

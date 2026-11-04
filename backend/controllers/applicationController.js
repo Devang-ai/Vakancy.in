@@ -1,7 +1,13 @@
 const { v4: uuidv4 } = require('uuid');
 const db = require('../config/db');
-const { sendEmployerApplicationReceivedEmail } = require('../services/emailService');
+const {
+  sendEmployerApplicationReceivedEmail,
+  sendCandidateApplicationConfirmationEmail,
+  sendApplicationStageEmail
+} = require('../services/emailService');
+const { canSendStageEmail } = require('../services/notificationPreferenceService');
 const { createEmployerNotification } = require('./notificationController');
+const { normalizeApplicationStatus, validateTransition } = require('../utils/applicationWorkflow');
 
 // Candidate apply for job
 const applyForJob = async (req, res) => {
@@ -23,20 +29,24 @@ const applyForJob = async (req, res) => {
     }
 
     // Ensure the job exists and is open for public applications
-    const targetJobs = await db.query('SELECT id, status, is_internal_only FROM JOB WHERE id = ?', [job_id]);
+    const targetJobs = await db.query('SELECT id, status, is_internal_only, is_archived, assigned_recruiter_id FROM JOB WHERE id = ?', [job_id]);
     if (targetJobs.length === 0) {
       return res.status(404).json({ success: false, message: 'Job not found.' });
     }
 
     const targetJob = targetJobs[0];
+    if (targetJob.is_archived === 1) {
+      return res.status(400).json({ success: false, message: 'Cannot apply for an archived job.' });
+    }
     if (targetJob.status !== 'open' && targetJob.status !== 'active') {
       return res.status(400).json({ success: false, message: 'Cannot apply for a job that is not actively accepting applications.' });
     }
 
-    const cands = await db.query('SELECT id FROM CANDIDATES WHERE user_id = ?', [userId]);
+    const cands = await db.query('SELECT * FROM CANDIDATES WHERE user_id = ?', [userId]);
     if (cands.length === 0) return res.status(404).json({ success: false, message: 'Candidate profile required.' });
 
-    const candidateId = cands[0].id;
+    const candDetail = cands[0];
+    const candidateId = candDetail.id;
 
     // Check if already applied
     const existing = await db.query('SELECT id FROM APPLICATION WHERE job_id = ? AND candidate_id = ?', [job_id, candidateId]);
@@ -44,38 +54,93 @@ const applyForJob = async (req, res) => {
       return res.status(400).json({ success: false, message: 'You have already applied for this job.' });
     }
 
-    const id = uuidv4();
-    await db.query(
-      'INSERT INTO APPLICATION (id, job_id, candidate_id, status) VALUES (?, ?, ?, "applied")',
-      [id, job_id, candidateId]
-    );
-
-    // Also auto-create Candidate Pipeline entry if recruiter/employer manages ATS
-    const defaultStage = await db.query("SELECT id FROM ATS_STAGE WHERE name = 'Applied' OR `order` = 1 LIMIT 1");
-    if (defaultStage.length > 0) {
-      const pipId = uuidv4();
-      const recruiterUsers = await db.query('SELECT id FROM USERS WHERE role = "recruiter" LIMIT 1');
-      const recruiterId = recruiterUsers.length > 0 ? recruiterUsers[0].id : userId;
-
-      await db.query(
-        'INSERT INTO CANDIDATE_PIPELINE (id, candidate_id, job_id, stage_id, recruiter_id) VALUES (?, ?, ?, ?, ?)',
-        [pipId, candidateId, job_id, defaultStage[0].id, recruiterId]
-      );
-
-      // Log pipeline stage history
-      const histId = uuidv4();
-      await db.query(
-        'INSERT INTO PIPELINE_STAGE_HISTORY (id, pipeline_id, to_stage_id, moved_by, remarks) VALUES (?, ?, ?, ?, "Initial job application submitted by candidate.")',
-        [histId, pipId, defaultStage[0].id, userId]
-      );
+    // Freeze application-time resume
+    const requestedResumeId = req.body.resume_id;
+    let resume = null;
+    if (requestedResumeId) {
+      const rRows = await db.query('SELECT * FROM CANDIDATE_RESUME WHERE id = ? AND candidate_id = ?', [requestedResumeId, candidateId]);
+      if (rRows.length === 0) return res.status(400).json({ success: false, code: 'INVALID_RESUME_ASSOCIATION', message: 'The selected resume does not belong to your candidate profile.' });
+      resume = rRows[0];
+    }
+    if (!resume) {
+      const rRows = await db.query('SELECT * FROM CANDIDATE_RESUME WHERE candidate_id = ? ORDER BY is_primary DESC, created_at DESC LIMIT 1', [candidateId]);
+      if (rRows.length > 0) resume = rRows[0];
     }
 
-    // Trigger Notification for Candidate
+    // Freeze application-time candidate profile snapshot
+    const [userRow] = await db.query('SELECT name, email, phone FROM USERS WHERE id = ?', [userId]);
+    const candidateSnapshot = JSON.stringify({
+      candidate_id: candidateId,
+      name: userRow?.name || candDetail.name,
+      email: userRow?.email,
+      phone: userRow?.phone,
+      professional_headline: candDetail.professional_headline,
+      current_location: candDetail.current_location,
+      total_experience: candDetail.total_experience,
+      current_organization: candDetail.current_organization,
+      current_designation: candDetail.current_designation,
+      snapshot_taken_at: new Date().toISOString()
+    });
+
+    const id = uuidv4();
+    const defaultStage = await db.query("SELECT id FROM ATS_STAGE WHERE name = 'Applied' OR `order` = 1 LIMIT 1");
+    const pipId = uuidv4();
+    const histId = uuidv4();
     const notifId = uuidv4();
-    await db.query(
-      'INSERT INTO NOTIFICATION (id, user_id, type, title, message, reference_type, reference_id) VALUES (?, ?, "application", "Application Submitted", "Your job application has been successfully submitted.", "APPLICATION", ?)',
-      [notifId, userId, id]
-    );
+
+    await db.withTransaction(async (tx) => {
+      await tx.query(
+        `INSERT INTO APPLICATION (
+          id, job_id, candidate_id, status, resume_id, resume_url, resume_filename, candidate_snapshot
+        ) VALUES (?, ?, ?, 'applied', ?, ?, ?, ?)`,
+        [
+          id,
+          job_id,
+          candidateId,
+          resume ? resume.id : null,
+          resume ? resume.file_url : null,
+          resume ? (resume.file_name || resume.resume_title) : null,
+          candidateSnapshot
+        ]
+      );
+
+      // Also auto-create Candidate Pipeline entry if recruiter/employer manages ATS
+      if (defaultStage.length > 0 && targetJob.assigned_recruiter_id) {
+        const recruiterId = targetJob.assigned_recruiter_id;
+        await tx.query(
+          'INSERT INTO CANDIDATE_PIPELINE (id, candidate_id, job_id, stage_id, recruiter_id) VALUES (?, ?, ?, ?, ?)',
+          [pipId, candidateId, job_id, defaultStage[0].id, recruiterId]
+        );
+
+        // Log pipeline stage history
+        await tx.query(
+          'INSERT INTO PIPELINE_STAGE_HISTORY (id, pipeline_id, to_stage_id, moved_by, remarks) VALUES (?, ?, ?, ?, "Initial job application submitted by candidate.")',
+          [histId, pipId, defaultStage[0].id, userId]
+        );
+      }
+
+      // Trigger Notification for Candidate
+      await tx.query(
+        'INSERT INTO NOTIFICATION (id, user_id, type, title, message, reference_type, reference_id) VALUES (?, ?, "application", "Application Submitted", "Your job application has been successfully submitted.", "APPLICATION", ?)',
+        [notifId, userId, id]
+      );
+    });
+
+    const applicationJob = await db.query('SELECT title, employer_id FROM JOB WHERE id = ? LIMIT 1', [job_id]);
+    let employerCompanyName = '';
+    if (applicationJob[0]?.employer_id) {
+      const empInfo = await db.query('SELECT company_name FROM EMPLOYERS WHERE id = ? LIMIT 1', [applicationJob[0].employer_id]);
+      employerCompanyName = empInfo[0]?.company_name || '';
+    }
+
+    sendCandidateApplicationConfirmationEmail(userRow?.email, {
+      jobTitle: applicationJob[0]?.title,
+      companyName: employerCompanyName,
+      referenceNumber: `APP-${id.slice(0, 8).toUpperCase()}`,
+      appliedAt: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
+    }).catch(err => {
+      console.warn('⚠️ [Async Email] Candidate application confirmation error:', err.message);
+    });
 
     // Task 39: Trigger Employer Application Notification Email (Non-blocking & Privacy-Preserving)
     try {
@@ -139,6 +204,9 @@ const applyForJob = async (req, res) => {
 
     res.status(201).json({ success: true, message: 'Application submitted successfully.', application_id: id });
   } catch (error) {
+    if (error && error.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ success: false, code: 'DUPLICATE_APPLICATION', message: 'You have already applied for this job.' });
+    }
     res.status(500).json({ success: false, message: 'Error submitting application.', error: error.message });
   }
 };
@@ -344,6 +412,15 @@ const updateApplicationStatus = async (req, res) => {
     const { status } = req.body;
     const userRole = req.user.role;
 
+    const targetStatus = normalizeApplicationStatus(status);
+    const currentRows = await db.query('SELECT status FROM APPLICATION WHERE id = ? LIMIT 1', [id]);
+    if (!currentRows.length) return res.status(404).json({ success: false, message: 'Application not found.' });
+    const transition = validateTransition(currentRows[0].status, targetStatus);
+    if (!transition.valid) {
+      return res.status(transition.code === 'INVALID_STATUS_TRANSITION' ? 409 : 400).json({ success: false, code: transition.code, message: transition.code === 'INVALID_STATUS_TRANSITION' ? `Application cannot move from '${transition.from}' to '${transition.to}'.` : 'Invalid application status.' });
+    }
+    if (transition.unchanged) return res.json({ success: true, unchanged: true, message: 'Application is already in this stage.' });
+
     if (userRole === 'viewer') {
       return res.status(403).json({ success: false, message: 'Access denied: Viewer role is read-only.' });
     }
@@ -356,47 +433,66 @@ const updateApplicationStatus = async (req, res) => {
       });
     }
 
-    await db.query('UPDATE APPLICATION SET status = ? WHERE id = ?', [status, id]);
+    const { logActivity } = require('./adminController');
+    const appRows = await db.query('SELECT candidate_id, job_id FROM APPLICATION WHERE id = ?', [id]);
+    const jobId = appRows.length > 0 ? appRows[0].job_id : null;
+    let candUserId = null;
+    let jobTitle = 'Job Opening';
 
-    // Automatically trigger Candidate Notification & Recruitment Activity Audit
-    try {
-      const { logActivity } = require('./adminController');
-      const appRows = await db.query('SELECT candidate_id, job_id FROM APPLICATION WHERE id = ?', [id]);
-      if (appRows.length > 0) {
-        const jobId = appRows[0].job_id;
-        const candRows = await db.query('SELECT user_id FROM CANDIDATES WHERE id = ?', [appRows[0].candidate_id]);
-        const jobRows = await db.query('SELECT title FROM JOB WHERE id = ?', [jobId]);
-        if (candRows.length > 0 && candRows[0].user_id) {
-          const candUserId = candRows[0].user_id;
-          const jobTitle = jobRows.length > 0 ? jobRows[0].title : 'Job Opening';
-          const readableStatus = String(status).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-          const notifId = uuidv4();
-          await db.query(
-            'INSERT INTO NOTIFICATION (id, user_id, type, title, message, reference_type, reference_id, is_read) VALUES (?, ?, "application_status", ?, ?, "APPLICATION", ?, 0)',
-            [notifId, candUserId, `Application ${readableStatus}`, `Your application for ${jobTitle} is now ${readableStatus}.`, id]
-          );
-        }
+    if (appRows.length > 0) {
+      const candRows = await db.query('SELECT user_id FROM CANDIDATES WHERE id = ?', [appRows[0].candidate_id]);
+      const jobRows = await db.query('SELECT title FROM JOB WHERE id = ?', [jobId]);
+      if (candRows.length > 0 && candRows[0].user_id) candUserId = candRows[0].user_id;
+      if (jobRows.length > 0 && jobRows[0].title) jobTitle = jobRows[0].title;
+    }
 
-        let actionType = 'application_status_changed';
-        const lowerStatus = String(status).toLowerCase();
-        if (lowerStatus === 'shortlisted') actionType = 'candidate_shortlisted';
-        else if (lowerStatus === 'interview') actionType = 'candidate_moved_to_interview';
-        else if (lowerStatus === 'selected') actionType = 'candidate_selected';
-        else if (lowerStatus === 'rejected') actionType = 'candidate_rejected';
-        else if (lowerStatus.includes('review')) actionType = 'application_reviewed';
+    const readableStatus = String(targetStatus).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    const notifId = uuidv4();
 
-        await logActivity({
-          performed_by: req.user.id,
-          action_type: actionType,
-          entity_type: 'APPLICATION',
-          entity_id: id,
-          related_job_id: jobId,
-          related_application_id: id,
-          description: `Staff member (${req.user.email}) changed application status to '${status}'`
-        });
+    let actionType = 'application_status_changed';
+    const lowerStatus = String(targetStatus).toLowerCase();
+    if (lowerStatus === 'shortlisted') actionType = 'candidate_shortlisted';
+    else if (lowerStatus === 'interview') actionType = 'candidate_moved_to_interview';
+    else if (lowerStatus === 'selected') actionType = 'candidate_selected';
+    else if (lowerStatus === 'rejected') actionType = 'candidate_rejected';
+    else if (lowerStatus.includes('review')) actionType = 'application_reviewed';
+
+    await db.withTransaction(async (tx) => {
+      await tx.query('UPDATE APPLICATION SET status = ?, status_updated_by_user_id = ?, status_updated_at = NOW() WHERE id = ?', [targetStatus, req.user.id, id]);
+
+      if (candUserId) {
+        await tx.query(
+          'INSERT INTO NOTIFICATION (id, user_id, type, title, message, reference_type, reference_id, is_read) VALUES (?, ?, "application_status", ?, ?, "APPLICATION", ?, 0)',
+          [notifId, candUserId, `Application ${readableStatus}`, `Your application for ${jobTitle} is now ${readableStatus}.`, id]
+        );
       }
-    } catch (notifErr) {
-      console.warn('⚠️ [Activity/Notification Trigger Warning]:', notifErr.message);
+
+      await logActivity({
+        performed_by: req.user.id,
+        action_type: actionType,
+        entity_type: 'APPLICATION',
+        entity_id: id,
+        related_job_id: jobId,
+        related_application_id: id,
+        description: `Staff member (${req.user.email}) changed application status from '${transition.from}' to '${targetStatus}'`,
+        changed_field: 'status',
+        previous_value: transition.from,
+        new_value: targetStatus
+      }, tx);
+    });
+
+    if (candUserId && transition.from !== targetStatus) {
+      try {
+        const isAllowed = await canSendStageEmail(candUserId);
+        if (isAllowed) {
+          const userRows = await db.query('SELECT email FROM USERS WHERE id = ?', [candUserId]);
+          if (userRows.length > 0 && userRows[0].email) {
+            await sendApplicationStageEmail(userRows[0].email, { jobTitle, status: targetStatus });
+          }
+        }
+      } catch (mailErr) {
+        console.warn('⚠️ [Email Notice] Failed to dispatch stage email:', mailErr.message);
+      }
     }
 
     res.json({ success: true, message: 'Application status updated.' });

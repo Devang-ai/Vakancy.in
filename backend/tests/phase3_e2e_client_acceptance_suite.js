@@ -591,6 +591,16 @@ async function runPhase3AcceptanceSuite() {
   });
   assert(activityRes.status === 200 && (activityRes.data.activity || activityRes.data.activities), 'Director verified recruitment activity audit trail');
 
+  // Teardown test enquiries created during run for test isolation
+  try {
+    const db = require('../config/db');
+    await db.initDB();
+    const enqIdsToDelete = [contactUsRes.data?.ticket_id, execEnquiryId].filter(Boolean);
+    if (enqIdsToDelete.length > 0) {
+      await db.query('DELETE FROM EMPLOYER_ENQUIRY WHERE id IN (?)', [enqIdsToDelete]);
+    }
+  } catch (_) {}
+
   console.log('\n====================================================');
   console.log(`ACCEPTANCE SUITE SUMMARY: ${passedCount} PASSED, ${failedCount} FAILED`);
   console.log('====================================================\n');
