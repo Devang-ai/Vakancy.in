@@ -434,6 +434,25 @@ CREATE TABLE IF NOT EXISTS `JOB` (
 
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
+  `category_id` VARCHAR(36) NULL,
+  `priority` VARCHAR(50) DEFAULT 'standard',
+  `is_recommended` TINYINT(1) DEFAULT 0,
+  `allow_candidate_access` TINYINT(1) DEFAULT 1,
+  `is_internal_only` TINYINT(1) DEFAULT 0,
+  `is_archived` TINYINT(1) DEFAULT 0,
+  `archive_reason` TEXT NULL,
+  `archived_at` TIMESTAMP NULL,
+  `restored_at` TIMESTAMP NULL,
+  `restore_note` TEXT NULL,
+  `manual_company_name` VARCHAR(255) NULL,
+  `manual_contact_person` VARCHAR(255) NULL,
+  `manual_contact_phone` VARCHAR(50) NULL,
+  `manual_contact_email` VARCHAR(255) NULL,
+  `manual_company_website` VARCHAR(255) NULL,
+  `last_updated_by_user_id` VARCHAR(36) NULL,
+  `lead_id` VARCHAR(36) NULL,
+  `enquiry_id` VARCHAR(36) NULL,
+
   FOREIGN KEY (`employer_id`) REFERENCES `EMPLOYERS`(`id`) ON DELETE SET NULL,
 
   FOREIGN KEY (`client_id`) REFERENCES `CLIENT`(`id`) ON DELETE SET NULL

@@ -1112,7 +1112,46 @@ async function autoMigrateTables(connection) {
       console.log('[DB Auto-Init] Seed records inserted successfully.');
     }
 
-    // 3. Populate default location master data if missing
+    // 3. Ensure all extended columns exist on JOB table
+    const jobColumns = [
+      { name: 'category_id', type: 'VARCHAR(36) NULL' },
+      { name: 'priority', type: "VARCHAR(50) DEFAULT 'standard'" },
+      { name: 'is_recommended', type: 'TINYINT(1) DEFAULT 0' },
+      { name: 'allow_candidate_access', type: 'TINYINT(1) DEFAULT 1' },
+      { name: 'is_internal_only', type: 'TINYINT(1) DEFAULT 0' },
+      { name: 'is_archived', type: 'TINYINT(1) DEFAULT 0' },
+      { name: 'archive_reason', type: 'TEXT NULL' },
+      { name: 'archived_at', type: 'TIMESTAMP NULL' },
+      { name: 'restored_at', type: 'TIMESTAMP NULL' },
+      { name: 'restore_note', type: 'TEXT NULL' },
+      { name: 'manual_company_name', type: 'VARCHAR(255) NULL' },
+      { name: 'manual_contact_person', type: 'VARCHAR(255) NULL' },
+      { name: 'manual_contact_phone', type: 'VARCHAR(50) NULL' },
+      { name: 'manual_contact_email', type: 'VARCHAR(255) NULL' },
+      { name: 'manual_company_website', type: 'VARCHAR(255) NULL' },
+      { name: 'last_updated_by_user_id', type: 'VARCHAR(36) NULL' },
+      { name: 'lead_id', type: 'VARCHAR(36) NULL' },
+      { name: 'enquiry_id', type: 'VARCHAR(36) NULL' }
+    ];
+    for (const col of jobColumns) {
+      try {
+        await connection.query(`ALTER TABLE \`JOB\` ADD COLUMN \`${col.name}\` ${col.type}`);
+      } catch (_) {}
+    }
+
+    // 4. Run versioned migrations if any
+    try {
+      const { migrations } = require('../database/migrations');
+      if (Array.isArray(migrations)) {
+        for (const m of migrations) {
+          try {
+            await m.up(connection);
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
+
+    // 5. Populate default location master data if missing
     try {
       const { relationalSeed } = require('../database/seedLocationData');
       if (relationalSeed && relationalSeed.countries) {
