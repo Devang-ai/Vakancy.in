@@ -1,0 +1,138 @@
+name: Deploy Backend API to Hostinger
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: production-backend
+  cancel-in-progress: false
+
+jobs:
+  test-and-deploy-backend:
+    name: Validate, Test & Deploy Backend (Hostinger CLI)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      # 1. Dependency Installation & Syntax Check
+      - name: Install Backend Dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: Validate Server Syntax
+        run: |
+          cd backend
+          node -c server.js
+
+      # 2. Automated Regression & Safety Test Suites
+      - name: Run Security Regression Tests
+        run: |
+          cd backend
+          npm run test:security
+
+      - name: Run Database Safety & RBAC Tests
+        run: |
+          cd backend
+          npm run test:phase2:safe
+
+      # 3. Direct Linux Binary Installation of Official Hostinger CLI
+      - name: Install Official Hostinger CLI Binary
+        run: |
+          echo "Fetching latest Hostinger CLI release metadata..."
+          RELEASE_JSON=$(curl -sSL -H "User-Agent: GitHub-Actions" https://api.github.com/repos/hostinger/api-cli/releases/latest)
+          LATEST_TAG=$(echo "$RELEASE_JSON" | grep '"tag_name":' | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')
+          VERSION="${LATEST_TAG#v}"
+          
+          if [ -z "$VERSION" ]; then
+            VERSION="4.13.3"
+            LATEST_TAG="v4.13.3"
+          fi
+          
+          ARCHIVE_NAME="hostinger-${VERSION}-linux-amd64.tar.gz"
+          DOWNLOAD_URL="https://github.com/hostinger/api-cli/releases/download/${LATEST_TAG}/${ARCHIVE_NAME}"
+          
+          echo "Downloading Hostinger CLI binary: ${DOWNLOAD_URL}"
+          curl -sSL "$DOWNLOAD_URL" -o /tmp/hostinger.tar.gz
+          tar -xzf /tmp/hostinger.tar.gz -C /tmp
+          sudo mv /tmp/hostinger /usr/local/bin/hostinger
+          sudo chmod +x /usr/local/bin/hostinger
+          rm -f /tmp/hostinger.tar.gz
+          
+          echo "Verifying Hostinger CLI installation:"
+          hostinger version
+
+      # 4. Deploy Backend via Hostinger CLI (Unattended CI/CD)
+      - name: Deploy Backend to Hostinger Node.js Web App
+        env:
+          HOSTINGER_API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
+        run: |
+          if [ -z "$HOSTINGER_API_TOKEN" ]; then
+            echo "::error::HOSTINGER_API_TOKEN secret is missing or empty in GitHub repository secrets."
+            exit 1
+          fi
+          
+          # Verify token credentials non-interactively
+          hostinger auth status --no-input
+          
+          cd backend
+          echo "Deploying backend application payload to existing domain api.vakancy.in..."
+          hostinger up . \
+            --domain api.vakancy.in \
+            --type nodejs \
+            --app-type express \
+            --entry-file server.js \
+            --node-version 20 \
+            --package-manager npm \
+            --source upload \
+            --yes \
+            --no-input \
+            --format json
+
+      # 5. Production Health Probe Verification with Retries
+      - name: Verify Backend Health Probe (With Retries)
+        run: |
+          PROBE_URL="https://api.vakancy.in/health"
+          MAX_ATTEMPTS=12
+          DELAY_SECONDS=5
+          SUCCESS=0
+          
+          echo "Checking health probe at ${PROBE_URL} (Max attempts: ${MAX_ATTEMPTS})..."
+          
+          for i in $(seq 1 $MAX_ATTEMPTS); do
+            echo "Attempt $i of $MAX_ATTEMPTS..."
+            HTTP_CODE=$(curl -s -o /tmp/health_response.json -w "%{http_code}" -m 10 "$PROBE_URL" || true)
+            
+            if [ "$HTTP_CODE" -eq 200 ]; then
+              echo "Health check succeeded with HTTP 200 OK!"
+              cat /tmp/health_response.json
+              echo ""
+              SUCCESS=1
+              break
+            else
+              echo "Health check returned HTTP ${HTTP_CODE}. Waiting ${DELAY_SECONDS}s for application boot..."
+              sleep $DELAY_SECONDS
+            fi
+          done
+          
+          if [ "$SUCCESS" -ne 1 ]; then
+            echo "::error::Backend health check probe failed after ${MAX_ATTEMPTS} attempts."
+            echo "Last response body:"
+            cat /tmp/health_response.json || true
+            exit 1
+          fi
