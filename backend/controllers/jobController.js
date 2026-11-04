@@ -640,7 +640,7 @@ const getJobs = async (req, res) => {
       jobs: enrichedJobs,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Error fetching jobs.', error: error.message });
+    const errMsg = error ? (error.message || String(error)) : 'Unknown error'; console.error('getJobs error:', errMsg); res.status(500).json({ success: false, message: 'Error fetching jobs.', error: errMsg });
   }
 };
 

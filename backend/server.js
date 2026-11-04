@@ -99,18 +99,30 @@ app.get('/api/health', healthCheckHandler);
 const readinessCheckHandler = async (req, res) => {
   try {
     await db.query('SELECT 1');
-    const tables = await db.query("SHOW TABLES LIKE 'JOB'").catch(() => []);
+    const tables = await db.query("SHOW TABLES LIKE 'job'").catch(() => []);
+    let jobTest = null;
+    let jobError = null;
+    try {
+      const [rows] = await db.query('SELECT COUNT(*) AS cnt FROM job');
+      jobTest = rows ? rows.cnt : 0;
+    } catch (je) {
+      jobError = je.message;
+    }
+    const [lcRows] = await db.query("SHOW VARIABLES LIKE 'lower_case_table_names'").catch(() => [[]]);
     res.status(200).json({
       status: 'ready',
       database: db.isFallback() ? 'in-memory-fallback' : 'connected',
       schema_ready: Boolean(tables && tables.length > 0),
+      job_count: jobTest,
+      job_query_error: jobError,
+      lower_case_table_names: lcRows && lcRows.Value,
       timestamp: new Date().toISOString()
     });
   } catch (err) {
     res.status(503).json({
       status: 'unavailable',
       database: 'unreachable',
-      error: process.env.NODE_ENV === 'production' ? 'Database query failed' : err.message,
+      error: err.message,
       timestamp: new Date().toISOString()
     });
   }

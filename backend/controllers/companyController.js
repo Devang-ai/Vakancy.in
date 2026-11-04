@@ -33,7 +33,7 @@ const getPublicCompanies = async (req, res) => {
       companies,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Error fetching public companies.', error: error.message });
+    const cErrMsg = error ? (error.message || String(error)) : 'Unknown error'; res.status(500).json({ success: false, message: 'Error fetching public companies.', error: cErrMsg });
   }
 };
 
