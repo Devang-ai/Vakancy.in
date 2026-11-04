@@ -1236,6 +1236,13 @@ async function initDB() {
   }
 }
 
+function normalizeQueryTableNames(sql) {
+  if (typeof sql !== 'string') return sql;
+  return sql.replace(/\b(FROM|JOIN|INTO|UPDATE|TABLE)\s+[`]?([a-zA-Z0-9_]+)[`]?/gi, (match, clause, table) => {
+    return `${clause} \`${table.toLowerCase()}\``;
+  });
+}
+
 // Universal query function compatible with MySQL driver
 async function query(sql, params = []) {
   if (!isUsingFallback && pool) {
@@ -1243,6 +1250,19 @@ async function query(sql, params = []) {
       const [rows] = await pool.query(sql, params);
       return rows;
     } catch (err) {
+      // If table doesn't exist due to Linux MySQL case-sensitivity, normalize table names to lowercase and retry
+      if (err && (err.code === 'ER_NO_SUCH_TABLE' || (err.message && err.message.includes("doesn't exist")))) {
+        try {
+          const normalizedSql = normalizeQueryTableNames(sql);
+          if (normalizedSql !== sql) {
+            const [retryRows] = await pool.query(normalizedSql, params);
+            return retryRows;
+          }
+        } catch (retryErr) {
+          console.error('MySQL Query Error (after lowercase retry):', retryErr.message);
+          throw retryErr;
+        }
+      }
       console.error('MySQL Query Error:', err.message);
       throw err;
     }
