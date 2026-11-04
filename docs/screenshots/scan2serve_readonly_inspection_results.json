@@ -1,0 +1,32 @@
+{
+  "viewports": {
+    "390px": {
+      "width": 390,
+      "height": 844,
+      "cancelVisible": true,
+      "saveVisible": true
+    }
+  },
+  "prefilledFields": {
+    "company_name": "Scan2Serve",
+    "company_type": "Private Limited Company (Pvt Ltd)",
+    "industry": "Food & Beverage",
+    "country": "India",
+    "state": "Gujarat",
+    "city": "Ahmedabad",
+    "address": "A/18 NARAYAN PARK SOCIETY AHMEDABAD CANTONMENT (CB)",
+    "pincode": "382470",
+    "company_size": "1–10",
+    "about": "We Provide Scan to order Systems For Foodparks and Cafes!",
+    "founded_year": "2018",
+    "official_email": "chauhandevang075@gmail.com",
+    "official_phone": "09316956652",
+    "contact_person_name": "Devang Chauhan",
+    "contact_person_designation": "HR",
+    "linkedin_url": "https://www.linkedin.com/in/devang-chauhan-82a770226",
+    "hasLogo": true,
+    "dialogWidth": 1440,
+    "dialogHeight": 900
+  },
+  "passed": true
+}

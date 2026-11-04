@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Wrench, Plus, Trash2 } from 'lucide-react';
+import { Wrench, Plus } from 'lucide-react';
 import API from '../services/api';
 
 const AdminSkills = () => {
   const [skills, setSkills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newSkill, setNewSkill] = useState('');
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchSkills();
@@ -14,10 +16,11 @@ const AdminSkills = () => {
   const fetchSkills = async () => {
     try {
       setLoading(true);
+      setError('');
       const res = await API.get('/admin/skills');
       if (res.success) setSkills(res.skills || []);
     } catch (err) {
-      console.warn(err.message);
+      setError(err.message || 'Unable to load the skills catalog.');
     } finally {
       setLoading(false);
     }
@@ -27,20 +30,15 @@ const AdminSkills = () => {
     e.preventDefault();
     if (!newSkill.trim()) return;
     try {
-      await API.post('/admin/skills', { name: newSkill });
+      setSubmitting(true);
+      setError('');
+      await API.post('/master/skills', { name: newSkill.trim() });
       setNewSkill('');
-      fetchSkills();
+      await fetchSkills();
     } catch (err) {
-      console.warn(err.message);
-    }
-  };
-
-  const handleDeleteSkill = async (id) => {
-    try {
-      await API.delete(`/admin/skills/${id}`);
-      fetchSkills();
-    } catch (err) {
-      console.warn(err.message);
+      setError(err.message || 'Unable to add this skill.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -63,11 +61,14 @@ const AdminSkills = () => {
         />
         <button
           type="submit"
+          disabled={submitting}
           className="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-blue-800 hover:bg-blue-900 text-white font-bold text-xs shadow-xs flex items-center justify-center gap-1.5 shrink-0 transition-colors"
         >
-          <Plus className="w-4 h-4" /> Add Skill
+          <Plus className="w-4 h-4" /> {submitting ? 'Adding…' : 'Add Skill'}
         </button>
       </form>
+      {error && <p className="ep-card p-4 text-sm text-rose-700" role="alert">{error}</p>}
+      {loading && <p className="ep-card p-4 text-sm text-slate-600" role="status">Loading skills…</p>}
 
       {/* Skills Badges Grid */}
       <div className="ep-card p-6 flex flex-wrap gap-2.5">
@@ -75,19 +76,14 @@ const AdminSkills = () => {
           <div key={s.id} className="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 flex items-center gap-2 shadow-2xs group">
             <Wrench className="w-3.5 h-3.5 text-blue-700" />
             <span>{s.name}</span>
-            <button
-              onClick={() => handleDeleteSkill(s.id)}
-              className="text-slate-400 hover:text-rose-700 transition-colors ml-1"
-              title="Remove Skill"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
           </div>
         ))}
       </div>
+      {!loading && !error && skills.length === 0 && (
+        <p className="ep-card p-6 text-center text-sm text-slate-500">No skills are available.</p>
+      )}
     </div>
   );
 };
 
 export default AdminSkills;
-

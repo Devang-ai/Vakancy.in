@@ -34,13 +34,18 @@ export const AdminLeads = () => {
   const [formData, setFormData] = useState({
     company_name: '',
     contact_person: '',
+    contact_person_name: '',
     email: '',
+    contact_email: '',
     phone: '',
+    contact_phone: '',
     industry: 'Technology',
     location: '',
+    city: '',
     source: 'Outreach',
     notes: '',
-    follow_up_date: ''
+    follow_up_date: '',
+    confirmed_hiring_interest: true
   });
 
   useEffect(() => {
@@ -73,31 +78,62 @@ export const AdminLeads = () => {
 
   const handleCreateLead = async (e) => {
     e.preventDefault();
-    if (!formData.company_name.trim() || !formData.contact_person.trim() || !formData.email.trim()) {
-      alert('Company, contact person, and email are required.');
+    if (!formData.company_name.trim()) {
+      alert('Company name is required.');
+      return;
+    }
+    if (!formData.contact_person.trim()) {
+      alert('Contact person name is required.');
+      return;
+    }
+    if (!formData.phone.trim()) {
+      alert('Contact phone is required.');
+      return;
+    }
+    if (!formData.confirmed_hiring_interest) {
+      alert('Confirmed hiring interest must be verified before submitting this lead.');
       return;
     }
 
     try {
       setSubmitting(true);
-      const res = await API.post('/admin/leads', formData);
+      const payload = {
+        ...formData,
+        company_name: formData.company_name.trim(),
+        contact_person_name: formData.contact_person.trim(),
+        contact_person: formData.contact_person.trim(),
+        contact_phone: formData.phone.trim(),
+        phone: formData.phone.trim(),
+        contact_email: formData.email.trim() || null,
+        email: formData.email.trim() || null,
+        city: formData.location.trim() || null,
+        location: formData.location.trim() || null,
+        confirmed_hiring_interest: true
+      };
+
+      const res = await API.post('/admin/leads', payload);
       if (res.success) {
         setCreateModalOpen(false);
         setFormData({
           company_name: '',
           contact_person: '',
+          contact_person_name: '',
           email: '',
+          contact_email: '',
           phone: '',
+          contact_phone: '',
           industry: 'Technology',
           location: '',
+          city: '',
           source: 'Outreach',
           notes: '',
-          follow_up_date: ''
+          follow_up_date: '',
+          confirmed_hiring_interest: true
         });
         fetchLeads();
       }
     } catch (err) {
-      alert('Failed to create lead: ' + err.message);
+      alert('Failed to create lead: ' + (err.response?.data?.message || err.message));
     } finally {
       setSubmitting(false);
     }
@@ -324,10 +360,9 @@ export const AdminLeads = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">Work Email *</label>
+              <label className="block text-xs font-medium text-slate-700 mb-1">Work Email (Optional)</label>
               <input
                 type="email"
-                required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="ramesh@acme.com"
@@ -335,11 +370,12 @@ export const AdminLeads = () => {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">Phone Number</label>
+              <label className="block text-xs font-medium text-slate-700 mb-1">Contact Phone *</label>
               <input
                 type="text"
+                required
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value, contact_phone: e.target.value })}
                 placeholder="+91 98765 43210"
                 className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-hidden focus:border-blue-600"
               />
@@ -357,11 +393,11 @@ export const AdminLeads = () => {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">Location</label>
+              <label className="block text-xs font-medium text-slate-700 mb-1">Location / City</label>
               <input
                 type="text"
                 value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value, city: e.target.value })}
                 placeholder="e.g. Mumbai"
                 className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-200"
               />
@@ -375,6 +411,20 @@ export const AdminLeads = () => {
                 className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-200"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="flex items-center gap-2 p-2 bg-emerald-50 rounded-lg border border-emerald-200 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.confirmed_hiring_interest}
+                onChange={(e) => setFormData({ ...formData, confirmed_hiring_interest: e.target.checked })}
+                className="h-4 w-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+              />
+              <span className="text-xs font-medium text-emerald-900">
+                Confirmed Hiring Interest Verified * (Company actively wishes to hire)
+              </span>
+            </label>
           </div>
 
           <div>

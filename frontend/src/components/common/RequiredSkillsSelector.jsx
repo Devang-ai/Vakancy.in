@@ -113,7 +113,8 @@ export default function RequiredSkillsSelector({ selectedSkills = [], onChange, 
     setIsAddingSkill(true);
     try {
       const headers = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const authToken = localStorage.getItem('token');
+      if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
 
       const res = await fetch('/api/master/skills', {
         method: 'POST',
@@ -159,7 +160,7 @@ export default function RequiredSkillsSelector({ selectedSkills = [], onChange, 
   });
 
   return (
-    <div className="flex flex-col gap-2" ref={containerRef}>
+    <div className={`flex flex-col gap-2 relative ${isOpen ? 'z-40' : 'z-10'}`} ref={containerRef}>
       <div className="flex items-center justify-between">
         <div>
           <label className="text-xs font-bold text-[#0b1c30]">
@@ -174,91 +175,59 @@ export default function RequiredSkillsSelector({ selectedSkills = [], onChange, 
         </span>
       </div>
 
-      {/* Container with chips and input */}
-      <div
-        className={`w-full p-2 bg-[#eff4ff] rounded-xl border flex flex-wrap items-center gap-2 transition-all min-h-[46px] relative ${
-          error ? 'border-[#ba1a1a]' : 'border-transparent focus-within:bg-white focus-within:ring-2 focus-within:ring-[#00288e]'
-        }`}
-        onClick={() => inputRef.current?.focus()}
-      >
-        {/* Selected Skill Chips */}
-        {currentSkills.map((skill, idx) => (
-          <span
-            key={`${skill}-${idx}`}
-            className="inline-flex items-center gap-1.5 px-3 py-1 bg-white text-[#00288e] rounded-lg text-xs font-semibold shadow-xs border border-blue-200/80 transition-all hover:bg-blue-50"
-          >
-            <span>{skill}</span>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleRemoveSkill(skill);
-              }}
-              className="w-4 h-4 rounded-full flex items-center justify-center text-[#00288e] hover:bg-[#00288e] hover:text-white transition-colors cursor-pointer text-xs font-bold leading-none"
-              title={`Remove ${skill}`}
-              aria-label={`Remove ${skill}`}
+      {/* Input container with directly anchored search dropdown */}
+      <div className={`relative w-full ${isOpen ? 'z-40' : 'z-10'}`}>
+        <div
+          className={`w-full p-2 bg-[#eff4ff] rounded-xl border flex flex-wrap items-center gap-2 transition-all min-h-[46px] relative ${
+            error ? 'border-[#ba1a1a]' : 'border-transparent focus-within:bg-white focus-within:ring-2 focus-within:ring-[#00288e]'
+          }`}
+          onClick={() => inputRef.current?.focus()}
+        >
+          {/* Selected Skill Chips */}
+          {currentSkills.map((skill, idx) => (
+            <span
+              key={`${skill}-${idx}`}
+              className="inline-flex items-center gap-1.5 px-3 py-1 bg-white text-[#00288e] rounded-lg text-xs font-semibold shadow-xs border border-blue-200/80 transition-all hover:bg-blue-50"
             >
-              &times;
-            </button>
-          </span>
-        ))}
+              <span>{skill}</span>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemoveSkill(skill);
+                }}
+                className="w-4 h-4 rounded-full flex items-center justify-center text-[#00288e] hover:bg-[#00288e] hover:text-white transition-colors cursor-pointer text-xs font-bold leading-none"
+                title={`Remove ${skill}`}
+                aria-label={`Remove ${skill}`}
+              >
+                &times;
+              </button>
+            </span>
+          ))}
 
-        {/* Input */}
-        <input
-          ref={inputRef}
-          type="text"
-          value={inputValue}
-          onChange={handleInputChange}
-          onFocus={handleInputFocus}
-          onKeyDown={handleKeyDown}
-          placeholder={currentSkills.length === 0 ? (placeholder === "+ Add skill..." ? "Search skills (e.g. Excel, Basic Computer, Java, Sales)..." : placeholder) : placeholder}
-          className="flex-1 min-w-[200px] bg-transparent border-none text-xs text-[#0b1c30] outline-none font-medium placeholder:text-[#757684]/70"
-        />
+          {/* Input */}
+          <input
+            ref={inputRef}
+            type="text"
+            value={inputValue}
+            onChange={handleInputChange}
+            onFocus={handleInputFocus}
+            onKeyDown={handleKeyDown}
+            placeholder={currentSkills.length === 0 ? (placeholder === "+ Add skill..." ? "Search skills (e.g. Excel, Basic Computer, Java, Sales)..." : placeholder) : placeholder}
+            className="flex-1 min-w-[110px] bg-transparent border-none text-xs text-[#0b1c30] outline-none font-medium placeholder:text-[#757684]/70"
+          />
 
-        {/* Loading Spinner */}
-        {isLoading && (
-          <div className="absolute right-3 top-3">
-            <div className="w-3.5 h-3.5 border-2 border-[#00288e] border-t-transparent rounded-full animate-spin"></div>
-          </div>
-        )}
-      </div>
+          {/* Loading Spinner */}
+          {isLoading && (
+            <div className="absolute right-3 top-3">
+              <div className="w-3.5 h-3.5 border-2 border-[#00288e] border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
+        </div>
 
-      {/* Quick-Pick Popular & Foundational Skills */}
-      <div className="flex flex-wrap items-center gap-1.5 pt-1">
-        <span className="text-[10px] font-bold text-[#757684] uppercase tracking-wider mr-1">
-          Popular:
-        </span>
-        {QUICK_ESSENTIAL_SKILLS.map((qSkill) => {
-          const isAdded = currentSkills.some((s) => s.toLowerCase() === qSkill.toLowerCase());
-          return (
-            <button
-              key={qSkill}
-              type="button"
-              onClick={() => {
-                if (isAdded) handleRemoveSkill(qSkill);
-                else addSkillToSelection(qSkill);
-              }}
-              className={`text-[11px] px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer border ${
-                isAdded
-                  ? 'bg-[#00288e] text-white border-[#00288e] shadow-xs'
-                  : 'bg-white text-[#444653] hover:text-[#00288e] border-slate-200/80 hover:bg-blue-50'
-              }`}
-            >
-              {isAdded ? '✓ ' : '+ '}
-              {qSkill}
-            </button>
-          );
-        })}
-      </div>
-
-      {error && (
-        <p className="text-[11px] text-[#ba1a1a] font-semibold mt-0.5">{error}</p>
-      )}
-
-      {/* Search Dropdown */}
-      {isOpen && (
-        <div className="relative w-full z-30">
-          <ul className="absolute left-0 right-0 top-1 max-h-60 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 text-xs text-[#0b1c30] font-medium z-50">
+        {/* Search Dropdown directly anchored to input container */}
+        {isOpen && (
+          <ul className="absolute left-0 right-0 top-full mt-1 max-h-60 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl py-1.5 text-xs text-[#0b1c30] font-medium z-50">
             {suggestions.length > 0 ? (
               suggestions.map((item, idx) => {
                 const name = typeof item === 'string' ? item : (item.name || item);
@@ -304,7 +273,39 @@ export default function RequiredSkillsSelector({ selectedSkills = [], onChange, 
               </li>
             )}
           </ul>
-        </div>
+        )}
+      </div>
+
+      {/* Quick-Pick Popular & Foundational Skills */}
+      <div className="flex flex-wrap items-center gap-1.5 pt-1">
+        <span className="text-[10px] font-bold text-[#757684] uppercase tracking-wider mr-1">
+          Popular:
+        </span>
+        {QUICK_ESSENTIAL_SKILLS.map((qSkill) => {
+          const isAdded = currentSkills.some((s) => s.toLowerCase() === qSkill.toLowerCase());
+          return (
+            <button
+              key={qSkill}
+              type="button"
+              onClick={() => {
+                if (isAdded) handleRemoveSkill(qSkill);
+                else addSkillToSelection(qSkill);
+              }}
+              className={`text-[11px] px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer border ${
+                isAdded
+                  ? 'bg-[#00288e] text-white border-[#00288e] shadow-xs'
+                  : 'bg-white text-[#444653] hover:text-[#00288e] border-slate-200/80 hover:bg-blue-50'
+              }`}
+            >
+              {isAdded ? '✓ ' : '+ '}
+              {qSkill}
+            </button>
+          );
+        })}
+      </div>
+
+      {error && (
+        <p className="text-[11px] text-[#ba1a1a] font-semibold mt-0.5">{error}</p>
       )}
     </div>
   );

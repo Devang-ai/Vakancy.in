@@ -164,34 +164,43 @@ export const ExecutiveSearchPage = () => {
             
             {/* Left: Text Content */}
             <div className="flex flex-col items-start text-left max-w-2xl">
-              <RevealOnScroll>
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-900/50 border border-blue-500/30 text-blue-300 text-xs font-bold uppercase tracking-[0.18em] mb-4">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                  Focused Sourcing
+              <RevealOnScroll delay={50}>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-bold mb-4">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Executive Search</span>
                 </div>
-              </RevealOnScroll>
-              
-              <RevealOnScroll delay={100}>
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.12] mb-5">
-                  Executive search for{' '}
+                  Specialized hiring for{' '}
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-blue-200">
-                    leadership and specialized roles.
+                    leadership and niche roles.
                   </span>
                 </h1>
               </RevealOnScroll>
               
               <RevealOnScroll delay={200}>
-                <p className="text-base sm:text-lg text-slate-300 leading-relaxed max-w-xl mb-8">
-                  Vakancy.in provides a focused recruitment approach for organizations looking for senior, leadership, or specialized talent where discretion, depth, and targeted sourcing are required.
+                <p className="text-base sm:text-lg text-slate-300 leading-relaxed max-w-xl mb-6">
+                  A focused and confidential search to help you find the right leaders for your organization. Vakancy.in provides discreet, depth-driven targeted sourcing for key mandates.
                 </p>
               </RevealOnScroll>
               
+              {/* Role Pills (Storyboard 1 Screen 5 Reference) */}
+              <div className="flex flex-wrap gap-2 mb-6">
+                {['CTO', 'VP Engineering', 'Head of Product', 'Head of HR', 'Director - Operations', 'CFO'].map((role) => (
+                  <span
+                    key={role}
+                    className="px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700 text-xs font-semibold text-blue-200"
+                  >
+                    {role}
+                  </span>
+                ))}
+              </div>
+
               <RevealOnScroll delay={300}>
                 <a
                   href="#enquiry-form"
-                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-white text-[#0f172a] font-bold text-sm hover:bg-slate-100 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-[#00288e] text-white font-bold text-sm hover:bg-[#1e40af] transition-colors shadow-sm"
                 >
-                  Discuss your requirement
+                  Request a Search
                   <ArrowRight className="w-4 h-4" />
                 </a>
               </RevealOnScroll>
@@ -239,6 +248,154 @@ export const ExecutiveSearchPage = () => {
         </div>
       </section>
 
+      {/* 1.5 OUR SERVICES 3-CARD GRID (Clean Standard Design System) */}
+      <section className="w-full bg-[#0a1122] py-8 sm:py-12 border-b border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-5 sm:mb-8">
+            <h2 className="text-xl sm:text-2xl font-extrabold text-white font-heading tracking-tight">
+              Our Services
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-6">
+            <div className="bg-[#111c38]/90 p-4 sm:p-6 rounded-2xl border border-slate-700/80 flex flex-col items-start gap-2.5 sm:gap-3 transition-all hover:border-blue-500/50">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-500/20 text-blue-300 flex items-center justify-center shrink-0">
+                <Target className="w-5 h-5 sm:w-6 sm:h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm sm:text-base text-white font-heading mb-1 sm:mb-1.5">
+                  Leadership Hiring
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                  Find the right leaders for key roles with discrete and market-mapped sourcing.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-[#111c38]/90 p-4 sm:p-6 rounded-2xl border border-slate-700/80 flex flex-col items-start gap-2.5 sm:gap-3 transition-all hover:border-blue-500/50">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-sky-500/20 text-sky-300 flex items-center justify-center shrink-0">
+                <Briefcase className="w-5 h-5 sm:w-6 sm:h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm sm:text-base text-white font-heading mb-1 sm:mb-1.5">
+                  Niche & Specialized Roles
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                  Access hard-to-find talent for technical, specialized, and domain-critical mandates.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-[#111c38]/90 p-4 sm:p-6 rounded-2xl border border-slate-700/80 flex flex-col items-start gap-2.5 sm:gap-3 transition-all hover:border-blue-500/50">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0">
+                <ShieldCheck className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm sm:text-base text-white font-heading mb-1 sm:mb-1.5">
+                  Confidential Search
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                  Discreet and professional hiring support protecting organizational privacy.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 1.8 REQUEST AN EXECUTIVE SEARCH PROMINENT LIGHT MODULE (Final Approved Design Reference) */}
+      <section className="w-full bg-[#081021] py-8 sm:py-12 border-b border-slate-800/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FadeInSection delay={150}>
+            <div className="rounded-3xl sm:rounded-[32px] overflow-hidden bg-gradient-to-br from-white via-[#f0f6ff] to-[#dbeafe] border border-blue-200/90 shadow-[0_12px_45px_rgba(0,0,0,0.35)] flex flex-col md:flex-row relative">
+              
+              {/* Mobile Edge-to-Edge Visual Header (Top on mobile, hidden on desktop) */}
+              <div className="md:hidden w-full relative">
+                <div className="w-full h-44 sm:h-52 relative overflow-hidden">
+                  <img
+                    src="/images/executive_meeting.jpg"
+                    alt="Vakancy Executive Search Boardroom"
+                    className="w-full h-full object-cover object-[center_30%]"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0a1122]/60 via-transparent to-transparent pointer-events-none" />
+                  {/* Floating Brand Badge */}
+                  <div className="absolute top-3.5 left-3.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/95 backdrop-blur-md text-[#00288e] text-[10px] font-black tracking-widest shadow-lg">
+                    <Sparkles className="w-3 h-3 text-[#00288e]" />
+                    <span>EXECUTIVE SEARCH</span>
+                  </div>
+                </div>
+                {/* Vibrant Brand Accent Ribbon */}
+                <div className="h-1.5 w-full bg-gradient-to-r from-[#00288e] via-[#2563eb] to-[#38bdf8]" />
+              </div>
+
+              {/* Text Content Block */}
+              <div className="relative z-10 flex-1 p-5 sm:p-7 md:p-9 lg:p-12 flex flex-col justify-center max-w-2xl">
+                {/* Desktop Badge (Mobile has the floating badge on the top photo) */}
+                <div className="hidden md:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#dbeafe] border border-blue-200/90 text-[#00288e] text-xs font-bold uppercase tracking-wider mb-4 shadow-2xs w-fit">
+                  <Sparkles className="w-3.5 h-3.5 text-[#00288e]" />
+                  <span>EXECUTIVE SEARCH MANDATE</span>
+                </div>
+
+                {/* Heading */}
+                <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-[#0b1c30] tracking-tight leading-tight mb-2.5 sm:mb-3">
+                  Request an Executive Search
+                </h3>
+
+                {/* Description */}
+                <p className="text-xs sm:text-sm lg:text-base text-slate-600 leading-relaxed mb-5 sm:mb-6 lg:mb-8 font-medium">
+                  Share your hiring requirement and our team will get in touch. Connect confidentially with our leadership hiring team for targeted sourcing.
+                </p>
+
+                {/* CTA Row */}
+                <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 sm:gap-4 w-full">
+                  <a
+                    href="#enquiry-form"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#00288e] hover:bg-[#1e40af] active:bg-[#1e3a8a] text-white font-bold text-xs sm:text-sm transition-all shadow-md min-h-[46px] w-full sm:w-auto text-center"
+                  >
+                    <span>Request a Search</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </a>
+
+                  <div className="hidden sm:block h-6 w-px bg-slate-300 mx-1" />
+
+                  <div className="inline-flex items-center justify-center sm:justify-start gap-2 text-xs font-bold text-[#0b1c30] text-center sm:text-left">
+                    <Users className="w-4 h-4 text-[#00288e] shrink-0" />
+                    <span>Direct consultation with executive search specialists</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Image Container with Diagonal Cut and Blue Ribbon (Desktop Only) */}
+              <div className="hidden md:block relative w-full md:w-[46%] lg:w-[48%] min-h-[260px] md:min-h-full shrink-0 overflow-hidden">
+                {/* Ambient Cyan Glow Underlay */}
+                <div
+                  className="absolute inset-0 bg-gradient-to-r from-[#38bdf8] via-[#60a5fa] to-transparent pointer-events-none"
+                  style={{ clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 12% 100%)' }}
+                />
+                {/* Royal Blue Accent Ribbon */}
+                <div
+                  className="absolute inset-0 bg-gradient-to-r from-[#1d4ed8] via-[#2563eb] to-[#38bdf8] pointer-events-none"
+                  style={{ clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 16% 100%)' }}
+                />
+                {/* Boardroom Image with Clean Diagonal Edge */}
+                <div
+                  className="absolute inset-0"
+                  style={{ clipPath: 'polygon(3.5% 0%, 100% 0%, 100% 100%, 19.5% 100%)' }}
+                >
+                  <img
+                    src="/images/executive_meeting.jpg"
+                    alt="Vakancy Executive Search Boardroom"
+                    className="w-full h-full object-cover object-[center_right]"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0a1122]/20 via-transparent to-transparent pointer-events-none" />
+                </div>
+              </div>
+
+            </div>
+          </FadeInSection>
+        </div>
+      </section>
+
       {/* 2. WHEN EXECUTIVE SEARCH MAKES SENSE (Light Surface) */}
       <section className="relative w-full py-18 sm:py-20 lg:py-24 bg-[#f8fafc] text-[#0f172a]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -278,18 +435,18 @@ export const ExecutiveSearchPage = () => {
         </div>
       </section>
 
-      {/* 3. OUR APPROACH (Deep Slate Section - 4 Steps) */}
-      <section className="relative w-full py-18 sm:py-20 lg:py-24 bg-[#0f172a] text-white border-t border-slate-800">
+      {/* 3. OUR APPROACH (Deep Slate Section - 4 Steps with Deliberate Boundary Containment) */}
+      <section className="relative w-full py-12 sm:py-16 lg:py-20 pb-16 sm:pb-20 lg:pb-24 bg-[#0f172a] text-white border-t border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center mb-10 sm:mb-16">
             <RevealOnScroll className="max-w-2xl">
               <span className="text-xs font-bold uppercase tracking-[0.18em] text-blue-400 mb-2 block">
                 Methodology
               </span>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white mb-4">
+              <h2 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white mb-3 sm:mb-4">
                 Our Approach
               </h2>
-              <p className="text-base sm:text-lg text-slate-300 leading-relaxed">
+              <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
                 A structured, consultative methodology designed to understand organizational needs and engage proven leaders.
               </p>
             </RevealOnScroll>
@@ -308,21 +465,21 @@ export const ExecutiveSearchPage = () => {
             </div>
           </div>
 
-          <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 relative z-10">
             {methodologySteps.map((step, idx) => (
               <StaggerItem
                 key={step.step}
                 index={idx}
-                className="bg-[#1e293b]/80 border border-slate-700/60 rounded-2xl p-7 hover:border-blue-500/40 transition-colors flex flex-col justify-between"
+                className="bg-[#1e293b]/90 border border-slate-700/80 rounded-2xl p-6 sm:p-7 hover:border-blue-500/50 transition-colors flex flex-col justify-between shadow-sm"
               >
                 <div>
-                  <span className="text-3xl font-extrabold text-blue-400/80 mb-4 block">
+                  <span className="text-2xl sm:text-3xl font-extrabold text-blue-400 mb-3 block">
                     {step.number}
                   </span>
-                  <h4 className="text-xl font-bold text-white mb-2.5">
+                  <h4 className="text-lg sm:text-xl font-bold text-white mb-2">
                     {step.title}
                   </h4>
-                  <p className="text-sm text-slate-300 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
                     {step.description}
                   </p>
                 </div>
@@ -332,45 +489,45 @@ export const ExecutiveSearchPage = () => {
         </div>
       </section>
 
-      {/* 4. ROLES WE CAN SUPPORT (Light Surface - Examples Only) */}
-      <section className="relative w-full py-18 sm:py-20 lg:py-24 bg-[#f8fafc] text-[#0f172a] border-t border-slate-200/80">
+      {/* 4. ROLES WE CAN SUPPORT (Compact Mobile Grid + Desktop Cards) */}
+      <section className="relative w-full py-12 sm:py-16 lg:py-20 bg-[#f8fafc] text-[#0f172a] border-t border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <RevealOnScroll className="max-w-2xl mb-14">
+          <RevealOnScroll className="max-w-2xl mb-8 sm:mb-14">
             <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#00288e] mb-2 block">
               Representative Roles
             </span>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#0f172a]">
+            <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-[#0f172a]">
               Roles We Can Support
             </h2>
-            <p className="text-base sm:text-lg text-slate-600 mt-3 leading-relaxed">
+            <p className="text-sm sm:text-base text-slate-600 mt-2 sm:mt-3 leading-relaxed">
               We coordinate searches across diverse disciplines. These example categories reflect the types of mandates we support.
             </p>
           </RevealOnScroll>
 
-          <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {roleCategories.map((cat, idx) => {
+          {/* Unified Responsive Grid (Mobile, Tablet, Desktop) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {roleCategories.map((cat) => {
               const Icon = cat.icon;
               return (
-                <StaggerItem
+                <div
                   key={cat.title}
-                  index={idx}
-                  className="bg-white rounded-2xl p-7 border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between"
+                  className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/90 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between"
                 >
                   <div>
-                    <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#00288e] flex items-center justify-center mb-5">
-                      <Icon className="w-6 h-6" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-50 text-[#00288e] flex items-center justify-center mb-3 sm:mb-4 shrink-0">
+                      <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
-                    <h3 className="text-lg font-bold text-[#0f172a] mb-2">
+                    <h3 className="text-base sm:text-lg font-bold text-[#0f172a] mb-2 leading-snug">
                       {cat.title}
                     </h3>
                     <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                       {cat.examples}
                     </p>
                   </div>
-                </StaggerItem>
+                </div>
               );
             })}
-          </StaggerContainer>
+          </div>
         </div>
       </section>
 
@@ -402,7 +559,8 @@ export const ExecutiveSearchPage = () => {
             </div>
 
             <div className="lg:col-span-7">
-              <StaggerContainer className="flex flex-col gap-5">
+              {/* Unified Responsive Comparison List (Mobile, Tablet, Desktop) */}
+              <div className="flex flex-col gap-3 sm:gap-4">
                 {[
                   {
                     title: 'Narrower Talent Pool',
@@ -420,17 +578,20 @@ export const ExecutiveSearchPage = () => {
                     title: 'Significant Organizational Responsibility',
                     desc: 'Senior appointments shape company direction; thorough vetting and reference alignment minimize hiring risk.',
                   },
-                ].map((item, idx) => (
-                  <StaggerItem
+                ].map((item) => (
+                  <div
                     key={item.title}
-                    index={idx}
-                    className="bg-[#0f172a] p-6 sm:p-7 rounded-2xl border border-slate-700/60 hover:border-blue-500/30 transition-colors"
+                    className="bg-[#0f172a] p-4 sm:p-6 rounded-2xl border border-slate-700/60 hover:border-blue-500/30 transition-colors"
                   >
-                    <h3 className="text-lg font-bold text-white mb-1.5">{item.title}</h3>
-                    <p className="text-sm text-slate-300 leading-relaxed">{item.desc}</p>
-                  </StaggerItem>
+                    <h3 className="text-sm sm:text-base lg:text-lg font-bold text-white mb-1.5 leading-snug">
+                      {item.title}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                      {item.desc}
+                    </p>
+                  </div>
                 ))}
-              </StaggerContainer>
+              </div>
             </div>
 
           </div>

@@ -1,34 +1,35 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  ShieldCheck,
+  AlertCircle,
+  ArrowRight,
   Building2,
-  User,
-  Mail,
-  Phone,
-  KeyRound,
+  CheckCircle2,
   Eye,
   EyeOff,
-  ArrowRight,
-  AlertCircle,
-  CheckCircle2,
+  Globe,
+  KeyRound,
   Lock,
-  Globe
+  Mail,
+  Phone,
+  ShieldCheck,
+  User
 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5">
-    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
   </svg>
 );
 
+import GoogleAuthButton from '../../components/auth/GoogleAuthButton';
+import BrandLogo from '../../components/common/BrandLogo';
+import { PageTransition, RevealOnScroll } from '../../components/common/Motion';
 import { useAuth } from '../../context/AuthContext';
 import API from '../../services/api';
-import Toast from '../../components/ui/Toast';
-import { PageTransition, RevealOnScroll } from '../../components/common/Motion';
 
 export const RegisterPage = () => {
   const navigate = useNavigate();
@@ -36,10 +37,10 @@ export const RegisterPage = () => {
   const [searchParams] = useSearchParams();
 
   // Changed: No default role, user must select if not provided in URL
-  const initialRole = ['employer', 'candidate'].includes(searchParams.get('role')) 
-    ? searchParams.get('role') 
+  const initialRole = ['employer', 'candidate'].includes(searchParams.get('role'))
+    ? searchParams.get('role')
     : null;
-    
+
   const [role, setRole] = useState(initialRole);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -112,7 +113,7 @@ export const RegisterPage = () => {
     const errs = {};
     if (!formData.first_name.trim()) errs.first_name = 'First name is required.';
     if (!formData.last_name.trim()) errs.last_name = 'Last name is required.';
-    
+
     if (!formData.email.trim()) {
       errs.email = 'Email address is required.';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -201,16 +202,16 @@ export const RegisterPage = () => {
   return (
     <PageTransition className="w-full bg-[#0f172a] min-h-screen text-slate-100 font-sans flex flex-col">
       <section className="relative w-full flex-grow flex items-center justify-center py-12 lg:py-24 overflow-hidden">
-        
+
         {/* Background Accents */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_70%,_rgba(37,99,235,0.1),_transparent_70%)] pointer-events-none" />
         <div className="absolute bottom-0 -left-40 w-[600px] h-[600px] rounded-full bg-emerald-600/10 blur-[120px] pointer-events-none translate-y-1/2" />
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-12 xl:gap-16 items-center">
+
             {/* LEFT COLUMN: Editorial Image & Context */}
-            <div className="hidden lg:flex flex-col gap-8 pr-8">
+            <div className="hidden xl:flex flex-col gap-8 pr-8">
               <RevealOnScroll>
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-slate-300 text-[11px] font-bold uppercase tracking-widest backdrop-blur-md">
                   <Globe className="w-4 h-4 text-blue-400" />
@@ -247,10 +248,10 @@ export const RegisterPage = () => {
             </div>
 
             {/* RIGHT COLUMN: Registration Card */}
-            <div className="w-full flex justify-center lg:justify-end">
+            <div className="w-full flex justify-center xl:justify-end">
               <RevealOnScroll delay={150} className="w-full max-w-lg">
                 <div className="bg-white rounded-[2rem] shadow-2xl p-8 sm:p-10 text-[#0f172a] relative overflow-hidden">
-                  
+
                   {/* Vakancy brand top border line */}
                   <div className="absolute top-0 left-0 w-full h-1 bg-[#1E40AF]"></div>
 
@@ -269,25 +270,28 @@ export const RegisterPage = () => {
                     </div>
                   ) : !role ? (
                     <div className="animate-in fade-in duration-500">
-                      <div className="mb-8">
-                        <h2 className="text-3xl font-extrabold tracking-tight mb-2">Get Started</h2>
-                        <p className="text-slate-500 text-sm">Select your account type to continue.</p>
+                      <div className="mb-6">
+                        <div className="mb-4">
+                          <BrandLogo variant="v-wordmark" size="lg" className="mb-1" />
+                        </div>
+                        <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-1 text-[#0b1c30]">Get Started</h2>
+                        <p className="text-slate-500 text-xs sm:text-sm">Select your account type to continue.</p>
                       </div>
 
                       <div className="flex flex-col gap-4">
                         <button
                           onClick={() => setRole('candidate')}
-                          className="group relative overflow-hidden flex items-center gap-5 p-5 sm:p-6 rounded-2xl border border-slate-200 bg-slate-50 hover:bg-white hover:border-blue-500 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all text-left"
+                          className="group relative overflow-hidden flex items-center gap-5 p-5 sm:p-6 rounded-2xl border border-slate-200 bg-slate-50 hover:bg-white hover:border-[#00288e] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all text-left"
                         >
                           <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-blue-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
-                            <User className="w-7 h-7 sm:w-8 sm:h-8 text-blue-600" />
+                            <User className="w-7 h-7 sm:w-8 sm:h-8 text-[#00288e]" />
                           </div>
                           <div className="flex-1 pr-6">
                             <h3 className="text-base sm:text-lg font-bold text-[#0f172a] mb-1">I am a Candidate</h3>
                             <p className="text-xs sm:text-sm text-slate-500">Find premium jobs, build your AI resume, and track applications.</p>
                           </div>
                           <div className="absolute right-5 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300">
-                            <ArrowRight className="w-5 h-5 text-blue-500" />
+                            <ArrowRight className="w-5 h-5 text-[#00288e]" />
                           </div>
                         </button>
 
@@ -311,7 +315,7 @@ export const RegisterPage = () => {
                       <div className="mt-8 text-center">
                         <p className="text-sm text-slate-500">
                           Already have an account?{' '}
-                          <Link to="/login" className="text-blue-600 font-bold hover:text-blue-700 underline">
+                          <Link to="/login" className="text-[#00288e] font-bold hover:underline">
                             Sign in
                           </Link>
                         </p>
@@ -319,28 +323,29 @@ export const RegisterPage = () => {
                     </div>
                   ) : (
                     <>
-                      <div className="mb-8">
-                        <h2 className="text-3xl font-extrabold tracking-tight mb-2">Create Account</h2>
-                        <p className="text-slate-500 text-sm">Registering as a {role === 'employer' ? 'Company / Recruiter' : 'Candidate'}.</p>
+                      <div className="mb-6">
+                        <div className="mb-4">
+                          <BrandLogo variant="v-wordmark" size="lg" className="mb-1" />
+                        </div>
+                        <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-1 text-[#0b1c30]">Create Account</h2>
+                        <p className="text-slate-500 text-xs sm:text-sm">Registering as a {role === 'employer' ? 'Company / Recruiter' : 'Candidate'}.</p>
                       </div>
 
                       {/* Role Switcher */}
-                      <div className="flex p-1 bg-slate-100 rounded-xl mb-8">
+                      <div className="flex p-1 bg-slate-100 rounded-xl mb-6">
                         <button
                           type="button"
                           onClick={() => handleRoleChange('candidate')}
-                          className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
-                            role === 'candidate' ? 'bg-white text-blue-600 shadow-md' : 'text-slate-500 hover:text-slate-900'
-                          }`}
+                          className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${role === 'candidate' ? 'bg-white text-[#00288e] shadow-md' : 'text-slate-500 hover:text-slate-900'
+                            }`}
                         >
                           <User className="w-4 h-4" /> Candidate
                         </button>
                         <button
                           type="button"
                           onClick={() => handleRoleChange('employer')}
-                          className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
-                            role === 'employer' ? 'bg-white text-blue-600 shadow-md' : 'text-slate-500 hover:text-slate-900'
-                          }`}
+                          className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${role === 'employer' ? 'bg-white text-[#00288e] shadow-md' : 'text-slate-500 hover:text-slate-900'
+                            }`}
                         >
                           <Building2 className="w-4 h-4" /> Employer
                         </button>
@@ -354,7 +359,7 @@ export const RegisterPage = () => {
                       )}
 
                       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                        
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
                             <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">First Name</label>
@@ -363,9 +368,8 @@ export const RegisterPage = () => {
                               name="first_name"
                               value={formData.first_name}
                               onChange={handleChange}
-                              className={`w-full bg-slate-50 text-[#0f172a] text-sm px-4 py-3 rounded-xl border focus:outline-none transition-all ${
-                                fieldErrors.first_name ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-blue-500'
-                              }`}
+                              className={`w-full bg-slate-50 text-[#0f172a] text-sm px-4 py-3 rounded-xl border focus:outline-none transition-all ${fieldErrors.first_name ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-blue-500'
+                                }`}
                             />
                             {fieldErrors.first_name && <p className="text-red-500 text-[11px] font-medium mt-1">{fieldErrors.first_name}</p>}
                           </div>
@@ -376,9 +380,8 @@ export const RegisterPage = () => {
                               name="last_name"
                               value={formData.last_name}
                               onChange={handleChange}
-                              className={`w-full bg-slate-50 text-[#0f172a] text-sm px-4 py-3 rounded-xl border focus:outline-none transition-all ${
-                                fieldErrors.last_name ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-blue-500'
-                              }`}
+                              className={`w-full bg-slate-50 text-[#0f172a] text-sm px-4 py-3 rounded-xl border focus:outline-none transition-all ${fieldErrors.last_name ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-blue-500'
+                                }`}
                             />
                             {fieldErrors.last_name && <p className="text-red-500 text-[11px] font-medium mt-1">{fieldErrors.last_name}</p>}
                           </div>
@@ -395,9 +398,8 @@ export const RegisterPage = () => {
                                 value={formData.company_name}
                                 onChange={handleChange}
                                 placeholder="e.g. Apex Global"
-                                className={`w-full bg-slate-50 text-[#0f172a] text-sm pl-11 pr-4 py-3 rounded-xl border focus:outline-none transition-all ${
-                                  fieldErrors.company_name ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-blue-500'
-                                }`}
+                                className={`w-full bg-slate-50 text-[#0f172a] text-sm pl-11 pr-4 py-3 rounded-xl border focus:outline-none transition-all ${fieldErrors.company_name ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-blue-500'
+                                  }`}
                               />
                             </div>
                             {fieldErrors.company_name && <p className="text-red-500 text-[11px] font-medium mt-1">{fieldErrors.company_name}</p>}
@@ -414,9 +416,8 @@ export const RegisterPage = () => {
                               value={formData.email}
                               onChange={handleChange}
                               placeholder={role === 'employer' ? 'name@company.com' : 'you@example.com'}
-                              className={`w-full bg-slate-50 text-[#0f172a] text-sm pl-11 pr-4 py-3 rounded-xl border focus:outline-none transition-all ${
-                                fieldErrors.email ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-blue-500'
-                              }`}
+                              className={`w-full bg-slate-50 text-[#0f172a] text-sm pl-11 pr-4 py-3 rounded-xl border focus:outline-none transition-all ${fieldErrors.email ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-blue-500'
+                                }`}
                             />
                           </div>
                           {fieldErrors.email && <p className="text-red-500 text-[11px] font-medium mt-1">{fieldErrors.email}</p>}
@@ -432,9 +433,8 @@ export const RegisterPage = () => {
                               value={formData.phone}
                               onChange={handleChange}
                               placeholder="+91 98765 43210"
-                              className={`w-full bg-slate-50 text-[#0f172a] text-sm pl-11 pr-4 py-3 rounded-xl border focus:outline-none transition-all ${
-                                fieldErrors.phone ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-blue-500'
-                              }`}
+                              className={`w-full bg-slate-50 text-[#0f172a] text-sm pl-11 pr-4 py-3 rounded-xl border focus:outline-none transition-all ${fieldErrors.phone ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-blue-500'
+                                }`}
                             />
                           </div>
                           {fieldErrors.phone && <p className="text-red-500 text-[11px] font-medium mt-1">{fieldErrors.phone}</p>}
@@ -451,9 +451,8 @@ export const RegisterPage = () => {
                                 value={formData.password}
                                 onChange={handleChange}
                                 placeholder="••••••••"
-                                className={`w-full bg-slate-50 text-[#0f172a] text-sm pl-11 pr-10 py-3 rounded-xl border focus:outline-none transition-all ${
-                                  fieldErrors.password ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-blue-500'
-                                }`}
+                                className={`w-full bg-slate-50 text-[#0f172a] text-sm pl-11 pr-10 py-3 rounded-xl border focus:outline-none transition-all ${fieldErrors.password ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-blue-500'
+                                  }`}
                               />
                               <button
                                 type="button"
@@ -473,9 +472,8 @@ export const RegisterPage = () => {
                               value={formData.confirm_password}
                               onChange={handleChange}
                               placeholder="••••••••"
-                              className={`w-full bg-slate-50 text-[#0f172a] text-sm px-4 py-3 rounded-xl border focus:outline-none transition-all ${
-                                fieldErrors.confirm_password ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-blue-500'
-                              }`}
+                              className={`w-full bg-slate-50 text-[#0f172a] text-sm px-4 py-3 rounded-xl border focus:outline-none transition-all ${fieldErrors.confirm_password ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-blue-500'
+                                }`}
                             />
                             {fieldErrors.confirm_password && <p className="text-red-500 text-[11px] font-medium mt-1">{fieldErrors.confirm_password}</p>}
                           </div>
@@ -501,7 +499,7 @@ export const RegisterPage = () => {
                         <button
                           type="submit"
                           disabled={loading}
-                          className="w-full mt-4 py-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                          className="w-full mt-4 py-4 rounded-xl bg-[#00288e] hover:bg-[#1e40af] text-white font-bold text-sm shadow-[0_4px_16px_rgba(0,40,142,0.25)] transition-all flex items-center justify-center gap-2 disabled:opacity-50 min-h-[44px]"
                         >
                           {loading ? 'Processing...' : 'Create Account'}
                           {!loading && <ArrowRight className="w-4 h-4" />}
@@ -515,12 +513,7 @@ export const RegisterPage = () => {
                       </div>
 
                       <div className="mt-6">
-                        <button 
-                          onClick={() => showToast('Redirecting to Google Sign-Up...')} 
-                          className="w-full py-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-sm font-bold transition-all flex items-center justify-center gap-3"
-                        >
-                          <GoogleIcon /> Continue with Google
-                        </button>
+                        <GoogleAuthButton role={role || "candidate"} companyName={formData?.company_name || ""} />
                       </div>
 
                       <div className="mt-8 text-center">
@@ -536,12 +529,13 @@ export const RegisterPage = () => {
                 </div>
               </RevealOnScroll>
             </div>
-            
+
           </div>
         </div>
       </section>
-      
-      <style dangerouslySetInnerHTML={{__html: `
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes progress {
           from { transform: scaleX(0); }
           to { transform: scaleX(1); }

@@ -45,23 +45,28 @@ export const PrivacyPage = () => {
     <PageTransition className="w-full bg-[#f8fafc] text-[#0f172a] min-h-screen font-sans">
       
       {/* Premium Hero Section */}
-      <section className="relative w-full pt-32 pb-24 bg-[#0f172a] overflow-hidden">
+      <section className="relative w-full pt-20 sm:pt-28 pb-12 sm:pb-20 bg-[#0f172a] overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_0%,_var(--tw-gradient-stops))] from-blue-900/30 via-[#0f172a] to-[#0f172a] pointer-events-none" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10 text-center flex flex-col items-center">
           <RevealOnScroll>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-300 text-[10px] font-bold uppercase tracking-[0.2em] mb-6 backdrop-blur-md">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-300 text-[10px] font-bold uppercase tracking-[0.2em] mb-4 sm:mb-6 backdrop-blur-md">
               <Shield className="w-3.5 h-3.5 text-blue-400" />
               Privacy & Data Governance
             </div>
           </RevealOnScroll>
           <RevealOnScroll delay={100}>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight mb-6">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight mb-3 sm:mb-4">
               Privacy Policy
             </h1>
           </RevealOnScroll>
-          <RevealOnScroll delay={200}>
-            <p className="text-slate-400 max-w-2xl text-lg leading-relaxed">
-              Effective Date: October 1, 2024. Discover how Vakancy protects your personal and enterprise data with uncompromising security.
+          <RevealOnScroll delay={150}>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-slate-300 text-xs font-medium mb-3">
+              <span>Effective Date: October 1, 2024</span>
+              <span className="text-slate-500">•</span>
+              <span>Last Updated: October 2024</span>
+            </div>
+            <p className="text-slate-400 max-w-2xl text-xs sm:text-base leading-relaxed">
+              Discover how Vakancy.in protects your personal, career, and recruitment data with transparent governance and data protection practices.
             </p>
           </RevealOnScroll>
         </div>
@@ -284,10 +289,10 @@ export const PrivacyPage = () => {
                   <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
                     <div className="font-semibold text-slate-900 text-sm mb-1 flex items-center gap-2">
                       <Mail className="w-4 h-4 text-rose-600" />
-                      Resend
+                      Hostinger Email Services (SMTP)
                     </div>
                     <p className="text-xs text-slate-600">
-                      Transactional email delivery for verification codes, application updates, and recruitment notices.
+                      Authenticated transactional email delivery for verification codes, password resets, application notices, and platform updates.
                     </p>
                   </div>
 

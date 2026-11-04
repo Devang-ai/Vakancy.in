@@ -1,0 +1,387 @@
+{
+  "testResults": {
+    "priority0_jobs_loading": {
+      "status": 200,
+      "headerText": "Find Jobs",
+      "consoleErrorsCount": 0,
+      "passed": true
+    },
+    "priority0_jobs_refresh": {
+      "status": 304,
+      "passed": false
+    },
+    "priority1_text_clipping_executive": {
+      "testedRolesCount": 5,
+      "roles": [
+        {
+          "text": "Leadership Hiring",
+          "lineClamp": "none",
+          "overflow": "visible",
+          "textOverflow": "clip",
+          "scrollWidth": 135,
+          "clientWidth": 135,
+          "isClipped": false
+        },
+        {
+          "text": "Leadership Positions",
+          "lineClamp": "none",
+          "overflow": "visible",
+          "textOverflow": "clip",
+          "scrollWidth": 300,
+          "clientWidth": 300,
+          "isClipped": false
+        },
+        {
+          "text": "Senior Management & Leadership",
+          "lineClamp": "none",
+          "overflow": "visible",
+          "textOverflow": "clip",
+          "scrollWidth": 316,
+          "clientWidth": 316,
+          "isClipped": false
+        },
+        {
+          "text": "Technology & Engineering",
+          "lineClamp": "none",
+          "overflow": "visible",
+          "textOverflow": "clip",
+          "scrollWidth": 316,
+          "clientWidth": 316,
+          "isClipped": false
+        },
+        {
+          "text": "Sales & Business Development",
+          "lineClamp": "none",
+          "overflow": "visible",
+          "textOverflow": "clip",
+          "scrollWidth": 316,
+          "clientWidth": 316,
+          "isClipped": false
+        }
+      ],
+      "passed": true
+    },
+    "priority1_categories_home": {
+      "categoriesCount": 6,
+      "categories": [
+        {
+          "text": "Engineering",
+          "hasTruncate": false,
+          "rect": {}
+        },
+        {
+          "text": "Mobile App",
+          "hasTruncate": false,
+          "rect": {}
+        },
+        {
+          "text": "Sales & BD",
+          "hasTruncate": false,
+          "rect": {}
+        },
+        {
+          "text": "Marketing",
+          "hasTruncate": false,
+          "rect": {}
+        },
+        {
+          "text": "Finance",
+          "hasTruncate": false,
+          "rect": {}
+        },
+        {
+          "text": "Design & UI",
+          "hasTruncate": false,
+          "rect": {}
+        }
+      ],
+      "passed": true
+    },
+    "priority2_mobile_navigation": {
+      "drawerFound": true,
+      "canonicalLinksFound": [
+        "Home",
+        "Find Jobs",
+        "For Employers",
+        "Executive Search",
+        "About Us",
+        "Contact Us"
+      ],
+      "hasUnauthorizedCompanies": false,
+      "allLinksWithTouchTarget44px": false,
+      "bodyScrollLockedWhenOpen": true,
+      "escapeKeyClosesDrawer": true,
+      "passed": true
+    },
+    "priority3_4_tablet_responsiveness": [
+      {
+        "viewport": "mobile_390",
+        "width": 390,
+        "height": 844,
+        "pages": [
+          {
+            "page": "home",
+            "hasOverflow": false,
+            "header": "Find the right opportunity, connect with"
+          },
+          {
+            "page": "jobs",
+            "hasOverflow": false,
+            "header": "Find Jobs"
+          },
+          {
+            "page": "executive",
+            "hasOverflow": false,
+            "header": "Specialized hiring for leadership and ni"
+          },
+          {
+            "page": "employers",
+            "hasOverflow": false,
+            "header": "Hire people who move your business forwa"
+          },
+          {
+            "page": "about",
+            "hasOverflow": false,
+            "header": "A smarter way to connect talent with opp"
+          }
+        ]
+      },
+      {
+        "viewport": "tablet_600",
+        "width": 600,
+        "height": 960,
+        "pages": [
+          {
+            "page": "home",
+            "hasOverflow": false,
+            "header": "Find the right opportunity, connect with"
+          },
+          {
+            "page": "jobs",
+            "hasOverflow": false,
+            "header": "Find Jobs"
+          },
+          {
+            "page": "executive",
+            "hasOverflow": false,
+            "header": "Specialized hiring for leadership and ni"
+          },
+          {
+            "page": "employers",
+            "hasOverflow": false,
+            "header": "Hire people who move your business forwa"
+          },
+          {
+            "page": "about",
+            "hasOverflow": false,
+            "header": "A smarter way to connect talent with opp"
+          }
+        ]
+      },
+      {
+        "viewport": "tablet_768",
+        "width": 768,
+        "height": 1024,
+        "pages": [
+          {
+            "page": "home",
+            "hasOverflow": false,
+            "header": "Find the right opportunity, connect with"
+          },
+          {
+            "page": "jobs",
+            "hasOverflow": false,
+            "header": "Find Jobs"
+          },
+          {
+            "page": "executive",
+            "hasOverflow": false,
+            "header": "Specialized hiring for leadership and ni"
+          },
+          {
+            "page": "employers",
+            "hasOverflow": false,
+            "header": "Hire people who move your business forwa"
+          },
+          {
+            "page": "about",
+            "hasOverflow": false,
+            "header": "A smarter way to connect talent with opp"
+          }
+        ]
+      },
+      {
+        "viewport": "tablet_820",
+        "width": 820,
+        "height": 1180,
+        "pages": [
+          {
+            "page": "home",
+            "hasOverflow": false,
+            "header": "Find the right opportunity, connect with"
+          },
+          {
+            "page": "jobs",
+            "hasOverflow": false,
+            "header": "Find Jobs"
+          },
+          {
+            "page": "executive",
+            "hasOverflow": false,
+            "header": "Specialized hiring for leadership and ni"
+          },
+          {
+            "page": "employers",
+            "hasOverflow": false,
+            "header": "Hire people who move your business forwa"
+          },
+          {
+            "page": "about",
+            "hasOverflow": false,
+            "header": "A smarter way to connect talent with opp"
+          }
+        ]
+      },
+      {
+        "viewport": "tablet_912",
+        "width": 912,
+        "height": 1368,
+        "pages": [
+          {
+            "page": "home",
+            "hasOverflow": false,
+            "header": "Find the right opportunity, connect with"
+          },
+          {
+            "page": "jobs",
+            "hasOverflow": false,
+            "header": "Find Jobs"
+          },
+          {
+            "page": "executive",
+            "hasOverflow": false,
+            "header": "Specialized hiring for leadership and ni"
+          },
+          {
+            "page": "employers",
+            "hasOverflow": false,
+            "header": "Hire people who move your business forwa"
+          },
+          {
+            "page": "about",
+            "hasOverflow": false,
+            "header": "A smarter way to connect talent with opp"
+          }
+        ]
+      },
+      {
+        "viewport": "tablet_1024",
+        "width": 1024,
+        "height": 768,
+        "pages": [
+          {
+            "page": "home",
+            "hasOverflow": false,
+            "header": "Find the right opportunity, connect with"
+          },
+          {
+            "page": "jobs",
+            "hasOverflow": false,
+            "header": "Find Jobs"
+          },
+          {
+            "page": "executive",
+            "hasOverflow": false,
+            "header": "Specialized hiring for leadership and ni"
+          },
+          {
+            "page": "employers",
+            "hasOverflow": false,
+            "header": "Hire people who move your business forwa"
+          },
+          {
+            "page": "about",
+            "hasOverflow": false,
+            "header": "A smarter way to connect talent with opp"
+          }
+        ]
+      },
+      {
+        "viewport": "tablet_1180",
+        "width": 1180,
+        "height": 820,
+        "pages": [
+          {
+            "page": "home",
+            "hasOverflow": false,
+            "header": "Find the right opportunity, connect with"
+          },
+          {
+            "page": "jobs",
+            "hasOverflow": false,
+            "header": "Find Jobs"
+          },
+          {
+            "page": "executive",
+            "hasOverflow": false,
+            "header": "Specialized hiring for leadership and ni"
+          },
+          {
+            "page": "employers",
+            "hasOverflow": false,
+            "header": "Hire people who move your business forwa"
+          },
+          {
+            "page": "about",
+            "hasOverflow": false,
+            "header": "A smarter way to connect talent with opp"
+          }
+        ]
+      },
+      {
+        "viewport": "desktop_1440",
+        "width": 1440,
+        "height": 900,
+        "pages": [
+          {
+            "page": "home",
+            "hasOverflow": false,
+            "header": "Find the right opportunity, connect with"
+          },
+          {
+            "page": "jobs",
+            "hasOverflow": false,
+            "header": "Find Jobs"
+          },
+          {
+            "page": "executive",
+            "hasOverflow": false,
+            "header": "Specialized hiring for leadership and ni"
+          },
+          {
+            "page": "employers",
+            "hasOverflow": false,
+            "header": "Hire people who move your business forwa"
+          },
+          {
+            "page": "about",
+            "hasOverflow": false,
+            "header": "A smarter way to connect talent with opp"
+          }
+        ]
+      }
+    ]
+  },
+  "consoleErrors": [
+    "Warning: Each child in a list should have a unique \"key\" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s \n\nCheck the render method of `ExecutiveSearchPage`.  \n    at StaggerItem (http://localhost:5173/src/components/common/Motion.jsx:113:31)\n    at ExecutiveSearchPage (http://localhost:5173/src/pages/guest/ExecutiveSearchPage.jsx?t=1793652478253:38:35)\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4112:5)\n    at Outlet (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4518:26)\n    at main\n    at div\n    at GuestLayout (http://localhost:5173/src/components/layout/GuestLayout.jsx?t=1793652258995:33:47)\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4112:5)\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4582:5)\n    at Suspense\n    at Router (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4525:15)\n    at BrowserRouter (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:5263:5)\n    at NotificationProvider (http://localhost:5173/src/context/NotificationContext.jsx:22:40)\n    at AuthProvider (http://localhost:5173/src/context/AuthContext.jsx:22:32)\n    at App",
+    "Warning: Each child in a list should have a unique \"key\" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s \n\nCheck the render method of `ExecutiveSearchPage`.  \n    at StaggerItem (http://localhost:5173/src/components/common/Motion.jsx:113:31)\n    at ExecutiveSearchPage (http://localhost:5173/src/pages/guest/ExecutiveSearchPage.jsx?t=1793652478253:38:35)\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4112:5)\n    at Outlet (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4518:26)\n    at main\n    at div\n    at GuestLayout (http://localhost:5173/src/components/layout/GuestLayout.jsx?t=1793652258995:33:47)\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4112:5)\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4582:5)\n    at Suspense\n    at Router (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4525:15)\n    at BrowserRouter (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:5263:5)\n    at NotificationProvider (http://localhost:5173/src/context/NotificationContext.jsx:22:40)\n    at AuthProvider (http://localhost:5173/src/context/AuthContext.jsx:22:32)\n    at App",
+    "Warning: Each child in a list should have a unique \"key\" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s \n\nCheck the render method of `ExecutiveSearchPage`.  \n    at StaggerItem (http://localhost:5173/src/components/common/Motion.jsx:113:31)\n    at ExecutiveSearchPage (http://localhost:5173/src/pages/guest/ExecutiveSearchPage.jsx?t=1793652478253:38:35)\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4112:5)\n    at Outlet (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4518:26)\n    at main\n    at div\n    at GuestLayout (http://localhost:5173/src/components/layout/GuestLayout.jsx?t=1793652258995:33:47)\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4112:5)\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4582:5)\n    at Suspense\n    at Router (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4525:15)\n    at BrowserRouter (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:5263:5)\n    at NotificationProvider (http://localhost:5173/src/context/NotificationContext.jsx:22:40)\n    at AuthProvider (http://localhost:5173/src/context/AuthContext.jsx:22:32)\n    at App",
+    "Warning: Each child in a list should have a unique \"key\" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s \n\nCheck the render method of `ExecutiveSearchPage`.  \n    at StaggerItem (http://localhost:5173/src/components/common/Motion.jsx:113:31)\n    at ExecutiveSearchPage (http://localhost:5173/src/pages/guest/ExecutiveSearchPage.jsx?t=1793652478253:38:35)\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4112:5)\n    at Outlet (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4518:26)\n    at main\n    at div\n    at GuestLayout (http://localhost:5173/src/components/layout/GuestLayout.jsx?t=1793652258995:33:47)\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4112:5)\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4582:5)\n    at Suspense\n    at Router (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4525:15)\n    at BrowserRouter (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:5263:5)\n    at NotificationProvider (http://localhost:5173/src/context/NotificationContext.jsx:22:40)\n    at AuthProvider (http://localhost:5173/src/context/AuthContext.jsx:22:32)\n    at App",
+    "Warning: Each child in a list should have a unique \"key\" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s \n\nCheck the render method of `ExecutiveSearchPage`.  \n    at StaggerItem (http://localhost:5173/src/components/common/Motion.jsx:113:31)\n    at ExecutiveSearchPage (http://localhost:5173/src/pages/guest/ExecutiveSearchPage.jsx?t=1793652478253:38:35)\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4112:5)\n    at Outlet (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4518:26)\n    at main\n    at div\n    at GuestLayout (http://localhost:5173/src/components/layout/GuestLayout.jsx?t=1793652258995:33:47)\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4112:5)\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4582:5)\n    at Suspense\n    at Router (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4525:15)\n    at BrowserRouter (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:5263:5)\n    at NotificationProvider (http://localhost:5173/src/context/NotificationContext.jsx:22:40)\n    at AuthProvider (http://localhost:5173/src/context/AuthContext.jsx:22:32)\n    at App",
+    "Warning: Each child in a list should have a unique \"key\" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s \n\nCheck the render method of `ExecutiveSearchPage`.  \n    at StaggerItem (http://localhost:5173/src/components/common/Motion.jsx:113:31)\n    at ExecutiveSearchPage (http://localhost:5173/src/pages/guest/ExecutiveSearchPage.jsx?t=1793652478253:38:35)\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4112:5)\n    at Outlet (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4518:26)\n    at main\n    at div\n    at GuestLayout (http://localhost:5173/src/components/layout/GuestLayout.jsx?t=1793652258995:33:47)\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4112:5)\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4582:5)\n    at Suspense\n    at Router (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4525:15)\n    at BrowserRouter (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:5263:5)\n    at NotificationProvider (http://localhost:5173/src/context/NotificationContext.jsx:22:40)\n    at AuthProvider (http://localhost:5173/src/context/AuthContext.jsx:22:32)\n    at App",
+    "Warning: Each child in a list should have a unique \"key\" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s \n\nCheck the render method of `ExecutiveSearchPage`.  \n    at StaggerItem (http://localhost:5173/src/components/common/Motion.jsx:113:31)\n    at ExecutiveSearchPage (http://localhost:5173/src/pages/guest/ExecutiveSearchPage.jsx?t=1793652478253:38:35)\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4112:5)\n    at Outlet (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4518:26)\n    at main\n    at div\n    at GuestLayout (http://localhost:5173/src/components/layout/GuestLayout.jsx?t=1793652258995:33:47)\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4112:5)\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4582:5)\n    at Suspense\n    at Router (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4525:15)\n    at BrowserRouter (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:5263:5)\n    at NotificationProvider (http://localhost:5173/src/context/NotificationContext.jsx:22:40)\n    at AuthProvider (http://localhost:5173/src/context/AuthContext.jsx:22:32)\n    at App",
+    "Warning: Each child in a list should have a unique \"key\" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s \n\nCheck the render method of `ExecutiveSearchPage`.  \n    at StaggerItem (http://localhost:5173/src/components/common/Motion.jsx:113:31)\n    at ExecutiveSearchPage (http://localhost:5173/src/pages/guest/ExecutiveSearchPage.jsx?t=1793652478253:38:35)\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4112:5)\n    at Outlet (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4518:26)\n    at main\n    at div\n    at GuestLayout (http://localhost:5173/src/components/layout/GuestLayout.jsx?t=1793652258995:33:47)\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4112:5)\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4582:5)\n    at Suspense\n    at Router (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4525:15)\n    at BrowserRouter (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:5263:5)\n    at NotificationProvider (http://localhost:5173/src/context/NotificationContext.jsx:22:40)\n    at AuthProvider (http://localhost:5173/src/context/AuthContext.jsx:22:32)\n    at App",
+    "Warning: Each child in a list should have a unique \"key\" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s \n\nCheck the render method of `ExecutiveSearchPage`.  \n    at StaggerItem (http://localhost:5173/src/components/common/Motion.jsx:113:31)\n    at ExecutiveSearchPage (http://localhost:5173/src/pages/guest/ExecutiveSearchPage.jsx?t=1793652478253:38:35)\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4112:5)\n    at Outlet (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4518:26)\n    at main\n    at div\n    at GuestLayout (http://localhost:5173/src/components/layout/GuestLayout.jsx?t=1793652258995:33:47)\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4112:5)\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4582:5)\n    at Suspense\n    at Router (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:4525:15)\n    at BrowserRouter (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=6e6920b2:5263:5)\n    at NotificationProvider (http://localhost:5173/src/context/NotificationContext.jsx:22:40)\n    at AuthProvider (http://localhost:5173/src/context/AuthContext.jsx:22:32)\n    at App"
+  ],
+  "pageErrors": []
+}

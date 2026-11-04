@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, MapPin, Plus, UserPlus, Tag, CheckCircle2, AlertCircle, X, ArrowRight } from 'lucide-react';
 import API from '../../services/api';
 import StatusBadge from '../../components/StatusBadge';
+import useModalA11y from '../../hooks/useModalA11y';
 
 const RecruiterCandidateDb = () => {
   const [candidates, setCandidates] = useState([]);
@@ -21,6 +22,11 @@ const RecruiterCandidateDb = () => {
 
   const [msg, setMsg] = useState({ type: '', text: '' });
   const [submitting, setSubmitting] = useState(false);
+
+  useModalA11y(assignModal.isOpen || manualModal, () => {
+    setAssignModal({ isOpen: false, candidate: null });
+    setManualModal(false);
+  });
 
   useEffect(() => {
     fetchCandidates();
@@ -167,9 +173,21 @@ const RecruiterCandidateDb = () => {
 
       {/* Assign Pipeline Modal */}
       {assignModal.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="w-full max-w-md glass-card rounded-2xl border border-white/15 p-6 shadow-2xl relative">
-            <button onClick={() => setAssignModal({ isOpen: false, candidate: null })} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setAssignModal({ isOpen: false, candidate: null })}
+        >
+          <div 
+            className="relative w-full max-w-md max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] glass-card rounded-2xl border border-white/15 p-6 shadow-2xl overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button 
+              type="button"
+              onClick={() => setAssignModal({ isOpen: false, candidate: null })} 
+              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded"
+            >
               <X className="w-5 h-5" />
             </button>
 
@@ -215,9 +233,21 @@ const RecruiterCandidateDb = () => {
 
       {/* Manual Add Candidate Modal */}
       {manualModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="w-full max-w-md glass-card rounded-2xl border border-white/15 p-6 shadow-2xl relative max-h-[85vh] overflow-y-auto">
-            <button onClick={() => setManualModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setManualModal(false)}
+        >
+          <div 
+            className="relative w-full max-w-md max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] glass-card rounded-2xl border border-white/15 p-6 shadow-2xl overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button 
+              type="button"
+              onClick={() => setManualModal(false)} 
+              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded"
+            >
               <X className="w-5 h-5" />
             </button>
 

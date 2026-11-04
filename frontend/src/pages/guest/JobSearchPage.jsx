@@ -38,10 +38,12 @@ const CANONICAL_POPULAR_CATEGORIES = [
 import jobService from '../../services/jobService';
 import JobCard from '../../components/common/JobCard';
 import Drawer from '../../components/ui/Drawer';
+import useModalA11y from '../../hooks/useModalA11y';
 import Pagination from '../../components/ui/Pagination';
 import LoadingSkeleton from '../../components/ui/LoadingSkeleton';
 import EmptyState from '../../components/ui/EmptyState';
 import Toast from '../../components/ui/Toast';
+import CustomDropdown from '../../components/common/CustomDropdown';
 import API from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
@@ -63,6 +65,7 @@ export const JobSearchPage = () => {
 
   // Filter Facet States
   const [selectedWorkModes, setSelectedWorkModes] = useState([]);
+  const [selectedJobTypes, setSelectedJobTypes] = useState([]);
   const [selectedExpBrackets, setSelectedExpBrackets] = useState([]);
   const [selectedCtcRanges, setSelectedCtcRanges] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(initialCategory || null);
@@ -273,6 +276,12 @@ export const JobSearchPage = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingSaveJobId, setPendingSaveJobId] = useState(null);
   const [toast, setToast] = useState(null);
+
+  useModalA11y(isCategoryModalOpen || showAuthModal, () => {
+    setIsCategoryModalOpen(false);
+    setShowAuthModal(false);
+    setPendingSaveJobId(null);
+  });
 
   // Auto-dismiss toast
   useEffect(() => {
@@ -513,6 +522,7 @@ export const JobSearchPage = () => {
         location: locationQuery.trim() || (selectedLocations.length > 0 ? selectedLocations.join(',') : undefined),
         experience: experienceQuery.trim() || (selectedExpBrackets.length > 0 ? selectedExpBrackets[0] : undefined),
         workMode: selectedWorkModes.length > 0 ? selectedWorkModes : undefined,
+        jobType: selectedJobTypes.length > 0 ? selectedJobTypes : undefined,
         category: selectedCategory || undefined,
         companyType: selectedCompanyTypes.length > 0 ? selectedCompanyTypes : undefined,
         ctcRange: selectedCtcRanges.length > 0 ? selectedCtcRanges : undefined,
@@ -545,6 +555,7 @@ export const JobSearchPage = () => {
     locationQuery,
     experienceQuery,
     selectedWorkModes,
+    selectedJobTypes,
     selectedCategory,
     selectedCompanyTypes,
     selectedCtcRanges,
@@ -588,6 +599,7 @@ export const JobSearchPage = () => {
     setLocationQuery('');
     setExperienceQuery('');
     setSelectedWorkModes([]);
+    setSelectedJobTypes([]);
     setSelectedExpBrackets([]);
     setSelectedCtcRanges([]);
     setSelectedCategory(null);
@@ -603,8 +615,9 @@ export const JobSearchPage = () => {
   // Active filters list computation
   const activeFilters = [
     ...(onlyRecommended ? [{ type: 'recommended', label: 'Recommended Jobs' }] : []),
-    ...(selectedCategory ? [{ type: 'category', label: `Job Category: ${selectedCategory}`, value: selectedCategory }] : []),
+    ...(selectedCategory ? [{ type: 'category', label: `Category: ${selectedCategory}`, value: selectedCategory }] : []),
     ...selectedLocations.map((loc) => ({ type: 'location', label: loc })),
+    ...selectedJobTypes.map((jt) => ({ type: 'jobType', label: jt })),
     ...selectedExpBrackets.map((exp) => ({ type: 'exp', label: exp.split(' ')[0] || exp })),
     ...selectedCtcRanges.map((ctc) => ({ type: 'ctc', label: ctc })),
     ...selectedWorkModes.map((wm) => ({ type: 'workMode', label: wm })),
@@ -627,6 +640,7 @@ export const JobSearchPage = () => {
       setCurrentPage(1);
     }
     if (filter.type === 'location') toggleArrayItem(selectedLocations, setSelectedLocations, filter.label);
+    if (filter.type === 'jobType') toggleArrayItem(selectedJobTypes, setSelectedJobTypes, filter.label);
     if (filter.type === 'exp') setSelectedExpBrackets([]);
     if (filter.type === 'ctc') toggleArrayItem(selectedCtcRanges, setSelectedCtcRanges, filter.label);
     if (filter.type === 'workMode') toggleArrayItem(selectedWorkModes, setSelectedWorkModes, filter.label);
@@ -644,12 +658,12 @@ export const JobSearchPage = () => {
 
   // Filter Panel Content
   const FilterPanelContent = () => (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       {/* Active Filter Summary Card */}
       {activeFilters.length > 0 && (
         <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-            <span className="font-bold text-sm text-slate-900">
+            <span className="font-bold text-xs text-slate-800">
               Filters Applied ({activeFilters.length})
             </span>
             <button
@@ -657,20 +671,20 @@ export const JobSearchPage = () => {
               className="text-xs text-[#00288e] hover:text-[#1e40af] font-semibold transition-colors cursor-pointer"
               type="button"
             >
-              Clear All
+              Reset
             </button>
           </div>
-          <div className="flex flex-wrap gap-1.5 pt-3">
+          <div className="flex flex-wrap gap-1.5 pt-2.5">
             {activeFilters.map((f, i) => (
               <span
                 key={i}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-800 text-xs font-medium border border-slate-200/60"
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50/80 text-[#00288e] text-xs font-semibold border border-blue-200/60"
               >
                 <span>{f.label}</span>
                 <button
                   type="button"
                   onClick={() => handleRemoveActiveFilter(f)}
-                  className="text-slate-400 hover:text-rose-600 transition-colors"
+                  className="text-blue-400 hover:text-rose-600 transition-colors ml-0.5"
                   aria-label={`Remove filter ${f.label}`}
                 >
                   <X className="w-3 h-3" />
@@ -681,295 +695,188 @@ export const JobSearchPage = () => {
         </div>
       )}
 
-      {/* Facet Groups Container */}
-      <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200/80 shadow-xs flex flex-col gap-5">
-        {/* Recommended Jobs Filter */}
-        <div className="flex flex-col gap-2">
-          <label className="font-bold text-sm text-slate-900">Recommended</label>
-          <div className="flex flex-col gap-1.5 pt-1">
-            <label className="flex items-center justify-between cursor-pointer group py-1 select-none">
-              <span className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={onlyRecommended}
-                  onChange={() => {
-                    const nextVal = !onlyRecommended;
-                    setOnlyRecommended(nextVal);
-                    setCurrentPage(1);
-                    const newParams = new URLSearchParams(searchParams);
-                    if (nextVal) {
-                      newParams.set('recommended', 'true');
-                    } else {
-                      newParams.delete('recommended');
-                    }
-                    setSearchParams(newParams, { replace: true });
-                  }}
-                  className="w-4 h-4 rounded text-[#00288e] accent-[#00288e] cursor-pointer"
-                />
-                <span className={`text-xs sm:text-sm font-medium transition-colors ${onlyRecommended ? 'text-[#00288e] font-semibold' : 'text-slate-700 group-hover:text-[#00288e]'}`}>
-                  Recommended Jobs
-                </span>
-              </span>
-            </label>
+      {/* Main Filter Card (Matching Storyboard Screen 2) */}
+      <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex flex-col gap-4">
+        {/* Header with Reset */}
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal className="w-4 h-4 text-[#00288e]" />
+            <h2 className="font-bold text-sm sm:text-base text-slate-900 font-heading">Filters</h2>
           </div>
-        </div>
-
-        <div className="w-full h-px bg-slate-100"></div>
-
-        {/* Work Mode */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <label className="font-bold text-sm text-slate-900">Work Mode</label>
-            <ChevronUp className="w-4 h-4 text-slate-400" />
-          </div>
-          <div className="flex flex-col gap-1.5 pt-1">
-            {['Work from Home', 'Hybrid', 'On-site'].map((mode) => (
-              <label
-                key={mode}
-                className="flex items-center justify-between cursor-pointer group py-1 select-none"
-              >
-                <span className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={selectedWorkModes.includes(mode)}
-                    onChange={() => toggleArrayItem(selectedWorkModes, setSelectedWorkModes, mode)}
-                    className="w-4 h-4 rounded text-[#00288e] accent-[#00288e] cursor-pointer"
-                  />
-                  <span className="text-xs sm:text-sm text-slate-700 group-hover:text-[#00288e] transition-colors">
-                    {mode}
-                  </span>
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div className="w-full h-px bg-slate-100"></div>
-
-        {/* Experience Bracket */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <label className="font-bold text-sm text-slate-900">Experience Bracket</label>
-          </div>
-          <div className="flex flex-col gap-1.5 pt-1">
-            {[
-              'Entry Level (0-2 yrs)',
-              'Mid-level (3-5 yrs)',
-              'Senior (6-9 yrs)',
-              'Leadership (10+ yrs)',
-            ].map((exp) => (
-              <label
-                key={exp}
-                className="flex items-center justify-between cursor-pointer group py-1 select-none"
-              >
-                <span className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={selectedExpBrackets.includes(exp)}
-                    onChange={() => toggleArrayItem(selectedExpBrackets, setSelectedExpBrackets, exp)}
-                    className="w-4 h-4 rounded text-[#00288e] accent-[#00288e] cursor-pointer"
-                  />
-                  <span className="text-xs sm:text-sm text-slate-700 group-hover:text-[#00288e] transition-colors">
-                    {exp}
-                  </span>
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div className="w-full h-px bg-slate-100"></div>
-
-        {/* Annual CTC / Salary */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <label className="font-bold text-sm text-slate-900">Annual CTC / Salary</label>
-            <ChevronUp className="w-4 h-4 text-slate-400" />
-          </div>
-          <div className="flex flex-col gap-1.5 pt-1">
-            {[
-              '₹6 - 10 Lakhs',
-              '₹10 - 15 Lakhs',
-              '₹15 - 25 Lakhs',
-              '₹25 - 50 Lakhs',
-              '₹50 Lakhs+',
-            ].map((range) => (
-              <label
-                key={range}
-                className="flex items-center justify-between cursor-pointer group py-1 select-none"
-              >
-                <span className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={selectedCtcRanges.includes(range)}
-                    onChange={() => toggleArrayItem(selectedCtcRanges, setSelectedCtcRanges, range)}
-                    className="w-4 h-4 rounded text-[#00288e] accent-[#00288e] cursor-pointer"
-                  />
-                  <span className="text-xs sm:text-sm text-slate-700 group-hover:text-[#00288e] transition-colors">
-                    {range}
-                  </span>
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div className="w-full h-px bg-slate-100"></div>
-
-        {/* Job Category */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <label className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
-              <span>Job Category</span>
-              {selectedCategory && (
-                <span className="text-[10px] font-semibold text-[#00288e] bg-blue-50 px-1.5 py-0.5 rounded-full border border-blue-200">
-                  1 Selected
-                </span>
-              )}
-            </label>
-            {selectedCategory && (
-              <button
-                type="button"
-                onClick={() => handleSelectCategory(selectedCategory)}
-                className="text-xs text-slate-400 hover:text-rose-600 transition-colors font-medium cursor-pointer"
-                aria-label="Clear Job Category filter"
-              >
-                Clear
-              </button>
-            )}
-          </div>
-
-          {/* Loading, Error, Empty, or Popular Categories */}
-          {isCategoriesLoading ? (
-            <div className="flex flex-col gap-2 py-2">
-              <div className="h-6 bg-slate-100 rounded-md animate-pulse"></div>
-              <div className="h-6 bg-slate-100 rounded-md animate-pulse"></div>
-              <div className="h-6 bg-slate-100 rounded-md animate-pulse"></div>
-              <div className="h-6 bg-slate-100 rounded-md animate-pulse"></div>
-            </div>
-          ) : categoriesError ? (
-            <div className="p-2.5 rounded-lg bg-rose-50 border border-rose-100 text-rose-700 text-xs">
-              {categoriesError}
-            </div>
-          ) : popularCategories.length === 0 ? (
-            <div className="text-xs text-slate-400 py-1">No categories available</div>
-          ) : (
-            <div className="flex flex-col gap-1.5 pt-1">
-              {/* If selectedCategory is set but not in popularCategories, show it as selected at top */}
-              {selectedCategory && !popularCategories.some((c) => c.name === selectedCategory || c.id === selectedCategory) && (
-                <div
-                  onClick={() => handleSelectCategory(selectedCategory)}
-                  className="flex items-center justify-between cursor-pointer py-1.5 px-2 rounded-lg bg-blue-50 text-[#00288e] font-semibold border border-blue-200/80 shadow-2xs select-none"
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSelectCategory(selectedCategory); }}
-                >
-                  <span className="flex items-center gap-2 min-w-0">
-                    <span className="w-4 h-4 rounded-full border border-[#00288e] bg-[#00288e] text-white flex items-center justify-center shrink-0">
-                      <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
-                    </span>
-                    <span className="text-xs sm:text-sm truncate">{selectedCategory}</span>
-                  </span>
-                  <Check className="w-3.5 h-3.5 text-[#00288e] shrink-0" />
-                </div>
-              )}
-
-              {popularCategories.map((cat) => {
-                const isSelected = selectedCategory === cat.name || selectedCategory === cat.id;
-                return (
-                  <label
-                    key={cat.id || cat.name}
-                    onClick={() => handleSelectCategory(cat)}
-                    className={`flex items-center justify-between cursor-pointer group py-1.5 px-2 rounded-lg transition-all select-none ${
-                      isSelected
-                        ? 'bg-blue-50/80 text-[#00288e] font-semibold border border-blue-200/70 shadow-2xs'
-                        : 'hover:bg-slate-50 text-slate-700 border border-transparent'
-                    }`}
-                  >
-                    <span className="flex items-center gap-2 min-w-0">
-                      <span
-                        className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
-                          isSelected
-                            ? 'border-[#00288e] bg-[#00288e] text-white'
-                            : 'border-slate-300 group-hover:border-[#00288e]'
-                        }`}
-                      >
-                        {isSelected && <span className="w-1.5 h-1.5 bg-white rounded-full"></span>}
-                      </span>
-                      <span className="text-xs sm:text-sm truncate">{cat.name}</span>
-                    </span>
-                    {isSelected && (
-                      <Check className="w-3.5 h-3.5 text-[#00288e] shrink-0" />
-                    )}
-                  </label>
-                );
-              })}
-
-              {/* View All Categories Button */}
-              <button
-                type="button"
-                onClick={() => {
-                  setCategoryModalSearch('');
-                  setIsCategoryModalOpen(true);
-                }}
-                className="mt-2 w-full py-2 px-3 rounded-lg border border-blue-200/90 bg-[#eff4ff] hover:bg-[#dbeafe] text-[#00288e] text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer group shadow-2xs"
-              >
-                <LayoutGrid className="w-3.5 h-3.5 text-[#00288e] group-hover:scale-110 transition-transform" />
-                <span>View All Categories</span>
-                <span className="text-[10px] bg-white text-[#00288e] px-1.5 py-0.2 rounded-full font-bold ml-0.5 border border-blue-200">
-                  {categories.length || 49}
-                </span>
-              </button>
-            </div>
+          {(activeFilters.length > 0 || locationQuery || experienceQuery || selectedCategory || selectedJobTypes.length > 0 || selectedWorkModes.length > 0) && (
+            <button
+              onClick={handleClearAll}
+              className="text-xs text-[#00288e] hover:text-[#1e40af] font-semibold transition-colors cursor-pointer"
+              type="button"
+            >
+              Reset
+            </button>
           )}
         </div>
 
-        <div className="w-full h-px bg-slate-100"></div>
+        {/* Location Dropdown */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+            Location
+          </label>
+          <CustomDropdown
+            id="filter-location-dropdown"
+            name="location"
+            value={locationQuery || (selectedLocations.length > 0 ? selectedLocations[0] : '')}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === 'All Locations' || !val) {
+                setLocationQuery('');
+                setSelectedLocations([]);
+              } else {
+                setLocationQuery(val);
+                setSelectedLocations([val]);
+              }
+              setCurrentPage(1);
+            }}
+            placeholder="Select location"
+            options={[
+              { value: '', label: 'All Locations' },
+              { value: 'Ahmedabad', label: 'Ahmedabad' },
+              { value: 'Bengaluru', label: 'Bengaluru' },
+              { value: 'Delhi NCR', label: 'Delhi NCR' },
+              { value: 'Mumbai', label: 'Mumbai' },
+              { value: 'Hyderabad', label: 'Hyderabad' },
+              { value: 'Pune', label: 'Pune' },
+              { value: 'Remote', label: 'Remote' },
+            ]}
+          />
+        </div>
 
-        {/* Location */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <label className="font-bold text-sm text-slate-900">Popular Locations</label>
-            <ChevronUp className="w-4 h-4 text-slate-400" />
-          </div>
-          <div className="flex flex-col gap-1.5 pt-1">
-            {[
-              'Ahmedabad',
-              'Bengaluru',
-              'Delhi NCR',
-              'Mumbai',
-              'Hyderabad',
-              'Pune',
-              'Remote',
-            ].map((loc) => (
-              <label
-                key={loc}
-                className="flex items-center justify-between cursor-pointer group py-1 select-none"
-              >
+        {/* Experience Dropdown */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+            Experience
+          </label>
+          <CustomDropdown
+            id="filter-experience-dropdown"
+            name="experience"
+            value={experienceQuery || (selectedExpBrackets.length > 0 ? selectedExpBrackets[0] : '')}
+            onChange={(e) => {
+              const val = e.target.value;
+              setExperienceQuery(val);
+              if (val) {
+                setSelectedExpBrackets([val]);
+              } else {
+                setSelectedExpBrackets([]);
+              }
+              setCurrentPage(1);
+            }}
+            placeholder="Select experience"
+            options={[
+              { value: '', label: 'All Experience Levels' },
+              { value: '0 - 2 Years', label: '0 - 2 Years (Entry Level)' },
+              { value: '3 - 5 Years', label: '3 - 5 Years (Mid Level)' },
+              { value: '6 - 9 Years', label: '6 - 9 Years (Senior)' },
+              { value: '10+ Years', label: '10+ Years (Lead / Director)' },
+            ]}
+          />
+        </div>
+
+        {/* Category Dropdown */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+            Job Category
+          </label>
+          <CustomDropdown
+            id="filter-category-dropdown"
+            name="category"
+            value={selectedCategory || ''}
+            onChange={(e) => {
+              const val = e.target.value;
+              setSelectedCategory(val || null);
+              setCurrentPage(1);
+            }}
+            placeholder="Select category"
+            options={[
+              { value: '', label: 'All Categories' },
+              ...(categories && categories.length > 0
+                ? categories.map((c) => ({ value: c.name || c, label: c.name || c }))
+                : CANONICAL_POPULAR_CATEGORIES.map((cat) => ({ value: cat, label: cat }))),
+            ]}
+          />
+        </div>
+
+        {/* Job Type Checkboxes */}
+        <div className="flex flex-col gap-2 pt-2 border-t border-slate-100">
+          <label className="font-bold text-[11px] uppercase tracking-wider text-slate-600">
+            Job Type
+          </label>
+          <div className="flex flex-col gap-1.5">
+            {['Full-time', 'Part-time', 'Contract', 'Internship'].map((jt) => (
+              <label key={jt} className="flex items-center justify-between cursor-pointer group py-0.5 select-none">
                 <span className="flex items-center gap-2">
                   <input
                     type="checkbox"
-                    checked={selectedLocations.includes(loc)}
-                    onChange={() => toggleArrayItem(selectedLocations, setSelectedLocations, loc)}
+                    checked={selectedJobTypes.includes(jt)}
+                    onChange={() => toggleArrayItem(selectedJobTypes, setSelectedJobTypes, jt)}
                     className="w-4 h-4 rounded text-[#00288e] accent-[#00288e] cursor-pointer"
                   />
-                  <span className="text-xs sm:text-sm text-slate-700 group-hover:text-[#00288e] transition-colors">
-                    {loc}
+                  <span className={`text-xs transition-colors ${selectedJobTypes.includes(jt) ? 'text-[#00288e] font-semibold' : 'text-slate-700 group-hover:text-[#00288e]'}`}>
+                    {jt}
                   </span>
                 </span>
               </label>
             ))}
           </div>
         </div>
+
+        {/* Work Mode Checkboxes */}
+        <div className="flex flex-col gap-2 pt-2 border-t border-slate-100">
+          <label className="font-bold text-[11px] uppercase tracking-wider text-slate-600">
+            Work Mode
+          </label>
+          <div className="flex flex-col gap-1.5">
+            {['On-site', 'Hybrid', 'Remote'].map((wm) => {
+              const isChecked = selectedWorkModes.includes(wm) || (wm === 'Remote' && selectedWorkModes.includes('Work from Home'));
+              return (
+                <label key={wm} className="flex items-center justify-between cursor-pointer group py-0.5 select-none">
+                  <span className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => {
+                        const targetVal = wm === 'Remote' ? 'Work from Home' : wm;
+                        toggleArrayItem(selectedWorkModes, setSelectedWorkModes, targetVal);
+                      }}
+                      className="w-4 h-4 rounded text-[#00288e] accent-[#00288e] cursor-pointer"
+                    />
+                    <span className={`text-xs transition-colors ${isChecked ? 'text-[#00288e] font-semibold' : 'text-slate-700 group-hover:text-[#00288e]'}`}>
+                      {wm}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Apply Filters Button */}
+        <div className="pt-2 border-t border-slate-100">
+          <button
+            type="button"
+            onClick={() => {
+              fetchJobs();
+            }}
+            className="w-full py-2.5 px-4 rounded-xl bg-[#00288e] hover:bg-[#1e40af] text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center cursor-pointer"
+          >
+            Apply Filters
+          </button>
+        </div>
       </div>
 
-      {/* Sidebar Trust Card */}
-      <div className="bg-[#eff4ff] p-4 sm:p-5 rounded-xl border border-blue-100/80 text-slate-900 flex flex-col gap-1.5 shadow-xs">
+      {/* Direct From Employers Trust Badge */}
+      <div className="bg-[#eff4ff] p-4 rounded-xl border border-blue-100/80 text-slate-900 flex flex-col gap-1.5 shadow-2xs">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="w-5 h-5 text-[#006a61] shrink-0" />
-          <span className="font-bold text-sm text-slate-900">Direct From Employers</span>
+          <ShieldCheck className="w-4 h-4 text-[#006a61] shrink-0" />
+          <span className="font-bold text-xs text-slate-900">Direct From Employers</span>
         </div>
-        <p className="text-xs text-slate-600 leading-relaxed">
+        <p className="text-[11px] text-slate-600 leading-relaxed">
           Every job on Vakancy.in is verified and published by real employers or authorized hiring partners.
         </p>
       </div>
@@ -978,8 +885,18 @@ export const JobSearchPage = () => {
 
   return (
     <div className="w-full bg-[#f8f9ff] min-h-screen text-slate-900">
-      {/* 1. STICKY SUB-HEADER SEARCH MATRIX */}
-      <section className="sticky top-16 z-30 w-full bg-white shadow-xs py-2.5 sm:py-3 border-b border-slate-200/80">
+      {/* Header Banner - Responsive across Mobile, Tablet & Desktop */}
+      <div className="block pt-4 sm:pt-6 lg:pt-8 pb-2 sm:pb-3 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 font-heading tracking-tight">
+          Find Jobs
+        </h1>
+        <p className="text-xs sm:text-sm text-slate-500 mt-0.5 sm:mt-1">
+          Explore job opportunities from leading companies.
+        </p>
+      </div>
+
+      {/* 1. SUB-HEADER SEARCH MATRIX (Non-sticky on mobile, sticky on desktop) */}
+      <section className="relative sm:sticky sm:top-16 z-30 w-full bg-white shadow-xs py-2.5 sm:py-3 border-b border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <form
             onSubmit={handleUpdateSearch}
@@ -1007,7 +924,7 @@ export const JobSearchPage = () => {
                       if (keywordSuggestions.length > 0) setShowKeywordDropdown(true);
                     }}
                     onKeyDown={handleKeywordKeyDown}
-                    placeholder="e.g. React Developer, Node.js, Python"
+                    placeholder="Search by job title, skills or company"
                     className="w-full bg-transparent text-slate-900 font-semibold text-xs sm:text-sm focus:outline-none placeholder:text-slate-400 truncate"
                   />
                 </div>
@@ -1225,65 +1142,22 @@ export const JobSearchPage = () => {
               </div>
 
               <div className="flex items-center gap-3 self-start sm:self-auto">
-                {/* Custom Sort Selector */}
-                <div className="relative" ref={sortRef}>
-                  <button
-                    type="button"
-                    onClick={() => setIsSortOpen((prev) => !prev)}
-                    onKeyDown={handleSortKeyDown}
-                    aria-haspopup="listbox"
-                    aria-expanded={isSortOpen}
-                    aria-label={`Sort by: ${sortBy}`}
-                    className={`inline-flex items-center gap-1.5 bg-white border ${
-                      isSortOpen
-                        ? 'border-[#00288e] ring-2 ring-[#00288e]/15'
-                        : 'border-slate-200/90 hover:border-slate-300'
-                    } px-3 py-1.5 rounded-lg shadow-2xs text-xs font-medium text-slate-700 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00288e]/20 cursor-pointer`}
-                  >
-                    <span className="text-slate-500 font-normal">Sort by:</span>
-                    <span className="font-bold text-slate-900">{sortBy}</span>
-                    {isSortOpen ? (
-                      <ChevronUp className="w-3.5 h-3.5 text-slate-500 shrink-0 ml-0.5" aria-hidden="true" />
-                    ) : (
-                      <ChevronDown className="w-3.5 h-3.5 text-slate-500 shrink-0 ml-0.5" aria-hidden="true" />
-                    )}
-                  </button>
-
-                  {/* Floating Popover Overlay */}
-                  {isSortOpen && (
-                    <div
-                      role="listbox"
-                      aria-label="Sort options"
-                      className="absolute right-0 sm:left-0 mt-1.5 w-54 bg-white rounded-xl border border-slate-200 shadow-xl shadow-slate-900/10 py-1.5 z-40 animate-in fade-in zoom-in-95 duration-100"
-                    >
-                      {SORT_OPTIONS.map((option) => {
-                        const isSelected = sortBy === option;
-                        return (
-                          <button
-                            key={option}
-                            type="button"
-                            role="option"
-                            aria-selected={isSelected}
-                            onClick={() => {
-                              setSortBy(option);
-                              setCurrentPage(1);
-                              setIsSortOpen(false);
-                            }}
-                            className={`w-full flex items-center justify-between px-3.5 py-2 text-xs font-semibold transition-colors text-left cursor-pointer ${
-                              isSelected
-                                ? 'bg-[#EFF6FF] text-[#00288e]'
-                                : 'text-slate-700 hover:bg-[#F8FAFC] hover:text-slate-900'
-                            }`}
-                          >
-                            <span>{option}</span>
-                            {isSelected && (
-                              <Check className="w-4 h-4 text-[#00288e] shrink-0" aria-hidden="true" />
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
+                {/* Modern CustomDropdown Sort Selector */}
+                <div className="w-full sm:w-44">
+                  <CustomDropdown
+                    id="job-sort-dropdown"
+                    name="sortBy"
+                    value={sortBy}
+                    onChange={(e) => {
+                      setSortBy(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    placeholder="Sort by"
+                    options={SORT_OPTIONS.map((opt) => ({
+                      value: opt,
+                      label: opt === 'Date Posted (Newest)' ? 'Latest' : opt,
+                    }))}
+                  />
                 </div>
 
                 {/* View Toggle */}
@@ -1437,7 +1311,7 @@ export const JobSearchPage = () => {
           onClick={() => setIsCategoryModalOpen(false)}
         >
           <div
-            className="relative w-full max-w-5xl bg-white rounded-2xl shadow-2xl border border-slate-200 p-5 sm:p-6 md:p-7 overflow-hidden animate-in zoom-in-95 duration-150 flex flex-col max-h-[90vh]"
+            className="relative w-full max-w-5xl bg-white rounded-2xl shadow-2xl border border-slate-200 p-5 sm:p-6 md:p-7 overflow-hidden animate-in zoom-in-95 duration-150 flex flex-col max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -1624,7 +1498,7 @@ export const JobSearchPage = () => {
           }}
         >
           <div
-            className="relative w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 p-6 sm:p-7 overflow-hidden animate-in zoom-in-95 duration-150"
+            className="relative w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 p-6 sm:p-7 overflow-hidden animate-in zoom-in-95 duration-150 max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}

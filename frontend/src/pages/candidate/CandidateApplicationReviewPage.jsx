@@ -137,7 +137,7 @@ const CandidateApplicationReviewPage = () => {
         
         <div className="bg-[#eff4ff] p-4 rounded-lg border border-[#00288e]/20">
           <h3 className="text-sm font-bold text-[#0b1c30] mb-2">Step 2: Review & Submit</h3>
-          <p className="text-xs text-[#444653] mb-4">Please review your information before submitting. Your primary profile will be shared with the employer.</p>
+          <p className="text-xs text-[#444653] mb-4">Please review your information before submitting. Vakancy.in will process your application; private profile or resume access requires the applicable consent and authorization workflow.</p>
           <div className="text-sm font-semibold text-[#0b1c30]">Name: {profile?.name || user?.name || user?.email}</div>
           <div className="text-sm font-semibold text-[#0b1c30]">Email: {profile?.email || user?.email}</div>
         </div>

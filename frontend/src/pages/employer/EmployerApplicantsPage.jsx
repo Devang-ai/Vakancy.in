@@ -1,17 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {  useParams, Link, useNavigate , useOutletContext } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { PageTransition, StaggerContainer, StaggerItem, FadeInSection } from '../../components/common/Motion';
+import useModalA11y from '../../hooks/useModalA11y';
 
 /**
  * Vakancy.in - Employer Applicants Management Page
- * Stitch Screen: 16763d9caa244b2eb96c67aa1b762b56
  * Route: /recruiter/jobs/:id/applicants
- *
- * Privacy & Security Boundary:
- * - Candidate contact details and private dossiers are strictly managed by Vakancy.in.
- * - Employer views application counts, reference numbers, received dates, and high-level recruitment statuses.
- * - Employer can raise an enquiry/request to Vakancy.in team regarding an applicant.
  */
 export default function EmployerApplicantsPage() {
   const { id: jobId } = useParams();
@@ -38,6 +34,10 @@ export default function EmployerApplicantsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState('all');
 
+  // Candidate Profile Modal State (Part 2)
+  const [selectedProfile, setSelectedProfile] = useState(null);
+  const [resumeLoading, setResumeLoading] = useState(false);
+
   // Enquiry Modal State
   const [selectedApplicant, setSelectedApplicant] = useState(null);
   const [enquiryModalOpen, setEnquiryModalOpen] = useState(false);
@@ -51,6 +51,16 @@ export default function EmployerApplicantsPage() {
   const [historyApplicant, setHistoryApplicant] = useState(null);
   const [applicantEnquiries, setApplicantEnquiries] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+
+  useModalA11y(Boolean(selectedProfile), () => setSelectedProfile(null));
+  useModalA11y(enquiryModalOpen && Boolean(selectedApplicant), () => setEnquiryModalOpen(false));
+  useModalA11y(historyModalOpen && Boolean(historyApplicant), () => setHistoryModalOpen(false));
+
+  // Candidate Access Gate State
+  const [accessRestricted, setAccessRestricted] = useState(false);
+  const [callbackRequested, setCallbackRequested] = useState(false);
+  const [callbackReason, setCallbackReason] = useState('');
+  const [requestingCallback, setRequestingCallback] = useState(false);
 
   // Toast Notification
   const [toast, setToast] = useState(null);
@@ -76,13 +86,24 @@ export default function EmployerApplicantsPage() {
       }
 
       if (res.status === 403) {
-        setError('Access denied: You can only view applicants for your own jobs.');
+        const errData = await res.json().catch(() => ({}));
+        if (errData.candidate_access_allowed === false) {
+          setAccessRestricted(true);
+          setJob(errData.job || null);
+          if (errData.callback_pending) {
+            setCallbackRequested(true);
+          }
+          setLoading(false);
+          return;
+        }
+        setError(errData.message || 'Access denied: You can only view applicants for your own jobs.');
         setLoading(false);
         return;
       }
 
       const data = await res.json();
       if (data.success) {
+        setAccessRestricted(false);
         setJob(data.job || null);
         setApplicants(data.applicants || []);
         setMetrics(data.metrics || {
@@ -102,6 +123,57 @@ export default function EmployerApplicantsPage() {
       setError('Network connection error while loading applicants list.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRequestCallback = async (e) => {
+    e.preventDefault();
+    try {
+      setRequestingCallback(true);
+      const res = await fetch(`/api/employers/jobs/${jobId}/callback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ callback_reason: callbackReason })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setCallbackRequested(true);
+        showToast('Callback request sent successfully to Vakancy.in leadership team.');
+      } else if (data.code === 'CALLBACK_PENDING' || data.is_existing) {
+        setCallbackRequested(true);
+        showToast(data.message || 'A callback request is already active for this mandate.');
+      } else {
+        showToast(data.message || 'Error submitting callback request.', 'error');
+      }
+    } catch (err) {
+      showToast('Network error submitting callback request.', 'error');
+    } finally {
+      setRequestingCallback(false);
+    }
+  };
+
+  const handlePreviewResume = async (applicant) => {
+    try {
+      setResumeLoading(true);
+      const res = await fetch(`/api/employers/jobs/${jobId}/applicants/${applicant.id}/resume`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.file_url) {
+        window.open(data.file_url, '_blank', 'noopener,noreferrer');
+        showToast('Opening authorized candidate resume in secure view.');
+      } else {
+        showToast(data.message || 'Unable to open candidate resume.', 'error');
+      }
+    } catch (err) {
+      showToast('Network error while requesting secure resume.', 'error');
+    } finally {
+      setResumeLoading(false);
     }
   };
 
@@ -372,12 +444,73 @@ export default function EmployerApplicantsPage() {
       </section>
 
       {/* ─────────────────────────────────────────────────────────
-          SCOREBOARD METRICS CARDS
+          SCOREBOARD METRICS OR CALLBACK GATE
       ───────────────────────────────────────────────────────── */}
-      <section className="w-full px-4 sm:px-6 lg:px-8 py-5">
-        <StaggerContainer className="max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-          {/* Card 1: Total Received */}
-          <StaggerItem index={0} className="p-4 rounded-2xl bg-white border border-slate-200/60 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+      {accessRestricted ? (
+        <section className="w-full px-4 sm:px-6 lg:px-8 py-10 flex-1 flex items-center justify-center">
+          <div id="job-candidate-access-locked-card" className="max-w-xl w-full bg-white rounded-2xl border border-blue-200 shadow-md p-6 sm:p-8 space-y-5 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-blue-50 text-[#00288e] mx-auto flex items-center justify-center shadow-xs">
+              <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+
+            <div>
+              <h2 className="text-xl font-bold text-[#0b1c30] tracking-tight">
+                Candidate Access Restricted
+              </h2>
+              <p className="text-xs text-[#444653] mt-2 leading-relaxed">
+                Candidate direct dossier browsing on "<strong>{job?.title}</strong>" is currently managed under Vakancy.in Executive Recruitment Services. Our Lead Recruiter screens candidates, conducts qualification interviews, and presents verified shortlists.
+              </p>
+            </div>
+
+            {callbackRequested ? (
+              <div id="job-callback-pending-alert" className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center justify-center gap-2">
+                <svg className="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Callback Request Received! Our Recruitment Director &amp; Lead Recruiter have been notified.
+              </div>
+            ) : (
+              <form onSubmit={handleRequestCallback} className="space-y-3 pt-2 text-left">
+                <label className="block text-xs font-semibold text-[#0b1c30]">
+                  Request Discussion or Candidate Access:
+                </label>
+                <textarea
+                  id="job-callback-reason-input"
+                  rows={3}
+                  value={callbackReason}
+                  onChange={(e) => setCallbackReason(e.target.value)}
+                  placeholder="e.g. Please call back to discuss candidate submissions, screening criteria, and commercial terms..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-[#00288e]"
+                />
+                <button
+                  id="btn-request-job-callback"
+                  type="submit"
+                  disabled={requestingCallback}
+                  className="w-full py-2.5 rounded-xl bg-[#00288e] hover:bg-blue-900 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                >
+                  {requestingCallback ? 'Submitting Request...' : 'Request Recruiter Callback & Match Dossiers'}
+                </button>
+              </form>
+            )}
+
+            <div className="pt-2">
+              <Link to="/recruiter/jobs" className="text-xs text-[#00288e] font-semibold hover:underline">
+                ← Return to Jobs Dashboard
+              </Link>
+            </div>
+          </div>
+        </section>
+      ) : (
+        <>
+          {/* ─────────────────────────────────────────────────────────
+              SCOREBOARD METRICS CARDS
+          ───────────────────────────────────────────────────────── */}
+          <section className="w-full px-4 sm:px-6 lg:px-8 py-5">
+            <StaggerContainer className="max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+              {/* Card 1: Total Received */}
+              <StaggerItem index={0} className="p-4 rounded-2xl bg-white border border-slate-200/60 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between text-xs text-[#444653]">
               <span className="font-semibold uppercase tracking-wider text-[11px]">Total Applications</span>
               <span className="w-7 h-7 rounded-lg bg-[#eff4ff] text-[#00288e] flex items-center justify-center font-bold">
@@ -645,81 +778,136 @@ export default function EmployerApplicantsPage() {
               <table className="w-full text-left text-xs text-[#0b1c30]">
                 <thead className="bg-[#f8f9ff] text-[11px] font-semibold uppercase tracking-wider text-[#444653] border-b border-slate-200">
                   <tr>
-                    <th className="py-3 px-4">Application Ref</th>
-                    <th className="py-3 px-4">Received Date</th>
-                    <th className="py-3 px-4">Recruitment Stage</th>
-                    <th className="py-3 px-4">Screening Data</th>
-                    <th className="py-3 px-4">Enquiry Status</th>
-                    <th className="py-3 px-4 text-right">Vakancy.in Actions</th>
+                    <th className="py-3 px-4 min-w-[240px]">Applicant &amp; Role Details</th>
+                    <th className="py-3 px-4 w-44">Experience &amp; Location</th>
+                    <th className="py-3 px-4 w-52">Verified Skills</th>
+                    <th className="py-3 px-4 w-36">Recruitment Stage</th>
+                    <th className="py-3 px-4 text-right w-64">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-normal">
                   {filteredApplicants.map((app, idx) => (
                     <tr key={app.id} className="hover:bg-[#f8f9ff]/70 transition-colors">
-                      {/* 1. Reference */}
+                      {/* 1. Applicant & Role Details */}
                       <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-md bg-[#eff4ff] text-[#00288e] flex items-center justify-center font-mono text-[10px] font-bold">
+                        <div className="flex items-start gap-2.5">
+                          <span className="w-6 h-6 rounded-md bg-[#eff4ff] text-[#00288e] flex items-center justify-center font-mono text-[10px] font-bold shrink-0 mt-0.5">
                             {idx + 1}
                           </span>
-                          <span className="font-mono font-bold text-[#00288e]">
-                            {app.reference_number}
-                          </span>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => setSelectedProfile(app)}
+                                className="font-bold text-[#0b1c30] text-sm hover:text-[#00288e] text-left cursor-pointer transition-colors"
+                              >
+                                {app.candidate_name}
+                              </button>
+                            </div>
+                            <p className="text-[11px] text-[#444653] font-medium leading-tight line-clamp-1">
+                              {app.professional_headline}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                              <span
+                                id={`cand-badge-appid-${app.id}`}
+                                className="font-mono text-[10px] text-[#00288e] bg-[#eff4ff] px-1.5 py-0.5 rounded font-bold border border-blue-100"
+                              >
+                                {app.reference_number || `APP-${app.id.substring(0, 6)}`}
+                              </span>
+                              <span
+                                id={`cand-badge-cid-${app.id}`}
+                                className="font-mono text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200"
+                              >
+                                CID: {app.candidate_id?.substring(0, 8)}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </td>
 
-                      {/* 2. Received Date */}
+                      {/* 2. Experience & Location */}
                       <td className="py-3.5 px-4 text-[#444653]">
-                        <span className="font-medium text-[#0b1c30]">
-                          {formatDate(app.applied_at)}
+                        <span className="font-semibold text-[#0b1c30] block">
+                          {app.total_experience ? `${app.total_experience} Years` : 'Fresher'}
                         </span>
-                        <span className="block text-[10px] text-[#444653]">
-                          Inbound submission
-                        </span>
-                      </td>
-
-                      {/* 3. Recruitment Stage */}
-                      <td className="py-3.5 px-4">
-                        {getStatusBadge(app.status)}
-                      </td>
-
-                      {/* 4. Screening Status */}
-                      <td className="py-3.5 px-4">
-                        <span className="inline-flex items-center gap-1 text-[11px] text-[#006a61] bg-[#86f2e4]/20 px-2 py-0.5 rounded-md font-medium">
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        <span className="text-[11px] text-[#444653] flex items-center gap-1 mt-0.5">
+                          <svg className="w-3 h-3 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                           </svg>
-                          Questionnaire Validated
+                          <span className="truncate max-w-[140px]">{app.current_location}</span>
                         </span>
                       </td>
 
-                      {/* 5. Enquiry Status */}
+                      {/* 3. Verified Skills */}
                       <td className="py-3.5 px-4">
-                        {app.enquiries_count > 0 ? (
-                          <button
-                            onClick={() => handleViewHistory(app)}
-                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-lg cursor-pointer transition-colors"
-                          >
-                            <span>✉ {app.enquiries_count} Enquiry Raised</span>
-                          </button>
+                        {app.skills && app.skills.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {app.skills.slice(0, 3).map((sk, sIdx) => (
+                              <span
+                                key={sIdx}
+                                className="px-2 py-0.5 rounded bg-blue-50 text-blue-900 border border-blue-200 text-[10px] font-medium"
+                              >
+                                {sk}
+                              </span>
+                            ))}
+                            {app.skills.length > 3 && (
+                              <span className="px-1.5 py-0.5 rounded text-[10px] text-slate-400 font-semibold">
+                                +{app.skills.length - 3}
+                              </span>
+                            )}
+                          </div>
                         ) : (
-                          <span className="text-[11px] text-slate-400">
-                            No active enquiries
-                          </span>
+                          <span className="text-slate-400 text-[11px] italic">No skills tagged</span>
                         )}
                       </td>
 
-                      {/* 6. Actions */}
+                      {/* 4. Recruitment Stage */}
+                      <td className="py-3.5 px-4">
+                        {getStatusBadge(app.status)}
+                        <span className="block text-[10px] text-[#444653] mt-1 font-mono">
+                          {formatDate(app.applied_at)}
+                        </span>
+                      </td>
+
+                      {/* 5. Actions */}
                       <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1.5">
                           <button
-                            onClick={() => handleOpenEnquiryModal(app)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#00288e] text-white hover:bg-[#1e40af] text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                            id={`btn-view-applicant-profile-${app.id}`}
+                            type="button"
+                            onClick={() => setSelectedProfile(app)}
+                            className="px-2.5 py-1.5 rounded-xl bg-[#eff4ff] hover:bg-[#dce9ff] text-[#00288e] font-bold text-xs transition-colors inline-flex items-center gap-1 cursor-pointer"
                           >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <span>Profile</span>
+                          </button>
+
+                          <button
+                            id={`btn-download-resume-${app.id}`}
+                            type="button"
+                            onClick={() => handlePreviewResume(app)}
+                            disabled={resumeLoading || !app.resume_id}
+                            className="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-xs transition-colors inline-flex items-center gap-1 cursor-pointer disabled:opacity-40"
+                            title={app.resume_id ? `Preview ${app.resume_file_name || 'Resume'}` : 'No resume uploaded'}
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <span>Resume</span>
+                          </button>
+
+                          <button
+                            id={`btn-enquiry-${app.id}`}
+                            type="button"
+                            onClick={() => handleOpenEnquiryModal(app)}
+                            className="p-1.5 rounded-xl text-[#444653] hover:text-[#00288e] hover:bg-slate-100 transition-colors cursor-pointer"
+                            title="Contact Vakancy.in regarding applicant"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                             </svg>
-                            <span>Contact Vakancy.in</span>
                           </button>
                         </div>
                       </td>
@@ -731,15 +919,246 @@ export default function EmployerApplicantsPage() {
           )}
         </div>
       </FadeInSection>
+        </>
+      )}
 
       {/* ─────────────────────────────────────────────────────────
-          RAISE ENQUIRY MODAL (COMMERCIAL RECRUITMENT FLOW)
+          CANDIDATE STRUCTURED PROFILE MODAL (PART 2 - REAL DATA)
       ───────────────────────────────────────────────────────── */}
-      {enquiryModalOpen && selectedApplicant && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col animate-in zoom-in-95">
+      {selectedProfile && typeof document !== 'undefined' && createPortal(
+        <div
+          id="applicant-profile-modal"
+          className="fixed inset-0 z-[9999] bg-[#0b1c30]/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="applicant-modal-title"
+          onClick={() => setSelectedProfile(null)}
+        >
+          <div
+            className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] max-h-[calc(100dvh-2rem)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-[#eff4ff]/60 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#00288e] text-white flex items-center justify-center font-bold text-base shadow-xs">
+                  {selectedProfile.candidate_name?.charAt(0) || 'C'}
+                </div>
+                <div>
+                  <h3 id="applicant-modal-title" className="text-base font-bold text-[#0b1c30]">
+                    {selectedProfile.candidate_name}
+                  </h3>
+                  <p className="text-xs text-[#444653] font-medium">{selectedProfile.professional_headline}</p>
+                </div>
+              </div>
+              <button
+                id="btn-close-candidate-modal"
+                type="button"
+                onClick={() => setSelectedProfile(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors cursor-pointer text-lg leading-none"
+                aria-label="Close Profile"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Scrollable Body */}
+            <div className="p-6 overflow-y-auto space-y-5 text-xs flex-1">
+              {/* Identifiers Grid */}
+              <div className="p-3.5 bg-[#f8f9ff] rounded-xl border border-slate-200/80 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div>
+                  <span className="text-[10px] text-[#444653] font-bold uppercase block">Candidate ID</span>
+                  <span id="cand-profile-candidate-id" className="font-mono text-xs font-bold text-[#00288e] break-all">
+                    {selectedProfile.candidate_id}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-[#444653] font-bold uppercase block">Application ID</span>
+                  <span id="cand-profile-app-id" className="font-mono text-xs font-bold text-[#0b1c30] break-all">
+                    {selectedProfile.application_id || selectedProfile.id}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-[#444653] font-bold uppercase block">Applied Job Title</span>
+                  <strong className="text-[#0b1c30]">{selectedProfile.applied_job_title || job?.title}</strong>
+                </div>
+                <div>
+                  <span className="text-[10px] text-[#444653] font-bold uppercase block">Recruitment Status</span>
+                  <div className="pt-0.5">{getStatusBadge(selectedProfile.status)}</div>
+                </div>
+              </div>
+
+              {/* Experience & Location */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200/80">
+                <div>
+                  <span className="text-[10px] text-[#444653] font-bold uppercase block">Total Experience</span>
+                  <strong className="text-[#0b1c30]">
+                    {selectedProfile.total_experience ? `${selectedProfile.total_experience} Years` : 'Fresher'}
+                  </strong>
+                </div>
+                <div>
+                  <span className="text-[10px] text-[#444653] font-bold uppercase block">Location</span>
+                  <strong className="text-[#0b1c30]">{selectedProfile.current_location}</strong>
+                </div>
+                <div>
+                  <span className="text-[10px] text-[#444653] font-bold uppercase block">Application Date</span>
+                  <strong className="text-[#0b1c30]">{formatDate(selectedProfile.applied_at)}</strong>
+                </div>
+                {selectedProfile.current_organization && (
+                  <div className="col-span-2 sm:col-span-3 pt-2 border-t border-slate-200/60">
+                    <span className="text-[10px] text-[#444653] font-bold uppercase block">Current Organization &amp; Role</span>
+                    <strong className="text-[#0b1c30]">
+                      {selectedProfile.current_designation || 'Specialist'} • {selectedProfile.current_organization}
+                    </strong>
+                  </div>
+                )}
+              </div>
+
+              {/* Profile Summary */}
+              {selectedProfile.professional_summary && (
+                <div>
+                  <h4 className="text-xs font-bold text-[#0b1c30] uppercase tracking-wider mb-1.5">Profile Summary</h4>
+                  <p className="text-[#444653] leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-200/60">
+                    {selectedProfile.professional_summary}
+                  </p>
+                </div>
+              )}
+
+              {/* Verified Skills */}
+              {selectedProfile.skills && selectedProfile.skills.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-bold text-[#0b1c30] uppercase tracking-wider mb-2">Verified Skills</h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selectedProfile.skills.map((skill, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2.5 py-1 rounded-lg bg-[#eff4ff] border border-blue-200 text-[#00288e] font-semibold text-xs"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Education History */}
+              {selectedProfile.education && selectedProfile.education.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-bold text-[#0b1c30] uppercase tracking-wider mb-2">Education</h4>
+                  <div className="space-y-2">
+                    {selectedProfile.education.map((edu, idx) => (
+                      <div key={idx} className="p-3 bg-slate-50 rounded-xl border border-slate-200/70 flex justify-between items-center">
+                        <div>
+                          <strong className="text-[#0b1c30] block text-xs">{edu.degree}</strong>
+                          <span className="text-[#444653] text-[11px]">{edu.institution}</span>
+                        </div>
+                        <div className="text-right text-[#444653] text-[11px]">
+                          {edu.year && <div>Year: {edu.year}</div>}
+                          {edu.cgpa && <div>CGPA: {edu.cgpa}</div>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Work Experience */}
+              {selectedProfile.work_history && selectedProfile.work_history.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-bold text-[#0b1c30] uppercase tracking-wider mb-2">Work Experience</h4>
+                  <div className="space-y-2">
+                    {selectedProfile.work_history.map((exp, idx) => (
+                      <div key={idx} className="p-3 bg-slate-50 rounded-xl border border-slate-200/70 space-y-1">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <strong className="text-[#0b1c30] block text-xs">{exp.designation || 'Role'}</strong>
+                            <span className="text-[#00288e] font-medium text-[11px]">{exp.organization}</span>
+                          </div>
+                          {exp.is_currently_working ? (
+                            <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">Current</span>
+                          ) : null}
+                        </div>
+                        {exp.key_achievements && (
+                          <p className="text-[#444653] text-[11px] pt-1">{exp.key_achievements}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Resume Section */}
+              <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-100 text-[#00288e] flex items-center justify-center shrink-0">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <span className="font-bold text-[#0b1c30] block text-xs">
+                      {selectedProfile.resume_file_name || 'Candidate Resume'}
+                    </span>
+                    <span className="text-[11px] text-emerald-700 font-semibold">
+                      ✓ Authorized Candidate Resume
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  id="btn-preview-applicant-resume"
+                  type="button"
+                  onClick={() => handlePreviewResume(selectedProfile)}
+                  disabled={resumeLoading || !selectedProfile.resume_id}
+                  className="px-4 py-2 rounded-xl bg-[#00288e] hover:bg-[#1e40af] text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  {resumeLoading ? (
+                    <span>Loading...</span>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      <span>Preview / Download Resume</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end shrink-0">
+              <button
+                type="button"
+                onClick={() => setSelectedProfile(null)}
+                className="px-5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-[#0b1c30] font-bold text-xs transition-colors cursor-pointer"
+              >
+                Close Profile
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ─────────────────────────────────────────────────────────
+          RAISE ENQUIRY MODAL (PORTALED TO BODY)
+      ───────────────────────────────────────────────────────── */}
+      {enquiryModalOpen && selectedApplicant && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in"
+          onClick={() => setEnquiryModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="enquiry-modal-title"
+        >
+          <div
+            className="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] animate-in zoom-in-95"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-[#eff4ff]/60">
+            <div className="shrink-0 px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-[#eff4ff]/60">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-[#00288e] text-white flex items-center justify-center">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -747,7 +1166,7 @@ export default function EmployerApplicantsPage() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-[#0b1c30]">
+                  <h3 id="enquiry-modal-title" className="text-sm font-bold text-[#0b1c30]">
                     Contact Vakancy.in Regarding Applicant
                   </h3>
                   <p className="text-[11px] text-[#444653]">
@@ -756,84 +1175,90 @@ export default function EmployerApplicantsPage() {
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setEnquiryModalOpen(false)}
                 className="text-slate-400 hover:text-slate-600 p-1 text-base leading-none cursor-pointer"
+                aria-label="Close modal"
               >
                 ✕
               </button>
             </div>
 
             {/* Modal Body / Form */}
-            <form onSubmit={handleSubmitEnquiry} className="p-6 space-y-4">
+            <form onSubmit={handleSubmitEnquiry} className="flex-1 min-h-0 flex flex-col overflow-hidden">
               {enquirySuccess ? (
-                <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-center space-y-2">
-                  <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
-                    ✓
+                <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-4">
+                  <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-center space-y-2">
+                    <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
+                      ✓
+                    </div>
+                    <h4 className="text-sm font-bold text-emerald-900">Enquiry Dispatched</h4>
+                    <p className="text-xs text-emerald-800">{enquirySuccess}</p>
                   </div>
-                  <h4 className="text-sm font-bold text-emerald-900">Enquiry Dispatched</h4>
-                  <p className="text-xs text-emerald-800">{enquirySuccess}</p>
                 </div>
               ) : (
                 <>
-                  <div>
-                    <label className="block text-xs font-bold text-[#0b1c30] uppercase tracking-wider mb-1.5">
-                      Enquiry Purpose / Action Requested <span className="text-[#ba1a1a]">*</span>
-                    </label>
-                    <div className="space-y-2 text-xs">
-                      {[
-                        { id: 'Request Candidate Discussion', desc: 'Discuss candidate qualifications with assigned Vakancy.in recruiter' },
-                        { id: 'Request Detailed Screening Summary', desc: 'Receive synthesized technical and screening evaluation report' },
-                        { id: 'Request Interview Coordination', desc: 'Coordinate interview slot availability with the candidate' },
-                        { id: 'General Recruitment Query', desc: 'Ask a general requisition query regarding this candidate application' }
-                      ].map((opt) => (
-                        <label
-                          key={opt.id}
-                          className={`flex items-start gap-2.5 p-2.5 rounded-xl border cursor-pointer transition-all ${
-                            enquiryType === opt.id
-                              ? 'border-[#00288e] bg-[#eff4ff]/60 ring-1 ring-[#00288e]'
-                              : 'border-slate-200 hover:bg-slate-50'
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="enquiry_type"
-                            value={opt.id}
-                            checked={enquiryType === opt.id}
-                            onChange={(e) => setEnquiryType(e.target.value)}
-                            className="mt-0.5 text-[#00288e] focus:ring-[#00288e]"
-                          />
-                          <div>
-                            <span className="font-bold text-[#0b1c30]">{opt.id}</span>
-                            <p className="text-[11px] text-[#444653] mt-0.5">{opt.desc}</p>
-                          </div>
-                        </label>
-                      ))}
+                  <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-4 text-xs">
+                    <div>
+                      <label className="block text-xs font-bold text-[#0b1c30] uppercase tracking-wider mb-1.5">
+                        Enquiry Purpose / Action Requested <span className="text-[#ba1a1a]">*</span>
+                      </label>
+                      <div className="space-y-2 text-xs">
+                        {[
+                          { id: 'Request Candidate Discussion', desc: 'Discuss candidate qualifications with assigned Vakancy.in recruiter' },
+                          { id: 'Request Detailed Screening Summary', desc: 'Receive synthesized technical and screening evaluation report' },
+                          { id: 'Request Interview Coordination', desc: 'Coordinate interview slot availability with the candidate' },
+                          { id: 'General Recruitment Query', desc: 'Ask a general requisition query regarding this candidate application' }
+                        ].map((opt) => (
+                          <label
+                            key={opt.id}
+                            className={`flex items-start gap-2.5 p-2.5 rounded-xl border cursor-pointer transition-all ${
+                              enquiryType === opt.id
+                                ? 'border-[#00288e] bg-[#eff4ff]/60 ring-1 ring-[#00288e]'
+                                : 'border-slate-200 hover:bg-slate-50'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="enquiry_type"
+                              value={opt.id}
+                              checked={enquiryType === opt.id}
+                              onChange={(e) => setEnquiryType(e.target.value)}
+                              className="mt-0.5 text-[#00288e] focus:ring-[#00288e]"
+                            />
+                            <div>
+                              <span className="font-bold text-[#0b1c30]">{opt.id}</span>
+                              <p className="text-[11px] text-[#444653] mt-0.5">{opt.desc}</p>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-[#0b1c30] uppercase tracking-wider mb-1.5">
+                        Optional Specific Notes / Questions
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={enquiryMessage}
+                        onChange={(e) => setEnquiryMessage(e.target.value)}
+                        placeholder="e.g. We would like to assess this applicant's availability for a 45-minute technical review next Tuesday..."
+                        className="w-full p-3 bg-[#f8f9ff] text-[#0b1c30] placeholder:text-[#444653] text-xs rounded-xl border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-[#00288e] transition-all resize-none"
+                      />
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-[#444653] flex items-center gap-2">
+                      <svg className="w-4 h-4 text-[#006a61] flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                      <span>
+                        The Vakancy.in recruitment team handles candidate scheduling and verified dossiers directly. No online fees or unlock charges apply.
+                      </span>
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-[#0b1c30] uppercase tracking-wider mb-1.5">
-                      Optional Specific Notes / Questions
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={enquiryMessage}
-                      onChange={(e) => setEnquiryMessage(e.target.value)}
-                      placeholder="e.g. We would like to assess this applicant's availability for a 45-minute technical review next Tuesday..."
-                      className="w-full p-3 bg-[#f8f9ff] text-[#0b1c30] placeholder:text-[#444653] text-xs rounded-xl border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-[#00288e] transition-all resize-none"
-                    />
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-[#444653] flex items-center gap-2">
-                    <svg className="w-4 h-4 text-[#006a61] flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                    </svg>
-                    <span>
-                      The Vakancy.in recruitment team handles candidate scheduling and verified dossiers directly. No online fees or unlock charges apply.
-                    </span>
-                  </div>
-
-                  <div className="pt-2 flex items-center justify-end gap-2.5">
+                  <div className="shrink-0 px-6 py-3 border-t border-slate-100 bg-slate-50 flex flex-wrap items-center justify-end gap-2.5">
                     <button
                       type="button"
                       onClick={() => setEnquiryModalOpen(false)}
@@ -866,31 +1291,43 @@ export default function EmployerApplicantsPage() {
               )}
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ─────────────────────────────────────────────────────────
-          VIEW ENQUIRIES HISTORY MODAL
+          VIEW ENQUIRIES HISTORY MODAL (PORTALED TO BODY)
       ───────────────────────────────────────────────────────── */}
-      {historyModalOpen && historyApplicant && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col animate-in zoom-in-95">
-            <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-[#eff4ff]/60">
+      {historyModalOpen && historyApplicant && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in"
+          onClick={() => setHistoryModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="history-modal-title"
+        >
+          <div
+            className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] animate-in zoom-in-95"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="shrink-0 px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-[#eff4ff]/60">
               <div>
-                <h3 className="text-xs font-bold text-[#0b1c30]">
+                <h3 id="history-modal-title" className="text-xs font-bold text-[#0b1c30]">
                   Enquiry History for {historyApplicant.reference_number}
                 </h3>
                 <p className="text-[10px] text-[#444653]">Communications sent to Vakancy.in recruitment team</p>
               </div>
               <button
+                type="button"
                 onClick={() => setHistoryModalOpen(false)}
                 className="text-slate-400 hover:text-slate-600 p-1 text-sm leading-none cursor-pointer"
+                aria-label="Close modal"
               >
                 ✕
               </button>
             </div>
 
-            <div className="p-5 max-h-80 overflow-y-auto space-y-3">
+            <div className="flex-1 min-h-0 p-5 overflow-y-auto space-y-3 text-xs">
               {loadingHistory ? (
                 <div className="py-8 text-center text-xs text-[#444653]">
                   Loading enquiry history...
@@ -919,8 +1356,9 @@ export default function EmployerApplicantsPage() {
               )}
             </div>
 
-            <div className="px-5 py-3 border-t border-slate-100 bg-slate-50 flex justify-end">
+            <div className="shrink-0 px-5 py-3 border-t border-slate-100 bg-slate-50 flex justify-end">
               <button
+                type="button"
                 onClick={() => setHistoryModalOpen(false)}
                 className="px-4 py-1.5 rounded-xl bg-[#00288e] text-white text-xs font-semibold hover:bg-[#1e40af] cursor-pointer"
               >
@@ -928,7 +1366,8 @@ export default function EmployerApplicantsPage() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </PageTransition>
   );

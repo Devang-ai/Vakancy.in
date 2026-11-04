@@ -250,7 +250,7 @@ export default function DependentLocationSelector({
   return (
     <div className={layout === 'grid' ? gridColsClass : 'flex flex-col gap-4'}>
       {/* 1. COUNTRY */}
-      <div className="flex flex-col gap-1 relative" ref={countryRef}>
+      <div className={`flex flex-col gap-1 relative ${showCountryDropdown ? 'z-40' : 'z-10'}`} ref={countryRef}>
         <label className="text-xs font-bold text-[#0b1c30]">
           Country <span className="text-[#ba1a1a] font-bold">*</span>
         </label>
@@ -288,7 +288,7 @@ export default function DependentLocationSelector({
 
         {/* Country Autocomplete Dropdown */}
         {showCountryDropdown && !disabled && (
-          <div className="absolute top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-30 divide-y divide-slate-100">
+          <div className="absolute top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl z-50 divide-y divide-slate-100">
             {filteredCountries.length > 0 ? (
               filteredCountries.map((cObj) => {
                 const name = typeof cObj === 'string' ? cObj : cObj.name;
@@ -317,7 +317,7 @@ export default function DependentLocationSelector({
       </div>
 
       {/* 2. STATE / PROVINCE / REGION */}
-      <div className="flex flex-col gap-1 relative" ref={stateRef}>
+      <div className={`flex flex-col gap-1 relative ${showStateDropdown ? 'z-40' : 'z-10'}`} ref={stateRef}>
         <label className="text-xs font-bold text-[#0b1c30]">
           State / Province / Region <span className="text-[#ba1a1a] font-bold">*</span>
         </label>
@@ -363,7 +363,7 @@ export default function DependentLocationSelector({
 
         {/* State Autocomplete Dropdown */}
         {showStateDropdown && countryNameStr && !disabled && (
-          <div className="absolute top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-30 divide-y divide-slate-100">
+          <div className="absolute top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl z-50 divide-y divide-slate-100">
             {filteredStates.length > 0 ? (
               filteredStates.map((stObj) => {
                 const name = typeof stObj === 'string' ? stObj : stObj.name;
@@ -389,7 +389,7 @@ export default function DependentLocationSelector({
       </div>
 
       {/* 3. CITY */}
-      <div className="flex flex-col gap-1 relative" ref={cityRef}>
+      <div className={`flex flex-col gap-1 relative ${showCityDropdown ? 'z-40' : 'z-10'}`} ref={cityRef}>
         <label className="text-xs font-bold text-[#0b1c30]">
           City <span className="text-[#ba1a1a] font-bold">*</span>
         </label>
@@ -435,7 +435,7 @@ export default function DependentLocationSelector({
 
         {/* City Autocomplete Dropdown */}
         {showCityDropdown && stateNameStr && !disabled && (
-          <div className="absolute top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-30 divide-y divide-slate-100">
+          <div className="absolute top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl z-50 divide-y divide-slate-100">
             {filteredCities.length > 0 ? (
               filteredCities.map((ctObj) => {
                 const name = typeof ctObj === 'string' ? ctObj : ctObj.name;

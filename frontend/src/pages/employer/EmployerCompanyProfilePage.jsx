@@ -1,11 +1,37 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {  Link, useNavigate , useOutletContext } from 'react-router-dom';
+import { createPortal } from 'react-dom';
+import { Link, useNavigate, useOutletContext } from 'react-router-dom';
+import {
+  Building2,
+  Globe,
+  MapPin,
+  Mail,
+  Phone,
+  User,
+  Share2,
+  UploadCloud,
+  X,
+  Check,
+  AlertCircle,
+  Calendar,
+  Briefcase,
+  Trash2,
+  Loader2,
+  Sparkles,
+  ExternalLink,
+  Edit,
+  Tag,
+  ShieldCheck,
+  CheckCircle2,
+  Info
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import API from '../../services/api';
 import DependentLocationSelector from '../../components/common/DependentLocationSelector';
 import Toast from '../../components/ui/Toast';
 import EmployerFooter from '../../components/employer/EmployerFooter';
 import { PageTransition, StaggerContainer, StaggerItem, FadeInSection } from '../../components/common/Motion';
+import useModalA11y from '../../hooks/useModalA11y';
 
 export default function EmployerCompanyProfilePage() {
   const { user, token, logout, fetchUserContext } = useAuth();
@@ -20,12 +46,34 @@ export default function EmployerCompanyProfilePage() {
   const [toast, setToast] = useState(null);
   const [profileLogoError, setProfileLogoError] = useState(false);
   const [formLogoError, setFormLogoError] = useState(false);
+  const [pendingLogoFile, setPendingLogoFile] = useState(null);
+  const [pendingLogoPreview, setPendingLogoPreview] = useState(null);
 
   // Edit Mode Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [modalActiveTab, setModalActiveTab] = useState('basic');
   const [isSaving, setIsSaving] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
+
+  const handleCloseEditModal = () => {
+    setPendingLogoFile(null);
+    setPendingLogoPreview(null);
+    setIsEditModalOpen(false);
+  };
+
+  useModalA11y(isEditModalOpen, handleCloseEditModal);
+
+  // Lock body scroll when edit modal is open
+  useEffect(() => {
+    if (isEditModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isEditModalOpen]);
 
   // Master Catalogs State
   const [masterIndustries, setMasterIndustries] = useState([]);
@@ -160,9 +208,9 @@ export default function EmployerCompanyProfilePage() {
     fetchProfile();
   }, [token]);
 
-  // Handle Logo Upload File Selection
-  const handleLogoUpload = async (e) => {
-    const file = e.target.files[0];
+  // Handle Logo file selection for deferred upload (uploaded only upon Save Changes)
+  const handleLogoSelect = (e) => {
+    const file = e.target.files?.[0];
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
@@ -176,37 +224,17 @@ export default function EmployerCompanyProfilePage() {
       return;
     }
 
-    const fileData = new FormData();
-    fileData.append('logo', file);
-
-    setIsUploadingLogo(true);
-    try {
-      const res = await fetch('/api/employers/profile/logo', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: fileData
-      });
-      const data = await res.json();
-      if (data.success && data.logo_url) {
-        setFormData((prev) => ({ ...prev, logo_url: data.logo_url }));
-        setProfile((prev) => ({ ...prev, logo_url: data.logo_url }));
-        setFormLogoError(false);
-        setProfileLogoError(false);
-        if (typeof fetchUserContext === 'function') fetchUserContext();
-        showToast('Company logo uploaded successfully!');
-      } else {
-        showToast(data.message || 'Error uploading logo.');
-      }
-    } catch (err) {
-      console.error('Logo upload error:', err);
-      showToast('Network error uploading logo.');
-    } finally {
-      setIsUploadingLogo(false);
-    }
+    setPendingLogoFile(file);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setPendingLogoPreview(event.target.result);
+      setFormLogoError(false);
+    };
+    reader.readAsDataURL(file);
   };
 
-  // Open Edit Modal and sync form data
-  const handleOpenEditModal = () => {
+  // Open Edit Modal, sync form data and optionally scroll to section
+  const handleOpenEditModal = (sectionId = 'section-identity') => {
     if (profile) {
       setFormData({
         company_name: profile.company_name || '',
@@ -239,8 +267,17 @@ export default function EmployerCompanyProfilePage() {
         twitter_url: profile.twitter_url || ''
       });
     }
+    setPendingLogoFile(null);
+    setPendingLogoPreview(null);
     setValidationErrors({});
+    setFormLogoError(false);
     setIsEditModalOpen(true);
+    if (sectionId) {
+      setTimeout(() => {
+        const el = document.getElementById(sectionId);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 120);
+    }
   };
 
   // Validation using native URL parser for social platforms
@@ -320,8 +357,21 @@ export default function EmployerCompanyProfilePage() {
       errors.contact_person_email = 'Please enter a valid contact person email.';
     }
 
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      const firstKey = Object.keys(errors)[0];
+      setTimeout(() => {
+        const targetEl = document.getElementById(`field-${firstKey}`);
+        if (targetEl) {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          targetEl.focus();
+        }
+      }, 60);
+      return false;
+    }
+
+    setValidationErrors({});
+    return true;
   };
 
   // Save changes via API
@@ -331,9 +381,40 @@ export default function EmployerCompanyProfilePage() {
 
     setIsSaving(true);
     try {
-      const data = await API.put('/employers/profile', formData);
+      let finalLogoUrl = formData.logo_url;
+
+      // Upload deferred logo file only upon explicit Save Changes
+      if (pendingLogoFile) {
+        setIsUploadingLogo(true);
+        const fileData = new FormData();
+        fileData.append('logo', pendingLogoFile);
+        const res = await fetch('/api/employers/profile/logo', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: fileData
+        });
+        const uploadData = await res.json();
+        if (uploadData.success && uploadData.logo_url) {
+          finalLogoUrl = uploadData.logo_url;
+        } else {
+          showToast(uploadData.message || 'Error uploading logo.');
+          setIsUploadingLogo(false);
+          setIsSaving(false);
+          return;
+        }
+        setIsUploadingLogo(false);
+      }
+
+      const payload = {
+        ...formData,
+        logo_url: finalLogoUrl
+      };
+
+      const data = await API.put('/employers/profile', payload);
       if (data.success && data.employer) {
         setProfile(data.employer);
+        setPendingLogoFile(null);
+        setPendingLogoPreview(null);
         if (typeof fetchUserContext === 'function') fetchUserContext();
         setIsEditModalOpen(false);
         showToast('Company profile updated successfully!');
@@ -345,6 +426,7 @@ export default function EmployerCompanyProfilePage() {
       showToast(err.message || 'Error updating company profile.');
     } finally {
       setIsSaving(false);
+      setIsUploadingLogo(false);
     }
   };
 
@@ -453,7 +535,7 @@ export default function EmployerCompanyProfilePage() {
 
               <div className="flex items-center gap-2 flex-wrap shrink-0">
                 <button
-                  onClick={handleOpenEditModal}
+                  onClick={() => handleOpenEditModal('section-identity')}
                   className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#00288e] text-white hover:bg-[#1e40af] shadow-xs transition-colors text-xs font-semibold cursor-pointer"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -516,7 +598,7 @@ export default function EmployerCompanyProfilePage() {
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                     <h3 className="font-bold text-base text-[#0b1c30]">Company Information</h3>
                     <button
-                      onClick={handleOpenEditModal}
+                      onClick={() => handleOpenEditModal('section-info')}
                       className="text-xs font-semibold text-[#00288e] hover:underline cursor-pointer"
                     >
                       Edit
@@ -570,7 +652,7 @@ export default function EmployerCompanyProfilePage() {
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                     <h3 className="font-bold text-base text-[#0b1c30]">Operating Location</h3>
                     <button
-                      onClick={handleOpenEditModal}
+                      onClick={() => handleOpenEditModal('section-location')}
                       className="text-xs font-semibold text-[#00288e] hover:underline cursor-pointer"
                     >
                       Edit
@@ -612,7 +694,7 @@ export default function EmployerCompanyProfilePage() {
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                     <h3 className="font-bold text-base text-[#0b1c30]">Contact Representative</h3>
                     <button
-                      onClick={handleOpenEditModal}
+                      onClick={() => handleOpenEditModal('section-contact')}
                       className="text-xs font-semibold text-[#00288e] hover:underline cursor-pointer"
                     >
                       Edit
@@ -658,7 +740,7 @@ export default function EmployerCompanyProfilePage() {
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                     <h3 className="font-bold text-base text-[#0b1c30]">Social Media Profiles</h3>
                     <button
-                      onClick={handleOpenEditModal}
+                      onClick={() => handleOpenEditModal('section-social')}
                       className="text-xs font-semibold text-[#00288e] hover:underline cursor-pointer"
                     >
                       Edit
@@ -750,503 +832,692 @@ export default function EmployerCompanyProfilePage() {
         <EmployerFooter />
 
       {/* ─────────────────────────────────────────────
-          3. EDIT COMPANY PROFILE MODAL
+          3. EDIT COMPANY PROFILE MODAL (PORTALED)
       ───────────────────────────────────────────── */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-[#0b1c30]/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-100 flex flex-col max-h-[92vh] overflow-hidden animate-fade-in">
+      {isEditModalOpen && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] bg-[#0b1c30]/65 backdrop-blur-xs flex items-center justify-center p-0 sm:p-4 sm:p-6 animate-fade-in"
+          onClick={handleCloseEditModal}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-company-profile-title"
+        >
+          <div
+            className="bg-white w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-4xl sm:rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-[#eff4ff]">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#00288e] text-white flex items-center justify-center font-bold text-xs">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
+            <div className="shrink-0 px-5 sm:px-6 py-4 border-b border-slate-200 bg-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#00288e]/10 text-[#00288e] flex items-center justify-center font-bold shrink-0">
+                  <Building2 className="w-5 h-5 text-[#00288e]" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-base text-[#0b1c30]">
+                  <h3 id="edit-company-profile-title" className="font-extrabold text-base sm:text-lg text-[#0b1c30] tracking-tight">
                     Edit Company Profile
                   </h3>
-                  <p className="text-xs text-[#444653]">
-                    Update company information, headquarters location, contact details, and social links
+                  <p className="text-xs text-slate-500 hidden sm:block">
+                    Update organization identity, brand logo, headquarters location, and contact details
                   </p>
                 </div>
               </div>
               <button
-                onClick={() => setIsEditModalOpen(false)}
-                className="p-1.5 rounded-lg text-[#444653] hover:bg-slate-200 transition-colors cursor-pointer"
+                type="button"
+                onClick={handleCloseEditModal}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center"
+                aria-label="Close modal"
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Modal Navigation Tabs */}
-            <div className="flex items-center border-b border-slate-200 bg-slate-50 px-6 gap-2 text-xs font-semibold overflow-x-auto">
+            {/* Quick Section Navigation Bar */}
+            <div className="shrink-0 flex items-center gap-2 px-4 sm:px-6 py-2.5 bg-slate-50 border-b border-slate-200 overflow-x-auto no-scrollbar">
               {[
-                { id: 'basic', label: 'Part A: Basic Info' },
-                { id: 'location', label: 'Part B: HQ Location' },
-                { id: 'contact', label: 'Part C: Contact Representative' },
-                { id: 'social', label: 'Part D: Social Profiles' }
-              ].map((tab) => (
+                { id: 'section-identity', label: '1. Identity' },
+                { id: 'section-details', label: '2. Details' },
+                { id: 'section-info', label: '3. Company Info' },
+                { id: 'section-location', label: '4. Location' },
+                { id: 'section-contact', label: '5. Contacts' },
+                { id: 'section-social', label: '6. Social Links' },
+              ].map((sec) => (
                 <button
-                  key={tab.id}
+                  key={sec.id}
                   type="button"
-                  onClick={() => setModalActiveTab(tab.id)}
-                  className={`py-3 px-3 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-                    modalActiveTab === tab.id
-                      ? 'border-[#00288e] text-[#00288e] font-bold'
-                      : 'border-transparent text-[#444653] hover:text-[#0b1c30]'
-                  }`}
+                  onClick={() => {
+                    const el = document.getElementById(sec.id);
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }}
+                  className="px-3 py-1 rounded-full text-xs font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-[#eff4ff] hover:text-[#00288e] hover:border-blue-200 transition-all shrink-0 cursor-pointer shadow-2xs"
                 >
-                  {tab.label}
+                  {sec.label}
                 </button>
               ))}
             </div>
 
             {/* Modal Form Body */}
-            <form onSubmit={handleSaveProfile} className="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
-              {/* TAB 1: BASIC INFO */}
-              {modalActiveTab === 'basic' && (
-                <div className="space-y-4">
-                  <div className="p-4 rounded-xl bg-[#eff4ff] border border-blue-50 flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-xl bg-[#00288e] text-white flex items-center justify-center font-bold text-xl overflow-hidden shrink-0 shadow-sm relative">
-                      {formData.logo_url && !formLogoError ? (
-                        <img
-                          src={formData.logo_url}
-                          alt="Logo"
-                          className="w-full h-full object-cover"
-                          onError={() => setFormLogoError(true)}
-                        />
-                      ) : (
-                        companyInitials
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-1 min-w-0 flex-1">
-                      <label className="text-xs font-bold text-[#0b1c30]">Company Logo Upload</label>
-                      <span className="text-[11px] text-[#444653]">JPG, PNG, WEBP, GIF, SVG up to 5MB</span>
-                      <div className="flex items-center gap-2 mt-1">
-                        <label className="px-3 py-1.5 rounded-lg bg-[#00288e] text-white text-xs font-semibold cursor-pointer hover:bg-[#1e40af] transition-colors inline-flex items-center gap-1.5">
-                          {isUploadingLogo ? 'Uploading...' : 'Choose Logo File'}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleLogoUpload}
-                            disabled={isUploadingLogo}
-                            className="hidden"
-                          />
-                        </label>
-                        {formData.logo_url && (
-                          <button
-                            type="button"
-                            onClick={() => setFormData({ ...formData, logo_url: '' })}
-                            className="text-[11px] text-[#ba1a1a] hover:underline cursor-pointer"
-                          >
-                            Remove Logo
-                          </button>
-                        )}
+            <form id="employer-profile-edit-form" onSubmit={handleSaveProfile} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 overscroll-contain bg-[#f8fafc]">
+              
+              {/* Validation Summary Alert if errors exist */}
+              {Object.keys(validationErrors).length > 0 && (
+                <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>Please review the highlighted fields below before saving.</span>
+                </div>
+              )}
+
+              {/* 1. COMPANY IDENTITY */}
+              <div id="section-identity" className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+                <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                  <div className="w-7 h-7 rounded-lg bg-[#00288e]/10 text-[#00288e] flex items-center justify-center font-bold text-xs">
+                    1
+                  </div>
+                  <div>
+                    <h4 className="text-sm sm:text-base font-bold text-[#0b1c30]">Company Identity</h4>
+                    <p className="text-xs text-slate-500">Official legal name, brand mark, and headline</p>
+                  </div>
+                </div>
+
+                {/* Company Logo Upload Box */}
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
+                  {/* Square Logo Preview */}
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white border border-slate-200 shadow-2xs text-[#00288e] flex items-center justify-center font-extrabold text-2xl shrink-0 overflow-hidden p-1 relative">
+                    {(pendingLogoPreview || formData.logo_url) && !formLogoError ? (
+                      <img
+                        src={pendingLogoPreview || formData.logo_url}
+                        alt="Company Logo Preview"
+                        className="w-full h-full object-contain rounded-xl"
+                        onError={() => setFormLogoError(true)}
+                      />
+                    ) : (
+                      <div className="w-full h-full rounded-xl bg-gradient-to-br from-[#00288e] to-[#1e40af] text-white flex items-center justify-center font-extrabold text-2xl">
+                        {companyInitials}
                       </div>
-                    </div>
+                    )}
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-[#0b1c30] mb-1">
-                        Company Name <span className="text-[#ba1a1a]">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.company_name}
-                        onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
-                        className={`w-full px-3 py-2 rounded-xl bg-[#eff4ff] border ${
-                          validationErrors.company_name ? 'border-[#ba1a1a]' : 'border-slate-200'
-                        } text-[#0b1c30] outline-none focus:bg-white focus:ring-2 focus:ring-[#00288e] transition-all`}
-                        placeholder="e.g. TechCorp Solutions"
-                      />
-                      {validationErrors.company_name && (
-                        <p className="text-[11px] text-[#ba1a1a] mt-1">{validationErrors.company_name}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-[#0b1c30] mb-1">
-                        Tagline
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.tagline}
-                        onChange={(e) => setFormData({ ...formData, tagline: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl bg-[#eff4ff] border border-slate-200 text-[#0b1c30] outline-none focus:bg-white focus:ring-2 focus:ring-[#00288e] transition-all"
-                        placeholder="e.g. Building next-gen software platforms"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-[#0b1c30] mb-1">
-                        Industry <span className="text-[#ba1a1a]">*</span>
-                      </label>
-                      <select
-                        value={formData.industry}
-                        onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl bg-[#eff4ff] border border-slate-200 text-[#0b1c30] outline-none focus:bg-white focus:ring-2 focus:ring-[#00288e] transition-all cursor-pointer"
-                      >
-                        {masterIndustries.length > 0 ? (
-                          masterIndustries.map((ind) => (
-                            <option key={ind} value={ind}>{ind}</option>
-                          ))
+                  <div className="flex flex-col gap-1.5 min-w-0 flex-1 text-center sm:text-left">
+                    <label className="text-xs font-bold text-[#0b1c30]">Organization Logo</label>
+                    <span className="text-xs text-slate-500">
+                      Upload JPG, PNG, WEBP, GIF, or SVG (max 5MB). Logo maintains exact aspect ratio without cropping.
+                    </span>
+                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 mt-1">
+                      <label className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#00288e] text-white hover:bg-[#1e40af] text-xs font-bold cursor-pointer transition-colors shadow-xs min-h-[40px]">
+                        {isUploadingLogo ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <span>Uploading...</span>
+                          </>
                         ) : (
                           <>
-                            <option value="Information Technology">Information Technology</option>
-                            <option value="Financial Technology (FinTech)">Financial Technology (FinTech)</option>
-                            <option value="Healthcare & Life Sciences">Healthcare & Life Sciences</option>
+                            <UploadCloud className="w-4 h-4" />
+                            <span>{(pendingLogoPreview || formData.logo_url) ? 'Change Logo' : 'Choose Logo File'}</span>
                           </>
                         )}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-[#0b1c30] mb-1">
-                        Company Type <span className="text-[#ba1a1a]">*</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleLogoSelect}
+                          disabled={isUploadingLogo || isSaving}
+                          className="hidden"
+                        />
                       </label>
-                      <select
-                        value={formData.company_type}
-                        onChange={(e) => setFormData({ ...formData, company_type: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl bg-[#eff4ff] border border-slate-200 text-[#0b1c30] outline-none focus:bg-white focus:ring-2 focus:ring-[#00288e] transition-all cursor-pointer"
-                      >
-                        {masterCompanyTypes.length > 0 ? (
-                          masterCompanyTypes.map((type) => (
-                            <option key={type} value={type}>{type}</option>
-                          ))
-                        ) : (
-                          <option value="Private Limited Company (Pvt Ltd)">Private Limited Company (Pvt Ltd)</option>
-                        )}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-[#0b1c30] mb-1">
-                        Company Size
-                      </label>
-                      <select
-                        value={formData.company_size}
-                        onChange={(e) => setFormData({ ...formData, company_size: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl bg-[#eff4ff] border border-slate-200 text-[#0b1c30] outline-none focus:bg-white focus:ring-2 focus:ring-[#00288e] transition-all cursor-pointer"
-                      >
-                        {masterCompanySizes.length > 0 ? (
-                          masterCompanySizes.map((sz) => (
-                            <option key={sz} value={sz}>{sz}</option>
-                          ))
-                        ) : (
-                          <>
-                            <option value="1–10">1–10</option>
-                            <option value="501–1,000">501–1,000</option>
-                          </>
-                        )}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-[#0b1c30] mb-1">
-                        Year Founded
-                      </label>
-                      <input
-                        type="number"
-                        value={formData.founded_year}
-                        onChange={(e) => setFormData({ ...formData, founded_year: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl bg-[#eff4ff] border border-slate-200 text-[#0b1c30] outline-none focus:bg-white focus:ring-2 focus:ring-[#00288e] transition-all"
-                        placeholder="e.g. 2018"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-[#0b1c30] mb-1">
-                        Company Website
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.website}
-                        onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                        className={`w-full px-3 py-2 rounded-xl bg-[#eff4ff] border ${
-                          validationErrors.website ? 'border-[#ba1a1a]' : 'border-slate-200'
-                        } text-[#0b1c30] outline-none focus:bg-white focus:ring-2 focus:ring-[#00288e] transition-all`}
-                        placeholder="https://company.com"
-                      />
-                      {validationErrors.website && (
-                        <p className="text-[11px] text-[#ba1a1a] mt-1">{validationErrors.website}</p>
+                      {(pendingLogoPreview || formData.logo_url) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPendingLogoFile(null);
+                            setPendingLogoPreview(null);
+                            setFormData((prev) => ({ ...prev, logo_url: '' }));
+                          }}
+                          className="inline-flex items-center gap-1 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors min-h-[40px] cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Remove</span>
+                        </button>
                       )}
                     </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="field-company_name" className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Company Legal Name <span className="text-[#ba1a1a]">*</span>
+                    </label>
+                    <input
+                      id="field-company_name"
+                      type="text"
+                      value={formData.company_name}
+                      onChange={(e) => {
+                        setFormData({ ...formData, company_name: e.target.value });
+                        if (validationErrors.company_name) {
+                          setValidationErrors(prev => ({ ...prev, company_name: null }));
+                        }
+                      }}
+                      className={`w-full px-3.5 py-2.5 rounded-xl bg-white border ${
+                        validationErrors.company_name ? 'border-[#ba1a1a] ring-1 ring-[#ba1a1a]' : 'border-slate-300'
+                      } text-slate-900 text-xs sm:text-sm font-medium outline-none focus:border-[#00288e] focus:ring-2 focus:ring-[#00288e]/15 transition-all`}
+                      placeholder="e.g. Apex Tech Solutions"
+                    />
+                    {validationErrors.company_name && (
+                      <p className="text-[11px] text-[#ba1a1a] font-medium mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{validationErrors.company_name}</span>
+                      </p>
+                    )}
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-[#0b1c30] mb-1">
-                      Company Description / About Story
+                    <label htmlFor="field-tagline" className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Company Tagline
                     </label>
-                    <textarea
-                      rows={4}
-                      value={formData.about}
-                      onChange={(e) => setFormData({ ...formData, about: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl bg-[#eff4ff] border border-slate-200 text-[#0b1c30] outline-none focus:bg-white focus:ring-2 focus:ring-[#00288e] transition-all resize-y"
-                      placeholder="Describe your company's mission, products, and tech focus..."
+                    <input
+                      id="field-tagline"
+                      type="text"
+                      value={formData.tagline}
+                      onChange={(e) => setFormData({ ...formData, tagline: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs sm:text-sm font-medium outline-none focus:border-[#00288e] focus:ring-2 focus:ring-[#00288e]/15 transition-all"
+                      placeholder="e.g. Innovating Cloud and Enterprise Solutions"
                     />
                   </div>
                 </div>
-              )}
+              </div>
 
-              {/* TAB 2: LOCATION */}
-              {modalActiveTab === 'location' && (
-                <div className="space-y-4">
-                  <DependentLocationSelector
-                    country={formData.country}
-                    state={formData.state}
-                    city={formData.city}
-                    onChangeLocation={({ country, state, city }) => {
-                      setFormData(prev => ({
-                        ...prev,
-                        country,
-                        state,
-                        city
-                      }));
-                    }}
-                    errors={{
-                      country: validationErrors.country,
-                      state: validationErrors.state,
-                      city: validationErrors.city
-                    }}
-                    showLocality={false}
-                    layout="grid"
+              {/* 2. COMPANY DETAILS */}
+              <div id="section-details" className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+                <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                  <div className="w-7 h-7 rounded-lg bg-[#00288e]/10 text-[#00288e] flex items-center justify-center font-bold text-xs">
+                    2
+                  </div>
+                  <div>
+                    <h4 className="text-sm sm:text-base font-bold text-[#0b1c30]">Company Details</h4>
+                    <p className="text-xs text-slate-500">Core industry, corporate structure, and organizational mission</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="field-industry" className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Industry Sector <span className="text-[#ba1a1a]">*</span>
+                    </label>
+                    <select
+                      id="field-industry"
+                      value={formData.industry}
+                      onChange={(e) => {
+                        setFormData({ ...formData, industry: e.target.value });
+                        if (validationErrors.industry) {
+                          setValidationErrors(prev => ({ ...prev, industry: null }));
+                        }
+                      }}
+                      className={`w-full px-3.5 py-2.5 rounded-xl bg-white border ${
+                        validationErrors.industry ? 'border-[#ba1a1a] ring-1 ring-[#ba1a1a]' : 'border-slate-300'
+                      } text-slate-900 text-xs sm:text-sm font-medium outline-none focus:border-[#00288e] focus:ring-2 focus:ring-[#00288e]/15 transition-all cursor-pointer`}
+                    >
+                      <option value="">Select Industry</option>
+                      {masterIndustries.length > 0 ? (
+                        masterIndustries.map((ind) => (
+                          <option key={ind} value={ind}>{ind}</option>
+                        ))
+                      ) : (
+                        <>
+                          <option value="Information Technology">Information Technology</option>
+                          <option value="Financial Technology (FinTech)">Financial Technology (FinTech)</option>
+                          <option value="Healthcare & Life Sciences">Healthcare & Life Sciences</option>
+                        </>
+                      )}
+                    </select>
+                    {validationErrors.industry && (
+                      <p className="text-[11px] text-[#ba1a1a] font-medium mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{validationErrors.industry}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor="field-company_type" className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Company Type / Structure <span className="text-[#ba1a1a]">*</span>
+                    </label>
+                    <select
+                      id="field-company_type"
+                      value={formData.company_type}
+                      onChange={(e) => {
+                        setFormData({ ...formData, company_type: e.target.value });
+                        if (validationErrors.company_type) {
+                          setValidationErrors(prev => ({ ...prev, company_type: null }));
+                        }
+                      }}
+                      className={`w-full px-3.5 py-2.5 rounded-xl bg-white border ${
+                        validationErrors.company_type ? 'border-[#ba1a1a] ring-1 ring-[#ba1a1a]' : 'border-slate-300'
+                      } text-slate-900 text-xs sm:text-sm font-medium outline-none focus:border-[#00288e] focus:ring-2 focus:ring-[#00288e]/15 transition-all cursor-pointer`}
+                    >
+                      <option value="">Select Company Type</option>
+                      {masterCompanyTypes.length > 0 ? (
+                        masterCompanyTypes.map((type) => (
+                          <option key={type} value={type}>{type}</option>
+                        ))
+                      ) : (
+                        <option value="Private Limited Company (Pvt Ltd)">Private Limited Company (Pvt Ltd)</option>
+                      )}
+                    </select>
+                    {validationErrors.company_type && (
+                      <p className="text-[11px] text-[#ba1a1a] font-medium mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{validationErrors.company_type}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="field-about" className="block text-xs font-bold text-slate-700 mb-1.5">
+                    Company Description &amp; Mission
+                  </label>
+                  <textarea
+                    id="field-about"
+                    rows={4}
+                    value={formData.about}
+                    onChange={(e) => setFormData({ ...formData, about: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs sm:text-sm font-medium outline-none focus:border-[#00288e] focus:ring-2 focus:ring-[#00288e]/15 transition-all resize-y"
+                    placeholder="Describe your organization's mission, flagship products, technological focus, and workplace culture..."
                   />
+                </div>
+              </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="sm:col-span-2">
-                      <label className="block text-xs font-semibold text-[#0b1c30] mb-1">
-                        Full Address
-                      </label>
-                      <textarea
-                        rows={2}
-                        value={formData.address}
-                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl bg-[#eff4ff] border border-slate-200 text-[#0b1c30] outline-none focus:bg-white focus:ring-2 focus:ring-[#00288e] transition-all resize-none"
-                        placeholder="e.g. 100ft Road, Indiranagar"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-[#0b1c30] mb-1">
-                        Pincode
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.pincode}
-                        onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl bg-[#eff4ff] border border-slate-200 text-[#0b1c30] outline-none focus:bg-white focus:ring-2 focus:ring-[#00288e] transition-all"
-                        placeholder="e.g. 560038"
-                      />
-                    </div>
+              {/* 3. COMPANY INFORMATION */}
+              <div id="section-info" className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+                <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                  <div className="w-7 h-7 rounded-lg bg-[#00288e]/10 text-[#00288e] flex items-center justify-center font-bold text-xs">
+                    3
+                  </div>
+                  <div>
+                    <h4 className="text-sm sm:text-base font-bold text-[#0b1c30]">Company Information</h4>
+                    <p className="text-xs text-slate-500">Team scale, founding year, and corporate web presence</p>
                   </div>
                 </div>
-              )}
 
-              {/* TAB 3: CONTACT PERSON */}
-              {modalActiveTab === 'contact' && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-[#0b1c30] mb-1">
-                        Official Email
-                      </label>
-                      <input
-                        type="email"
-                        value={formData.official_email}
-                        onChange={(e) => setFormData({ ...formData, official_email: e.target.value })}
-                        className={`w-full px-3 py-2 rounded-xl bg-[#eff4ff] border ${
-                          validationErrors.official_email ? 'border-[#ba1a1a]' : 'border-slate-200'
-                        } text-[#0b1c30] outline-none focus:bg-white focus:ring-2 focus:ring-[#00288e] transition-all`}
-                        placeholder="official@company.com"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-[#0b1c30] mb-1">
-                        Official Phone
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.official_phone}
-                        onChange={(e) => setFormData({ ...formData, official_phone: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl bg-[#eff4ff] border border-slate-200 text-[#0b1c30] outline-none focus:bg-white focus:ring-2 focus:ring-[#00288e] transition-all"
-                        placeholder="+91 80 4000 5000"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-[#0b1c30] mb-1">
-                        Alternate Phone
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.alt_phone}
-                        onChange={(e) => setFormData({ ...formData, alt_phone: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl bg-[#eff4ff] border border-slate-200 text-[#0b1c30] outline-none focus:bg-white focus:ring-2 focus:ring-[#00288e] transition-all"
-                        placeholder="+91 98765 43210"
-                      />
-                    </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label htmlFor="field-company_size" className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Company Size
+                    </label>
+                    <select
+                      id="field-company_size"
+                      value={formData.company_size}
+                      onChange={(e) => setFormData({ ...formData, company_size: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs sm:text-sm font-medium outline-none focus:border-[#00288e] focus:ring-2 focus:ring-[#00288e]/15 transition-all cursor-pointer"
+                    >
+                      {masterCompanySizes.length > 0 ? (
+                        masterCompanySizes.map((sz) => (
+                          <option key={sz} value={sz}>{sz}</option>
+                        ))
+                      ) : (
+                        <>
+                          <option value="1–10">1–10</option>
+                          <option value="11–50">11–50</option>
+                          <option value="51–200">51–200</option>
+                          <option value="201–500">201–500</option>
+                          <option value="501–1,000">501–1,000</option>
+                          <option value="1,001–5,000">1,001–5,000</option>
+                          <option value="5,000+">5,000+</option>
+                        </>
+                      )}
+                    </select>
                   </div>
 
-                  <div className="pt-2 border-t border-slate-100">
-                    <h4 className="text-xs font-bold text-[#0b1c30] mb-3">Contact Representative</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-[#0b1c30] mb-1">
-                          Contact Person Name
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.contact_person_name}
-                          onChange={(e) => setFormData({ ...formData, contact_person_name: e.target.value })}
-                          className="w-full px-3 py-2 rounded-xl bg-[#eff4ff] border border-slate-200 text-[#0b1c30] outline-none focus:bg-white focus:ring-2 focus:ring-[#00288e] transition-all"
-                          placeholder="e.g. Priya Sharma"
-                        />
-                      </div>
+                  <div>
+                    <label htmlFor="field-founded_year" className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Year Founded
+                    </label>
+                    <input
+                      id="field-founded_year"
+                      type="number"
+                      value={formData.founded_year}
+                      onChange={(e) => setFormData({ ...formData, founded_year: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs sm:text-sm font-medium outline-none focus:border-[#00288e] focus:ring-2 focus:ring-[#00288e]/15 transition-all"
+                      placeholder="e.g. 2018"
+                    />
+                  </div>
 
-                      <div>
-                        <label className="block text-xs font-semibold text-[#0b1c30] mb-1">
-                          Designation
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.contact_person_designation}
-                          onChange={(e) => setFormData({ ...formData, contact_person_designation: e.target.value })}
-                          className="w-full px-3 py-2 rounded-xl bg-[#eff4ff] border border-slate-200 text-[#0b1c30] outline-none focus:bg-white focus:ring-2 focus:ring-[#00288e] transition-all"
-                          placeholder="e.g. Lead Recruiter"
-                        />
-                      </div>
-                    </div>
+                  <div>
+                    <label htmlFor="field-website" className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Company Website
+                    </label>
+                    <input
+                      id="field-website"
+                      type="text"
+                      value={formData.website}
+                      onChange={(e) => {
+                        setFormData({ ...formData, website: e.target.value });
+                        if (validationErrors.website) {
+                          setValidationErrors(prev => ({ ...prev, website: null }));
+                        }
+                      }}
+                      className={`w-full px-3.5 py-2.5 rounded-xl bg-white border ${
+                        validationErrors.website ? 'border-[#ba1a1a] ring-1 ring-[#ba1a1a]' : 'border-slate-300'
+                      } text-slate-900 text-xs sm:text-sm font-medium outline-none focus:border-[#00288e] focus:ring-2 focus:ring-[#00288e]/15 transition-all`}
+                      placeholder="https://company.com"
+                    />
+                    {validationErrors.website && (
+                      <p className="text-[11px] text-[#ba1a1a] font-medium mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{validationErrors.website}</span>
+                      </p>
+                    )}
                   </div>
                 </div>
-              )}
+              </div>
 
-              {/* TAB 4: SOCIAL PROFILES */}
-              {modalActiveTab === 'social' && (
-                <div className="space-y-4">
+              {/* 4. HEADQUARTERS & LOCATION */}
+              <div id="section-location" className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+                <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                  <div className="w-7 h-7 rounded-lg bg-[#00288e]/10 text-[#00288e] flex items-center justify-center font-bold text-xs">
+                    4
+                  </div>
+                  <div>
+                    <h4 className="text-sm sm:text-base font-bold text-[#0b1c30]">Headquarters &amp; Location</h4>
+                    <p className="text-xs text-slate-500">Registered corporate address and physical location details</p>
+                  </div>
+                </div>
+
+                <DependentLocationSelector
+                  country={formData.country}
+                  state={formData.state}
+                  city={formData.city}
+                  onChangeLocation={({ country, state, city }) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      country,
+                      state,
+                      city,
+                      location: [city, state, country].filter(Boolean).join(', ')
+                    }));
+                    setValidationErrors(prev => ({
+                      ...prev,
+                      country: null,
+                      state: null,
+                      city: null
+                    }));
+                  }}
+                  errors={{
+                    country: validationErrors.country,
+                    state: validationErrors.state,
+                    city: validationErrors.city
+                  }}
+                  showLocality={false}
+                  layout="grid"
+                />
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+                  <div className="sm:col-span-2">
+                    <label htmlFor="field-address" className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Full Address
+                    </label>
+                    <textarea
+                      id="field-address"
+                      rows={2}
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs sm:text-sm font-medium outline-none focus:border-[#00288e] focus:ring-2 focus:ring-[#00288e]/15 transition-all resize-none"
+                      placeholder="e.g. Tower B, Global Infotech Park, Whitefield"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="field-pincode" className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Postal Code / Pincode
+                    </label>
+                    <input
+                      id="field-pincode"
+                      type="text"
+                      value={formData.pincode}
+                      onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs sm:text-sm font-medium outline-none focus:border-[#00288e] focus:ring-2 focus:ring-[#00288e]/15 transition-all"
+                      placeholder="e.g. 560066"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 5. CONTACT REPRESENTATIVES */}
+              <div id="section-contact" className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+                <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                  <div className="w-7 h-7 rounded-lg bg-[#00288e]/10 text-[#00288e] flex items-center justify-center font-bold text-xs">
+                    5
+                  </div>
+                  <div>
+                    <h4 className="text-sm sm:text-base font-bold text-[#0b1c30]">Contact Representatives</h4>
+                    <p className="text-xs text-slate-500">Official communication channels and hiring team contacts</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label htmlFor="field-official_email" className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Official Email
+                    </label>
+                    <input
+                      id="field-official_email"
+                      type="email"
+                      value={formData.official_email}
+                      onChange={(e) => {
+                        setFormData({ ...formData, official_email: e.target.value });
+                        if (validationErrors.official_email) {
+                          setValidationErrors(prev => ({ ...prev, official_email: null }));
+                        }
+                      }}
+                      className={`w-full px-3.5 py-2.5 rounded-xl bg-white border ${
+                        validationErrors.official_email ? 'border-[#ba1a1a] ring-1 ring-[#ba1a1a]' : 'border-slate-300'
+                      } text-slate-900 text-xs sm:text-sm font-medium outline-none focus:border-[#00288e] focus:ring-2 focus:ring-[#00288e]/15 transition-all`}
+                      placeholder="official@company.com"
+                    />
+                    {validationErrors.official_email && (
+                      <p className="text-[11px] text-[#ba1a1a] font-medium mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{validationErrors.official_email}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor="field-official_phone" className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Official Phone
+                    </label>
+                    <input
+                      id="field-official_phone"
+                      type="tel"
+                      value={formData.official_phone}
+                      onChange={(e) => setFormData({ ...formData, official_phone: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs sm:text-sm font-medium outline-none focus:border-[#00288e] focus:ring-2 focus:ring-[#00288e]/15 transition-all"
+                      placeholder="+91 80 4000 5000"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="field-alt_phone" className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Alternate Phone
+                    </label>
+                    <input
+                      id="field-alt_phone"
+                      type="tel"
+                      value={formData.alt_phone}
+                      onChange={(e) => setFormData({ ...formData, alt_phone: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs sm:text-sm font-medium outline-none focus:border-[#00288e] focus:ring-2 focus:ring-[#00288e]/15 transition-all"
+                      placeholder="+91 98765 43210"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-slate-100">
+                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-3">Primary Recruiter Contact</span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-[#0b1c30] mb-1">
-                        LinkedIn URL
+                      <label htmlFor="field-contact_person_name" className="block text-xs font-bold text-slate-700 mb-1.5">
+                        Contact Person Name
                       </label>
                       <input
+                        id="field-contact_person_name"
                         type="text"
-                        value={formData.linkedin_url}
-                        onChange={(e) => setFormData({ ...formData, linkedin_url: e.target.value })}
-                        className={`w-full px-3 py-2 rounded-xl bg-[#eff4ff] border ${
-                          validationErrors.linkedin_url ? 'border-[#ba1a1a]' : 'border-slate-200'
-                        } text-[#0b1c30] outline-none focus:bg-white focus:ring-2 focus:ring-[#00288e] transition-all`}
-                        placeholder="https://linkedin.com/company/techcorp"
+                        value={formData.contact_person_name}
+                        onChange={(e) => setFormData({ ...formData, contact_person_name: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs sm:text-sm font-medium outline-none focus:border-[#00288e] focus:ring-2 focus:ring-[#00288e]/15 transition-all"
+                        placeholder="e.g. Priya Sharma"
                       />
-                      {validationErrors.linkedin_url && (
-                        <p className="text-[11px] text-[#ba1a1a] mt-1">{validationErrors.linkedin_url}</p>
-                      )}
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-[#0b1c30] mb-1">
-                        Instagram URL
+                      <label htmlFor="field-contact_person_designation" className="block text-xs font-bold text-slate-700 mb-1.5">
+                        Designation / Role
                       </label>
                       <input
+                        id="field-contact_person_designation"
                         type="text"
-                        value={formData.instagram_url}
-                        onChange={(e) => setFormData({ ...formData, instagram_url: e.target.value })}
-                        className={`w-full px-3 py-2 rounded-xl bg-[#eff4ff] border ${
-                          validationErrors.instagram_url ? 'border-[#ba1a1a]' : 'border-slate-200'
-                        } text-[#0b1c30] outline-none focus:bg-white focus:ring-2 focus:ring-[#00288e] transition-all`}
-                        placeholder="https://www.instagram.com/username?igsh=abc123"
+                        value={formData.contact_person_designation}
+                        onChange={(e) => setFormData({ ...formData, contact_person_designation: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs sm:text-sm font-medium outline-none focus:border-[#00288e] focus:ring-2 focus:ring-[#00288e]/15 transition-all"
+                        placeholder="e.g. Lead Talent Partner"
                       />
-                      {validationErrors.instagram_url && (
-                        <p className="text-[11px] text-[#ba1a1a] mt-1">{validationErrors.instagram_url}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-[#0b1c30] mb-1">
-                        Facebook URL
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.facebook_url}
-                        onChange={(e) => setFormData({ ...formData, facebook_url: e.target.value })}
-                        className={`w-full px-3 py-2 rounded-xl bg-[#eff4ff] border ${
-                          validationErrors.facebook_url ? 'border-[#ba1a1a]' : 'border-slate-200'
-                        } text-[#0b1c30] outline-none focus:bg-white focus:ring-2 focus:ring-[#00288e] transition-all`}
-                        placeholder="https://facebook.com/techcorp"
-                      />
-                      {validationErrors.facebook_url && (
-                        <p className="text-[11px] text-[#ba1a1a] mt-1">{validationErrors.facebook_url}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-[#0b1c30] mb-1">
-                        X / Twitter URL
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.twitter_url}
-                        onChange={(e) => setFormData({ ...formData, twitter_url: e.target.value })}
-                        className={`w-full px-3 py-2 rounded-xl bg-[#eff4ff] border ${
-                          validationErrors.twitter_url ? 'border-[#ba1a1a]' : 'border-slate-200'
-                        } text-[#0b1c30] outline-none focus:bg-white focus:ring-2 focus:ring-[#00288e] transition-all`}
-                        placeholder="https://x.com/techcorp"
-                      />
-                      {validationErrors.twitter_url && (
-                        <p className="text-[11px] text-[#ba1a1a] mt-1">{validationErrors.twitter_url}</p>
-                      )}
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
+
+              {/* 6. SOCIAL & WEB PROFILES */}
+              <div id="section-social" className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+                <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                  <div className="w-7 h-7 rounded-lg bg-[#00288e]/10 text-[#00288e] flex items-center justify-center font-bold text-xs">
+                    6
+                  </div>
+                  <div>
+                    <h4 className="text-sm sm:text-base font-bold text-[#0b1c30]">Social Profiles &amp; Web Presence</h4>
+                    <p className="text-xs text-slate-500">Official verified social channels for candidate transparency</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="field-linkedin_url" className="block text-xs font-bold text-slate-700 mb-1.5">
+                      LinkedIn Company Page
+                    </label>
+                    <input
+                      id="field-linkedin_url"
+                      type="text"
+                      value={formData.linkedin_url}
+                      onChange={(e) => {
+                        setFormData({ ...formData, linkedin_url: e.target.value });
+                        if (validationErrors.linkedin_url) {
+                          setValidationErrors(prev => ({ ...prev, linkedin_url: null }));
+                        }
+                      }}
+                      className={`w-full px-3.5 py-2.5 rounded-xl bg-white border ${
+                        validationErrors.linkedin_url ? 'border-[#ba1a1a] ring-1 ring-[#ba1a1a]' : 'border-slate-300'
+                      } text-slate-900 text-xs sm:text-sm font-medium outline-none focus:border-[#00288e] focus:ring-2 focus:ring-[#00288e]/15 transition-all`}
+                      placeholder="https://linkedin.com/company/techcorp"
+                    />
+                    {validationErrors.linkedin_url && (
+                      <p className="text-[11px] text-[#ba1a1a] font-medium mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{validationErrors.linkedin_url}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor="field-instagram_url" className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Instagram Profile
+                    </label>
+                    <input
+                      id="field-instagram_url"
+                      type="text"
+                      value={formData.instagram_url}
+                      onChange={(e) => {
+                        setFormData({ ...formData, instagram_url: e.target.value });
+                        if (validationErrors.instagram_url) {
+                          setValidationErrors(prev => ({ ...prev, instagram_url: null }));
+                        }
+                      }}
+                      className={`w-full px-3.5 py-2.5 rounded-xl bg-white border ${
+                        validationErrors.instagram_url ? 'border-[#ba1a1a] ring-1 ring-[#ba1a1a]' : 'border-slate-300'
+                      } text-slate-900 text-xs sm:text-sm font-medium outline-none focus:border-[#00288e] focus:ring-2 focus:ring-[#00288e]/15 transition-all`}
+                      placeholder="https://www.instagram.com/username"
+                    />
+                    {validationErrors.instagram_url && (
+                      <p className="text-[11px] text-[#ba1a1a] font-medium mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{validationErrors.instagram_url}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor="field-facebook_url" className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Facebook Page
+                    </label>
+                    <input
+                      id="field-facebook_url"
+                      type="text"
+                      value={formData.facebook_url}
+                      onChange={(e) => {
+                        setFormData({ ...formData, facebook_url: e.target.value });
+                        if (validationErrors.facebook_url) {
+                          setValidationErrors(prev => ({ ...prev, facebook_url: null }));
+                        }
+                      }}
+                      className={`w-full px-3.5 py-2.5 rounded-xl bg-white border ${
+                        validationErrors.facebook_url ? 'border-[#ba1a1a] ring-1 ring-[#ba1a1a]' : 'border-slate-300'
+                      } text-slate-900 text-xs sm:text-sm font-medium outline-none focus:border-[#00288e] focus:ring-2 focus:ring-[#00288e]/15 transition-all`}
+                      placeholder="https://facebook.com/techcorp"
+                    />
+                    {validationErrors.facebook_url && (
+                      <p className="text-[11px] text-[#ba1a1a] font-medium mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{validationErrors.facebook_url}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor="field-twitter_url" className="block text-xs font-bold text-slate-700 mb-1.5">
+                      X / Twitter Profile
+                    </label>
+                    <input
+                      id="field-twitter_url"
+                      type="text"
+                      value={formData.twitter_url}
+                      onChange={(e) => {
+                        setFormData({ ...formData, twitter_url: e.target.value });
+                        if (validationErrors.twitter_url) {
+                          setValidationErrors(prev => ({ ...prev, twitter_url: null }));
+                        }
+                      }}
+                      className={`w-full px-3.5 py-2.5 rounded-xl bg-white border ${
+                        validationErrors.twitter_url ? 'border-[#ba1a1a] ring-1 ring-[#ba1a1a]' : 'border-slate-300'
+                      } text-slate-900 text-xs sm:text-sm font-medium outline-none focus:border-[#00288e] focus:ring-2 focus:ring-[#00288e]/15 transition-all`}
+                      placeholder="https://x.com/techcorp"
+                    />
+                    {validationErrors.twitter_url && (
+                      <p className="text-[11px] text-[#ba1a1a] font-medium mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{validationErrors.twitter_url}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
             </form>
 
             {/* Modal Footer */}
-            <div className="px-6 py-3 border-t border-slate-100 flex items-center justify-between bg-slate-50">
-              <div className="flex items-center gap-2">
-                {modalActiveTab !== 'basic' && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (modalActiveTab === 'location') setModalActiveTab('basic');
-                      if (modalActiveTab === 'contact') setModalActiveTab('location');
-                      if (modalActiveTab === 'social') setModalActiveTab('contact');
-                    }}
-                    className="px-3 py-1.5 rounded-xl bg-white text-[#00288e] border border-slate-200 hover:bg-slate-50 text-xs font-semibold"
-                  >
-                    ← Previous Section
-                  </button>
-                )}
-                {modalActiveTab !== 'social' && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (modalActiveTab === 'basic') setModalActiveTab('location');
-                      if (modalActiveTab === 'location') setModalActiveTab('contact');
-                      if (modalActiveTab === 'contact') setModalActiveTab('social');
-                    }}
-                    className="px-3 py-1.5 rounded-xl bg-[#eff4ff] text-[#00288e] hover:bg-[#dce9ff] text-xs font-bold"
-                  >
-                    Next Section →
-                  </button>
-                )}
+            <div className="shrink-0 px-4 sm:px-6 py-3.5 border-t border-slate-200 bg-white flex items-center justify-between gap-3 shadow-xs">
+              <div className="text-xs text-slate-500 hidden sm:block">
+                <span className="text-[#ba1a1a] font-bold">*</span> Mandatory fields
               </div>
-
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
                 <button
                   type="button"
-                  onClick={() => setIsEditModalOpen(false)}
+                  onClick={handleCloseEditModal}
                   disabled={isSaving}
-                  className="px-4 py-2 rounded-xl text-[#444653] hover:bg-slate-200 transition-colors text-xs font-semibold cursor-pointer"
+                  className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors text-xs sm:text-sm font-semibold cursor-pointer min-h-[44px]"
                 >
                   Cancel
                 </button>
@@ -1254,15 +1525,26 @@ export default function EmployerCompanyProfilePage() {
                   type="button"
                   onClick={handleSaveProfile}
                   disabled={isSaving}
-                  className="px-5 py-2 rounded-xl bg-[#00288e] text-white hover:bg-[#1e40af] transition-colors text-xs font-semibold flex items-center gap-2 shadow-xs cursor-pointer disabled:opacity-50"
+                  className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-[#00288e] text-white hover:bg-[#1e40af] transition-colors text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-xs cursor-pointer min-h-[44px] disabled:opacity-50"
                 >
-                  {isSaving ? 'Saving...' : 'Save Changes'}
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Saving Profile...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Save Changes</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
-    </PageTransition>
+</PageTransition>
   );
 }

@@ -155,18 +155,18 @@ const CandidateDashboard = () => {
             </div>
 
             {/* Quick action CTAs */}
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               <Link
                 id="btn-complete-profile"
                 to="/candidate/profile"
-                className="px-4 py-2 rounded-xl bg-[#00288e] text-white text-xs font-semibold hover:bg-[#1e40af] transition-colors shadow-xs flex items-center gap-1.5"
+                className="flex-1 sm:flex-initial text-center justify-center px-4 py-2.5 rounded-xl bg-[#00288e] text-white text-xs font-semibold hover:bg-[#1e40af] transition-colors shadow-xs flex items-center gap-1.5 min-h-[44px]"
               >
                 My Profile
               </Link>
               <Link
                 id="btn-build-ai-resume"
                 to="/candidate/ai-builder"
-                className="px-4 py-2 rounded-xl bg-blue-50 text-[#00288e] border border-blue-200/80 text-xs font-semibold hover:bg-blue-100 transition-colors shadow-xs flex items-center gap-1.5"
+                className="flex-1 sm:flex-initial text-center justify-center px-4 py-2.5 rounded-xl bg-blue-50 text-[#00288e] border border-blue-200/80 text-xs font-semibold hover:bg-blue-100 transition-colors shadow-xs flex items-center gap-1.5 min-h-[44px]"
               >
                 <Sparkles className="w-3.5 h-3.5 text-[#00288e]" />
                 Build AI Resume
@@ -178,23 +178,23 @@ const CandidateDashboard = () => {
             {/* ══════════════════════════════
                 SECTION 2: Metric Cards Grid
             ══════════════════════════════ */}
-            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+            <section className="grid grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4">
               {/* Card 1: Active Applications */}
-              <div className="bg-white rounded-xl p-4 shadow-sm border border-[#eff4ff] flex flex-col justify-between group hover:shadow-md transition-all">
+              <div className="bg-white rounded-xl p-3.5 sm:p-4 shadow-sm border border-[#eff4ff] flex flex-col justify-between group hover:shadow-md transition-all">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold uppercase text-[#444653] tracking-wide">Active Applications</span>
-                  <div className="w-8 h-8 rounded-lg bg-[#eff4ff] flex items-center justify-center text-[#00288e]">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <span className="text-[10px] sm:text-[11px] font-semibold uppercase text-[#444653] tracking-wide truncate">Active Applications</span>
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#eff4ff] flex items-center justify-center text-[#00288e] shrink-0">
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
                       <rect x="9" y="3" width="6" height="4" rx="1"/>
                     </svg>
                   </div>
                 </div>
-                <div className="pt-2 pb-1 flex items-baseline gap-2">
-                  <span className="text-2xl lg:text-3xl font-bold text-[#0b1c30]">{activeApplications}</span>
-                  <span className="text-[11px] text-[#006a61] font-medium">Active</span>
+                <div className="pt-2 pb-1 flex items-baseline gap-1.5 sm:gap-2">
+                  <span className="text-xl sm:text-2xl lg:text-3xl font-bold text-[#0b1c30]">{activeApplications}</span>
+                  <span className="text-[10px] sm:text-[11px] text-[#006a61] font-medium">Active</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-[#444653] text-[11px]">
+                <div className="flex flex-wrap items-center gap-1 text-[#444653] text-[10px] sm:text-[11px]">
                   <span className="px-1.5 py-0.5 rounded bg-[#eff4ff] font-medium">{counts?.underReview || 0} In Review</span>
                   <span className="px-1.5 py-0.5 rounded bg-[#eff4ff] font-medium">{counts?.shortlisted || 0} Shortlisted</span>
                   <span className="px-1.5 py-0.5 rounded bg-[#dce9ff] text-[#00288e] font-semibold">{counts?.interview || 0} Interview</span>
@@ -202,20 +202,20 @@ const CandidateDashboard = () => {
               </div>
 
               {/* Card 2: Saved Roles */}
-              <div className="bg-white rounded-xl p-4 shadow-sm border border-[#eff4ff] flex flex-col justify-between group hover:shadow-md transition-all">
+              <div className="bg-white rounded-xl p-3.5 sm:p-4 shadow-sm border border-[#eff4ff] flex flex-col justify-between group hover:shadow-md transition-all">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold uppercase text-[#444653] tracking-wide">Saved Roles</span>
-                  <div className="w-8 h-8 rounded-lg bg-[#eff4ff] flex items-center justify-center text-[#444653]">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <span className="text-[10px] sm:text-[11px] font-semibold uppercase text-[#444653] tracking-wide truncate">Saved Roles</span>
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#eff4ff] flex items-center justify-center text-[#444653] shrink-0">
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
                     </svg>
                   </div>
                 </div>
-                <div className="pt-2 pb-1 flex items-baseline gap-2">
-                  <span className="text-2xl lg:text-3xl font-bold text-[#0b1c30]">{savedCount}</span>
-                  <span className="text-[11px] text-[#444653]">Roles bookmarked</span>
+                <div className="pt-2 pb-1 flex items-baseline gap-1.5 sm:gap-2">
+                  <span className="text-xl sm:text-2xl lg:text-3xl font-bold text-[#0b1c30]">{savedCount}</span>
+                  <span className="text-[10px] sm:text-[11px] text-[#444653] truncate">Roles bookmarked</span>
                 </div>
-                <div className="flex items-center justify-end text-[#444653] text-[11px]">
+                <div className="flex items-center justify-end text-[#444653] text-[10px] sm:text-[11px]">
                   <Link
                     to="/candidate/saved"
                     className="text-[#00288e] font-semibold hover:underline flex items-center"
@@ -364,11 +364,11 @@ const CandidateDashboard = () => {
                   </div>
                 </div>
 
-                {/* 3b: Recent Applications Tracker Table */}
-                <div className="bg-white rounded-xl p-6 shadow-sm flex flex-col gap-4">
+                {/* 3b: Recent Applications Tracker */}
+                <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm flex flex-col gap-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h2 className="text-lg font-bold text-[#0b1c30]">Recent Applications</h2>
+                      <h2 className="text-base sm:text-lg font-bold text-[#0b1c30]">Recent Applications</h2>
                       <p className="text-xs text-[#444653]">Real-time status updates from active hiring teams</p>
                     </div>
                     <Link
@@ -381,7 +381,61 @@ const CandidateDashboard = () => {
                       </svg>
                     </Link>
                   </div>
-                  <div className="overflow-x-auto">
+
+                  {/* Mobile (<640px) Cards Stream matching Storyboard Reference */}
+                  <div className="sm:hidden flex flex-col gap-2.5">
+                    {applications.length > 0 ? (
+                      applications.slice(0, 5).map((app) => {
+                        const statusLower = (app.status || 'applied').toLowerCase();
+                        const isSelected = statusLower === 'selected' || statusLower === 'offered';
+                        const isUnderReview = statusLower === 'under review' || statusLower === 'review';
+                        const isInterview = statusLower === 'interview';
+                        const isRejected = statusLower === 'rejected' || statusLower === 'archived';
+
+                        const badgeClass = isSelected
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : isInterview
+                          ? 'bg-blue-50 text-[#00288e] border-blue-200'
+                          : isUnderReview
+                          ? 'bg-amber-50 text-amber-700 border-amber-200'
+                          : isRejected
+                          ? 'bg-rose-50 text-rose-700 border-rose-200'
+                          : 'bg-[#eff4ff] text-[#00288e] border-blue-100';
+
+                        return (
+                          <Link
+                            key={app.id}
+                            to="/candidate/applications"
+                            className="p-3 rounded-xl bg-[#eff4ff]/60 hover:bg-[#eff4ff] border border-[#e5eeff] flex items-center justify-between gap-3 transition-colors"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="w-9 h-9 rounded-lg bg-white border border-[#e5eeff] flex items-center justify-center font-bold text-[#00288e] text-xs shrink-0 shadow-2xs">
+                                {(app.company_name || 'CO').slice(0, 2).toUpperCase()}
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <span className="text-xs font-bold text-[#0b1c30] truncate">{app.job_title || 'Position'}</span>
+                                <span className="text-[11px] text-[#444653] truncate">{app.company_name || 'Employer'}</span>
+                                <span className="text-[10px] text-slate-400">
+                                  {app.applied_at ? `Applied · ${new Date(app.applied_at).toLocaleDateString()}` : 'Applied recently'}
+                                </span>
+                              </div>
+                            </div>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${badgeClass}`}>
+                              {app.status || 'Applied'}
+                            </span>
+                          </Link>
+                        );
+                      })
+                    ) : (
+                      <div className="py-6 text-center text-[#444653] bg-slate-50 rounded-xl">
+                        <p className="font-bold text-xs">No applications yet</p>
+                        <Link to="/candidate/jobs" className="mt-1.5 inline-block text-xs text-[#00288e] font-bold">Browse Jobs →</Link>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Tablet/Desktop (>=640px) Table */}
+                  <div className="hidden sm:block overflow-x-auto">
                     <table className="w-full text-left text-xs">
                       <thead>
                         <tr className="bg-[#eff4ff] text-[#444653] uppercase text-[10px] font-semibold">

@@ -1,0 +1,252 @@
+{
+  "total": 49,
+  "passed": 49,
+  "failed": 0,
+  "results": [
+    {
+      "title": "ipad_pro_13_portrait - login horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (1032) > clientWidth (1032)"
+    },
+    {
+      "title": "ipad_pro_13_portrait - register horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (1032) > clientWidth (1032)"
+    },
+    {
+      "title": "ipad_pro_13_portrait - dashboard horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (1032) > clientWidth (1032)"
+    },
+    {
+      "title": "ipad_pro_13_portrait - find_jobs horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (1032) > clientWidth (1032)"
+    },
+    {
+      "title": "ipad_pro_13_portrait - applications horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (1032) > clientWidth (1032)"
+    },
+    {
+      "title": "ipad_pro_13_portrait - saved_jobs horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (1032) > clientWidth (1032)"
+    },
+    {
+      "title": "ipad_pro_13_portrait - profile horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (1032) > clientWidth (1032)"
+    },
+    {
+      "title": "ipad_pro_13_portrait - ai_builder horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (1032) > clientWidth (1032)"
+    },
+    {
+      "title": "ipad_pro_13_landscape - login horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (1376) > clientWidth (1376)"
+    },
+    {
+      "title": "ipad_pro_13_landscape - register horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (1376) > clientWidth (1376)"
+    },
+    {
+      "title": "ipad_pro_13_landscape - dashboard horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (1376) > clientWidth (1376)"
+    },
+    {
+      "title": "ipad_pro_13_landscape - find_jobs horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (1376) > clientWidth (1376)"
+    },
+    {
+      "title": "ipad_pro_13_landscape - applications horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (1376) > clientWidth (1376)"
+    },
+    {
+      "title": "ipad_pro_13_landscape - saved_jobs horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (1376) > clientWidth (1376)"
+    },
+    {
+      "title": "ipad_pro_13_landscape - profile horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (1376) > clientWidth (1376)"
+    },
+    {
+      "title": "ipad_pro_13_landscape - ai_builder horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (1376) > clientWidth (1376)"
+    },
+    {
+      "title": "mobile_390 - login horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (390) > clientWidth (390)"
+    },
+    {
+      "title": "mobile_390 - register horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (390) > clientWidth (390)"
+    },
+    {
+      "title": "mobile_390 - dashboard horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (390) > clientWidth (390)"
+    },
+    {
+      "title": "mobile_390 - find_jobs horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (390) > clientWidth (390)"
+    },
+    {
+      "title": "mobile_390 - applications horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (390) > clientWidth (390)"
+    },
+    {
+      "title": "mobile_390 - saved_jobs horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (390) > clientWidth (390)"
+    },
+    {
+      "title": "mobile_390 - profile horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (390) > clientWidth (390)"
+    },
+    {
+      "title": "mobile_390 - ai_builder horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (390) > clientWidth (390)"
+    },
+    {
+      "title": "desktop_1440 - login horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (1440) > clientWidth (1440)"
+    },
+    {
+      "title": "desktop_1440 - register horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (1440) > clientWidth (1440)"
+    },
+    {
+      "title": "desktop_1440 - dashboard horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (1440) > clientWidth (1440)"
+    },
+    {
+      "title": "desktop_1440 - find_jobs horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (1440) > clientWidth (1440)"
+    },
+    {
+      "title": "desktop_1440 - applications horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (1440) > clientWidth (1440)"
+    },
+    {
+      "title": "desktop_1440 - saved_jobs horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (1440) > clientWidth (1440)"
+    },
+    {
+      "title": "desktop_1440 - profile horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (1440) > clientWidth (1440)"
+    },
+    {
+      "title": "desktop_1440 - ai_builder horizontal overflow check",
+      "pass": true,
+      "details": "scrollWidth (1440) > clientWidth (1440)"
+    },
+    {
+      "title": "Languages accordion found and clicked",
+      "pass": true,
+      "details": ""
+    },
+    {
+      "title": "Language selector CustomDropdown trigger found",
+      "pass": true,
+      "details": ""
+    },
+    {
+      "title": "Search input inside language dropdown found and visible",
+      "pass": true,
+      "details": ""
+    },
+    {
+      "title": "Search filtered to show \"Gujarati\"",
+      "pass": true,
+      "details": "Options: [\"Gujarati\"]"
+    },
+    {
+      "title": "Language \"Gujarati\" selected in trigger button",
+      "pass": true,
+      "details": "Trigger: Gujarati"
+    },
+    {
+      "title": "Applications Company filter CustomDropdown present",
+      "pass": true,
+      "details": ""
+    },
+    {
+      "title": "Applications Work Mode filter CustomDropdown present",
+      "pass": true,
+      "details": ""
+    },
+    {
+      "title": "Applications Sort filter CustomDropdown present",
+      "pass": true,
+      "details": ""
+    },
+    {
+      "title": "Work Mode options include Hybrid, On-site, Remote",
+      "pass": true,
+      "details": "Options: [\"Work Mode: All\",\"Hybrid\",\"On-site\",\"Remote\"]"
+    },
+    {
+      "title": "iPad Pro 13 Portrait (1032px): Sidebar filters hidden by default (drawer mode)",
+      "pass": true,
+      "details": "aside display is none"
+    },
+    {
+      "title": "iPad Pro 13 Portrait (1032px): Results pane has full comfortable width (> 900px)",
+      "pass": true,
+      "details": "Width: 1032px"
+    },
+    {
+      "title": "iPad Pro 13 Portrait (1032px): Filters drawer button present",
+      "pass": true,
+      "details": ""
+    },
+    {
+      "title": "Filter Drawer opens smoothly on iPad Pro 13 Portrait",
+      "pass": true,
+      "details": ""
+    },
+    {
+      "title": "iPad Pro 13 Landscape (1376px): Sidebar filters pinned in 2-column layout",
+      "pass": true,
+      "details": "aside display is flex"
+    },
+    {
+      "title": "iPad Pro 13 Landscape (1376px): Generous results pane width (> 700px)",
+      "pass": true,
+      "details": "Results width: 1120px, Aside: 246px"
+    },
+    {
+      "title": "All Job detail links strictly preserve Candidate Portal (/candidate/jobs/:id)",
+      "pass": true,
+      "details": "Found guest detail links: []"
+    },
+    {
+      "title": "Login Card is centered and well-proportioned on iPad Pro 13 Portrait (1032px)",
+      "pass": true,
+      "details": "Width: 512px, Left: 260px, Centered: true"
+    }
+  ]
+}

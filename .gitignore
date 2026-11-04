@@ -47,11 +47,19 @@ temp_*.*
 **/update_*.js
 **/update_*.py
 
-# Local database files & backups
+# Zip packages
+*.zip
+**/*.zip
+
+database-backups/
+**/database-backups/
 *.sqlite
 *.sqlite3
 *.db
 *.bak
+*.sql
+**/*.sql
+!backend/database/seed.sql
 
 # Temporary one-off development patch and scratch scripts (root level)
 patch_*.*
@@ -67,5 +75,14 @@ query_tables.js
 get_token.cjs
 remove_header.js
 add_resumes_route.js
+chatgpt_response.html
+download_ref.js
+fetch_chatgpt.js
+*.png
+!frontend/public/**/*.png
+!admin-frontend/public/**/*.png
+!backend/tests/test_logo.png
+test_*.html
+
 
 

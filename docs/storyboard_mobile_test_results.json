@@ -1,0 +1,758 @@
+[
+  {
+    "page": "guest_home",
+    "path": "/",
+    "role": "guest",
+    "viewport": "320px",
+    "width": 320,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_home",
+    "path": "/",
+    "role": "guest",
+    "viewport": "360px",
+    "width": 360,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_home",
+    "path": "/",
+    "role": "guest",
+    "viewport": "390px",
+    "width": 390,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_home",
+    "path": "/",
+    "role": "guest",
+    "viewport": "430px",
+    "width": 430,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_home",
+    "path": "/",
+    "role": "guest",
+    "viewport": "768px",
+    "width": 768,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_home",
+    "path": "/",
+    "role": "guest",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_jobs",
+    "path": "/jobs",
+    "role": "guest",
+    "viewport": "320px",
+    "width": 320,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_jobs",
+    "path": "/jobs",
+    "role": "guest",
+    "viewport": "360px",
+    "width": 360,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_jobs",
+    "path": "/jobs",
+    "role": "guest",
+    "viewport": "390px",
+    "width": 390,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_jobs",
+    "path": "/jobs",
+    "role": "guest",
+    "viewport": "430px",
+    "width": 430,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_jobs",
+    "path": "/jobs",
+    "role": "guest",
+    "viewport": "768px",
+    "width": 768,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_jobs",
+    "path": "/jobs",
+    "role": "guest",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_for_employers",
+    "path": "/for-employers",
+    "role": "guest",
+    "viewport": "320px",
+    "width": 320,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_for_employers",
+    "path": "/for-employers",
+    "role": "guest",
+    "viewport": "360px",
+    "width": 360,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_for_employers",
+    "path": "/for-employers",
+    "role": "guest",
+    "viewport": "390px",
+    "width": 390,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_for_employers",
+    "path": "/for-employers",
+    "role": "guest",
+    "viewport": "430px",
+    "width": 430,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_for_employers",
+    "path": "/for-employers",
+    "role": "guest",
+    "viewport": "768px",
+    "width": 768,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_for_employers",
+    "path": "/for-employers",
+    "role": "guest",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_executive_search",
+    "path": "/executive-search",
+    "role": "guest",
+    "viewport": "320px",
+    "width": 320,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_executive_search",
+    "path": "/executive-search",
+    "role": "guest",
+    "viewport": "360px",
+    "width": 360,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_executive_search",
+    "path": "/executive-search",
+    "role": "guest",
+    "viewport": "390px",
+    "width": 390,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_executive_search",
+    "path": "/executive-search",
+    "role": "guest",
+    "viewport": "430px",
+    "width": 430,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_executive_search",
+    "path": "/executive-search",
+    "role": "guest",
+    "viewport": "768px",
+    "width": 768,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_executive_search",
+    "path": "/executive-search",
+    "role": "guest",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_about",
+    "path": "/about",
+    "role": "guest",
+    "viewport": "320px",
+    "width": 320,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_about",
+    "path": "/about",
+    "role": "guest",
+    "viewport": "360px",
+    "width": 360,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_about",
+    "path": "/about",
+    "role": "guest",
+    "viewport": "390px",
+    "width": 390,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_about",
+    "path": "/about",
+    "role": "guest",
+    "viewport": "430px",
+    "width": 430,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_about",
+    "path": "/about",
+    "role": "guest",
+    "viewport": "768px",
+    "width": 768,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "guest_about",
+    "path": "/about",
+    "role": "guest",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_dashboard",
+    "path": "/candidate/dashboard",
+    "role": "candidate",
+    "viewport": "320px",
+    "width": 320,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_dashboard",
+    "path": "/candidate/dashboard",
+    "role": "candidate",
+    "viewport": "360px",
+    "width": 360,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_dashboard",
+    "path": "/candidate/dashboard",
+    "role": "candidate",
+    "viewport": "390px",
+    "width": 390,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_dashboard",
+    "path": "/candidate/dashboard",
+    "role": "candidate",
+    "viewport": "430px",
+    "width": 430,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_dashboard",
+    "path": "/candidate/dashboard",
+    "role": "candidate",
+    "viewport": "768px",
+    "width": 768,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_dashboard",
+    "path": "/candidate/dashboard",
+    "role": "candidate",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_jobs",
+    "path": "/candidate/jobs",
+    "role": "candidate",
+    "viewport": "320px",
+    "width": 320,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_jobs",
+    "path": "/candidate/jobs",
+    "role": "candidate",
+    "viewport": "360px",
+    "width": 360,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_jobs",
+    "path": "/candidate/jobs",
+    "role": "candidate",
+    "viewport": "390px",
+    "width": 390,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_jobs",
+    "path": "/candidate/jobs",
+    "role": "candidate",
+    "viewport": "430px",
+    "width": 430,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_jobs",
+    "path": "/candidate/jobs",
+    "role": "candidate",
+    "viewport": "768px",
+    "width": 768,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_jobs",
+    "path": "/candidate/jobs",
+    "role": "candidate",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_applications",
+    "path": "/candidate/applications",
+    "role": "candidate",
+    "viewport": "320px",
+    "width": 320,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_applications",
+    "path": "/candidate/applications",
+    "role": "candidate",
+    "viewport": "360px",
+    "width": 360,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_applications",
+    "path": "/candidate/applications",
+    "role": "candidate",
+    "viewport": "390px",
+    "width": 390,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_applications",
+    "path": "/candidate/applications",
+    "role": "candidate",
+    "viewport": "430px",
+    "width": 430,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_applications",
+    "path": "/candidate/applications",
+    "role": "candidate",
+    "viewport": "768px",
+    "width": 768,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_applications",
+    "path": "/candidate/applications",
+    "role": "candidate",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_profile",
+    "path": "/candidate/profile",
+    "role": "candidate",
+    "viewport": "320px",
+    "width": 320,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_profile",
+    "path": "/candidate/profile",
+    "role": "candidate",
+    "viewport": "360px",
+    "width": 360,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_profile",
+    "path": "/candidate/profile",
+    "role": "candidate",
+    "viewport": "390px",
+    "width": 390,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_profile",
+    "path": "/candidate/profile",
+    "role": "candidate",
+    "viewport": "430px",
+    "width": 430,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_profile",
+    "path": "/candidate/profile",
+    "role": "candidate",
+    "viewport": "768px",
+    "width": 768,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_profile",
+    "path": "/candidate/profile",
+    "role": "candidate",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_resume",
+    "path": "/candidate/ai-builder",
+    "role": "candidate",
+    "viewport": "320px",
+    "width": 320,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_resume",
+    "path": "/candidate/ai-builder",
+    "role": "candidate",
+    "viewport": "360px",
+    "width": 360,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_resume",
+    "path": "/candidate/ai-builder",
+    "role": "candidate",
+    "viewport": "390px",
+    "width": 390,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_resume",
+    "path": "/candidate/ai-builder",
+    "role": "candidate",
+    "viewport": "430px",
+    "width": 430,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_resume",
+    "path": "/candidate/ai-builder",
+    "role": "candidate",
+    "viewport": "768px",
+    "width": 768,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "candidate_resume",
+    "path": "/candidate/ai-builder",
+    "role": "candidate",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "employer_dashboard",
+    "path": "/recruiter",
+    "role": "employer",
+    "viewport": "320px",
+    "width": 320,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "employer_dashboard",
+    "path": "/recruiter",
+    "role": "employer",
+    "viewport": "360px",
+    "width": 360,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "employer_dashboard",
+    "path": "/recruiter",
+    "role": "employer",
+    "viewport": "390px",
+    "width": 390,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "employer_dashboard",
+    "path": "/recruiter",
+    "role": "employer",
+    "viewport": "430px",
+    "width": 430,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "employer_dashboard",
+    "path": "/recruiter",
+    "role": "employer",
+    "viewport": "768px",
+    "width": 768,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "employer_dashboard",
+    "path": "/recruiter",
+    "role": "employer",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "employer_jobs",
+    "path": "/recruiter/jobs",
+    "role": "employer",
+    "viewport": "320px",
+    "width": 320,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "employer_jobs",
+    "path": "/recruiter/jobs",
+    "role": "employer",
+    "viewport": "360px",
+    "width": 360,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "employer_jobs",
+    "path": "/recruiter/jobs",
+    "role": "employer",
+    "viewport": "390px",
+    "width": 390,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "employer_jobs",
+    "path": "/recruiter/jobs",
+    "role": "employer",
+    "viewport": "430px",
+    "width": 430,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "employer_jobs",
+    "path": "/recruiter/jobs",
+    "role": "employer",
+    "viewport": "768px",
+    "width": 768,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "employer_jobs",
+    "path": "/recruiter/jobs",
+    "role": "employer",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "employer_create_job",
+    "path": "/recruiter/jobs/create",
+    "role": "employer",
+    "viewport": "320px",
+    "width": 320,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "employer_create_job",
+    "path": "/recruiter/jobs/create",
+    "role": "employer",
+    "viewport": "360px",
+    "width": 360,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "employer_create_job",
+    "path": "/recruiter/jobs/create",
+    "role": "employer",
+    "viewport": "390px",
+    "width": 390,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "employer_create_job",
+    "path": "/recruiter/jobs/create",
+    "role": "employer",
+    "viewport": "430px",
+    "width": 430,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "employer_create_job",
+    "path": "/recruiter/jobs/create",
+    "role": "employer",
+    "viewport": "768px",
+    "width": 768,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "employer_create_job",
+    "path": "/recruiter/jobs/create",
+    "role": "employer",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "employer_profile",
+    "path": "/recruiter/company-profile",
+    "role": "employer",
+    "viewport": "320px",
+    "width": 320,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "employer_profile",
+    "path": "/recruiter/company-profile",
+    "role": "employer",
+    "viewport": "360px",
+    "width": 360,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "employer_profile",
+    "path": "/recruiter/company-profile",
+    "role": "employer",
+    "viewport": "390px",
+    "width": 390,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "employer_profile",
+    "path": "/recruiter/company-profile",
+    "role": "employer",
+    "viewport": "430px",
+    "width": 430,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "employer_profile",
+    "path": "/recruiter/company-profile",
+    "role": "employer",
+    "viewport": "768px",
+    "width": 768,
+    "overflowPx": 0,
+    "passed": true
+  },
+  {
+    "page": "employer_profile",
+    "path": "/recruiter/company-profile",
+    "role": "employer",
+    "viewport": "1440px",
+    "width": 1440,
+    "overflowPx": 0,
+    "passed": true
+  }
+]

@@ -1,0 +1,127 @@
+{
+  "total": 24,
+  "passed": 24,
+  "failed": 0,
+  "results": [
+    {
+      "title": "mobile_390 - home zero horizontal overflow",
+      "pass": true,
+      "details": "scrollWidth (390) > clientWidth (390)"
+    },
+    {
+      "title": "mobile_390 - for_employers zero horizontal overflow",
+      "pass": true,
+      "details": "scrollWidth (390) > clientWidth (390)"
+    },
+    {
+      "title": "mobile_390 - about zero horizontal overflow",
+      "pass": true,
+      "details": "scrollWidth (390) > clientWidth (390)"
+    },
+    {
+      "title": "mobile_390 - executive_search zero horizontal overflow",
+      "pass": true,
+      "details": "scrollWidth (390) > clientWidth (390)"
+    },
+    {
+      "title": "tablet_768 - home zero horizontal overflow",
+      "pass": true,
+      "details": "scrollWidth (768) > clientWidth (768)"
+    },
+    {
+      "title": "tablet_768 - for_employers zero horizontal overflow",
+      "pass": true,
+      "details": "scrollWidth (768) > clientWidth (768)"
+    },
+    {
+      "title": "tablet_768 - about zero horizontal overflow",
+      "pass": true,
+      "details": "scrollWidth (768) > clientWidth (768)"
+    },
+    {
+      "title": "tablet_768 - executive_search zero horizontal overflow",
+      "pass": true,
+      "details": "scrollWidth (768) > clientWidth (768)"
+    },
+    {
+      "title": "ipad_pro_13_portrait_1032 - home zero horizontal overflow",
+      "pass": true,
+      "details": "scrollWidth (1032) > clientWidth (1032)"
+    },
+    {
+      "title": "ipad_pro_13_portrait_1032 - for_employers zero horizontal overflow",
+      "pass": true,
+      "details": "scrollWidth (1032) > clientWidth (1032)"
+    },
+    {
+      "title": "ipad_pro_13_portrait_1032 - about zero horizontal overflow",
+      "pass": true,
+      "details": "scrollWidth (1032) > clientWidth (1032)"
+    },
+    {
+      "title": "ipad_pro_13_portrait_1032 - executive_search zero horizontal overflow",
+      "pass": true,
+      "details": "scrollWidth (1032) > clientWidth (1032)"
+    },
+    {
+      "title": "ipad_pro_13_landscape_1376 - home zero horizontal overflow",
+      "pass": true,
+      "details": "scrollWidth (1376) > clientWidth (1376)"
+    },
+    {
+      "title": "ipad_pro_13_landscape_1376 - for_employers zero horizontal overflow",
+      "pass": true,
+      "details": "scrollWidth (1376) > clientWidth (1376)"
+    },
+    {
+      "title": "ipad_pro_13_landscape_1376 - about zero horizontal overflow",
+      "pass": true,
+      "details": "scrollWidth (1376) > clientWidth (1376)"
+    },
+    {
+      "title": "ipad_pro_13_landscape_1376 - executive_search zero horizontal overflow",
+      "pass": true,
+      "details": "scrollWidth (1376) > clientWidth (1376)"
+    },
+    {
+      "title": "desktop_1440 - home zero horizontal overflow",
+      "pass": true,
+      "details": "scrollWidth (1440) > clientWidth (1440)"
+    },
+    {
+      "title": "desktop_1440 - for_employers zero horizontal overflow",
+      "pass": true,
+      "details": "scrollWidth (1440) > clientWidth (1440)"
+    },
+    {
+      "title": "desktop_1440 - about zero horizontal overflow",
+      "pass": true,
+      "details": "scrollWidth (1440) > clientWidth (1440)"
+    },
+    {
+      "title": "desktop_1440 - executive_search zero horizontal overflow",
+      "pass": true,
+      "details": "scrollWidth (1440) > clientWidth (1440)"
+    },
+    {
+      "title": "Homepage: Employer Callout contains subtle background image with overlay",
+      "pass": true,
+      "details": ""
+    },
+    {
+      "title": "For Employers: Compact well-cropped image visible on mobile (height <= 220px)",
+      "pass": true,
+      "details": ""
+    },
+    {
+      "title": "About Us: Clean compact workspace image present in Who We Are section",
+      "pass": true,
+      "details": ""
+    },
+    {
+      "title": "Executive Search: Subtle compact visual integrated in Request Search banner",
+      "pass": true,
+      "details": ""
+    }
+  ]
+}

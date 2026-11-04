@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Building2, Plus, Edit3, Trash2, X, CheckCircle2 } from 'lucide-react';
 import API from '../../services/api';
+import useModalA11y from '../../hooks/useModalA11y';
 
 const RecruiterClients = () => {
   const [clients, setClients] = useState([]);
@@ -10,6 +11,8 @@ const RecruiterClients = () => {
   const [formData, setFormData] = useState({ name: '', industry: '', contact_info: '' });
   const [msg, setMsg] = useState({ type: '', text: '' });
   const [submitting, setSubmitting] = useState(false);
+
+  useModalA11y(isModalOpen, () => setIsModalOpen(false));
 
   useEffect(() => {
     fetchClients();
@@ -121,9 +124,21 @@ const RecruiterClients = () => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="w-full max-w-md glass-card rounded-2xl border border-white/15 p-6 shadow-2xl relative">
-            <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div 
+            className="relative w-full max-w-md max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] glass-card rounded-2xl border border-white/15 p-6 shadow-2xl overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button 
+              type="button"
+              onClick={() => setIsModalOpen(false)} 
+              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded"
+            >
               <X className="w-5 h-5" />
             </button>
 

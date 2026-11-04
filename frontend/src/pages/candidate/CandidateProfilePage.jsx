@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import CandidatePortalShell from '../../components/candidate/CandidatePortalShell';
+import useModalA11y from '../../hooks/useModalA11y';
 
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -30,6 +31,7 @@ import API from '../../services/api';
 import DependentLocationSelector from '../../components/common/DependentLocationSelector';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 import RequiredSkillsSelector from '../../components/common/RequiredSkillsSelector';
+import CustomDropdown from '../../components/common/CustomDropdown';
 
 const AccordionSection = ({ id, title, icon: Icon, isOpen, onToggle, children, badgeCount }) => (
   <div className="bg-white rounded-2xl border border-[#e5eeff] shadow-sm mb-6 overflow-hidden">
@@ -140,6 +142,11 @@ export default function CandidateProfilePage() {
   const [isDeletingResume, setIsDeletingResume] = useState(false);
   const resumeInputRef = useRef(null);
 
+  useModalA11y(showEduModal, () => setShowEduModal(false));
+  useModalA11y(showExpModal, () => setShowExpModal(false));
+  useModalA11y(showProjModal, () => setShowProjModal(false));
+  useModalA11y(resumeLimitModal, () => setResumeLimitModal(false));
+
   useEffect(() => {
     loadProfile();
     loadLanguages();
@@ -148,8 +155,9 @@ export default function CandidateProfilePage() {
   const loadLanguages = async () => {
     try {
       const res = await API.get('/master/languages');
-      if (res?.success && Array.isArray(res.data)) {
-        setMasterLanguages(res.data);
+      const list = res?.languages || res?.data || [];
+      if (Array.isArray(list)) {
+        setMasterLanguages(list);
       }
     } catch {
       // master languages optional fallback
@@ -571,40 +579,64 @@ export default function CandidateProfilePage() {
 
   return (
     <CandidatePortalShell>
+        {/* Screen Header (Storyboard 2 Screen 5 Reference) */}
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-[#0b1c30]">My Profile</h1>
+          <p className="text-xs sm:text-sm text-[#444653] mt-0.5">
+            Keep your profile updated to get better opportunities.
+          </p>
+        </div>
+
         {/* Top Profile Summary Header Card */}
-        <div className="bg-white rounded-2xl border border-[#e5eeff] p-6 shadow-sm mb-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#00288e] to-[#1e40af] text-white flex items-center justify-center text-2xl font-bold shadow-md shadow-blue-900/20">
-              {(profileData?.name || 'C').charAt(0).toUpperCase()}
+        <div className="bg-white rounded-2xl border border-[#e5eeff] p-5 sm:p-6 shadow-sm mb-5 flex flex-col md:flex-row md:items-center justify-between gap-5 sm:gap-6">
+          <div className="flex items-start sm:items-center gap-3.5 sm:gap-4 min-w-0">
+            {/* Circular avatar with enforced aspect-ratio and verified badge */}
+            <div className="relative shrink-0">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full aspect-square bg-gradient-to-br from-[#00288e] to-[#1e40af] text-white flex items-center justify-center text-xl sm:text-2xl font-bold shadow-md shadow-blue-900/15 border-2 border-white select-none">
+                {(profileData?.name || 'C').charAt(0).toUpperCase()}
+              </div>
+              <div className="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center border-2 border-white shadow-xs" title="Verified Candidate">
+                <Check className="w-3 h-3 stroke-[3]" />
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-extrabold text-[#0b1c30]">
-                {profileData?.name || 'Candidate Name'}
-              </h1>
-              <p className="text-sm font-medium text-[#444653]">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-extrabold text-[#0b1c30] tracking-tight truncate max-w-full">
+                  {profileData?.name || 'Candidate Name'}
+                </h2>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200">
+                  <Check className="w-2.5 h-2.5 stroke-[3]" /> Verified
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm font-semibold text-[#00288e] truncate max-w-full mt-0.5">
                 {profileData?.professional_headline || profileData?.current_designation || 'No professional title set'}
               </p>
-              <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-[#555e6d]">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-y-1 gap-x-3 mt-1.5 text-xs text-[#555e6d]">
                 {profileData?.current_location && (
                   <span className="flex items-center gap-1">
-                    <Globe className="w-3.5 h-3.5 text-slate-400" />
-                    {profileData.current_location}
+                    <Globe className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="truncate max-w-[160px]">{profileData.current_location}</span>
+                  </span>
+                )}
+                {profileData?.total_experience != null && (
+                  <span className="flex items-center gap-1">
+                    <Briefcase className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span>{profileData.total_experience} Yrs Experience</span>
                   </span>
                 )}
                 {profileData?.user_info?.email && (
-                  <span>• {profileData.user_info.email}</span>
-                )}
-                {profileData?.user_info?.phone && (
-                  <span>• {profileData.user_info.phone}</span>
+                  <span className="truncate max-w-[200px] text-slate-500">
+                    {profileData.user_info.email}
+                  </span>
                 )}
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-3 shrink-0 self-start md:self-auto">
             <Link
               to="/candidate/ai-builder"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#00288e] hover:bg-[#1e40af] text-white font-semibold text-xs shadow-xs transition-all"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#00288e] hover:bg-[#1e40af] text-white font-semibold text-xs shadow-xs transition-all min-h-[44px]"
             >
               <Sparkles className="w-4 h-4" />
               AI Resume Builder
@@ -612,15 +644,15 @@ export default function CandidateProfilePage() {
           </div>
         </div>
 
-        {/* Real Profile Completion Card */}
-        <div className="bg-white rounded-2xl border border-[#e5eeff] p-6 shadow-sm mb-6">
+        {/* Real Profile Completion Card (Storyboard 2 Screen 5 Reference) */}
+        <div className="bg-white rounded-2xl border border-[#e5eeff] p-5 sm:p-6 shadow-sm mb-6">
           <div className="flex items-center justify-between mb-2">
             <div>
-              <h2 className="text-sm font-bold text-[#0b1c30]">Profile Completion</h2>
+              <h3 className="text-sm font-bold text-[#0b1c30]">Profile Strength</h3>
               <p className="text-xs text-[#444653]">
                 {completionPercent === 100
                   ? 'Your profile is 100% complete! Employers can view your complete background.'
-                  : `${completionPercent}% Complete. Add missing sections to reach 100%.`}
+                  : 'Complete your profile to get more relevant job recommendations.'}
               </p>
             </div>
             <span className="text-base font-extrabold text-[#00288e]">{completionPercent}%</span>
@@ -637,16 +669,29 @@ export default function CandidateProfilePage() {
           </div>
 
           {missingItems.length > 0 && completionPercent < 100 && (
-            <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-              <span className="text-[#444653] font-medium">To complete profile, add:</span>
-              {missingItems.slice(0, 4).map((m, idx) => (
-                <span
-                  key={idx}
-                  className="px-2.5 py-0.5 rounded-full bg-[#eff4ff] text-[#00288e] font-semibold text-[11px]"
-                >
-                  + {m}
-                </span>
-              ))}
+            <div className="flex items-center justify-between pt-1">
+              <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                <span className="text-[#444653] font-medium">To complete:</span>
+                {missingItems.slice(0, 3).map((m, idx) => (
+                  <span
+                    key={idx}
+                    className="px-2 py-0.5 rounded-full bg-[#eff4ff] text-[#00288e] font-semibold text-[10px]"
+                  >
+                    + {m}
+                  </span>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (missingItems.includes('Skills')) toggleSection('skills');
+                  else if (missingItems.includes('Experience')) toggleSection('experience');
+                  else toggleSection('personal');
+                }}
+                className="text-xs font-bold text-[#00288e] hover:underline shrink-0"
+              >
+                Improve Profile →
+              </button>
             </div>
           )}
         </div>
@@ -710,14 +755,16 @@ export default function CandidateProfilePage() {
 
                 <div>
                   <label className="block text-xs font-bold text-[#444653] mb-1">Profile Category</label>
-                  <select
+                  <CustomDropdown
+                    id="profile-category-dropdown"
+                    name="profile_type"
                     value={personalForm.profile_type}
                     onChange={(e) => setPersonalForm({ ...personalForm, profile_type: e.target.value })}
-                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#00288e] bg-white"
-                  >
-                    <option value="experienced">Experienced Professional</option>
-                    <option value="fresher">Fresher / Graduate</option>
-                  </select>
+                    options={[
+                      { value: 'experienced', label: 'Experienced Professional' },
+                      { value: 'fresher', label: 'Fresher / Graduate' }
+                    ]}
+                  />
                 </div>
               </div>
               <div className="flex justify-end pt-4">
@@ -1179,45 +1226,49 @@ export default function CandidateProfilePage() {
 
             {/* Add Language Form */}
             <form onSubmit={handleAddLanguage} className="p-4 bg-[#f8f9ff] rounded-2xl border border-blue-50 flex flex-wrap items-end gap-4">
-              <div className="w-64">
+              <div className="w-full sm:w-64">
                 <label className="block text-xs font-bold text-[#444653] mb-1">Select Language</label>
-                <select
+                <CustomDropdown
+                  id="language-select-dropdown"
+                  name="selectedLanguage"
                   value={selectedLangId}
                   onChange={(e) => setSelectedLangId(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:border-[#00288e]"
-                >
-                  <option value="">-- Choose Language --</option>
-                  {masterLanguages.map((l) => (
-                    <option key={l.id} value={l.id}>{l.name}</option>
-                  ))}
-                </select>
+                  options={[
+                    { value: '', label: '-- Choose Language --' },
+                    ...masterLanguages.map((l) => ({ value: String(l.id), label: l.name }))
+                  ]}
+                  placeholder="-- Choose Language --"
+                  searchable={true}
+                  searchPlaceholder="Search language..."
+                  triggerClassName="min-h-[44px]"
+                />
               </div>
 
               <div className="flex items-center gap-4 py-2">
-                <label className="inline-flex items-center gap-1.5 text-xs text-[#444653] cursor-pointer">
+                <label className="inline-flex items-center gap-1.5 text-xs text-[#444653] cursor-pointer min-h-[44px]">
                   <input
                     type="checkbox"
                     checked={langProfs.can_read}
                     onChange={(e) => setLangProfs({ ...langProfs, can_read: e.target.checked })}
-                    className="rounded text-[#00288e]"
+                    className="rounded text-[#00288e] w-4 h-4"
                   />
                   <span>Read</span>
                 </label>
-                <label className="inline-flex items-center gap-1.5 text-xs text-[#444653] cursor-pointer">
+                <label className="inline-flex items-center gap-1.5 text-xs text-[#444653] cursor-pointer min-h-[44px]">
                   <input
                     type="checkbox"
                     checked={langProfs.can_write}
                     onChange={(e) => setLangProfs({ ...langProfs, can_write: e.target.checked })}
-                    className="rounded text-[#00288e]"
+                    className="rounded text-[#00288e] w-4 h-4"
                   />
                   <span>Write</span>
                 </label>
-                <label className="inline-flex items-center gap-1.5 text-xs text-[#444653] cursor-pointer">
+                <label className="inline-flex items-center gap-1.5 text-xs text-[#444653] cursor-pointer min-h-[44px]">
                   <input
                     type="checkbox"
                     checked={langProfs.can_speak}
                     onChange={(e) => setLangProfs({ ...langProfs, can_speak: e.target.checked })}
-                    className="rounded text-[#00288e]"
+                    className="rounded text-[#00288e] w-4 h-4"
                   />
                   <span>Speak</span>
                 </label>
@@ -1226,7 +1277,7 @@ export default function CandidateProfilePage() {
               <button
                 type="submit"
                 disabled={!selectedLangId}
-                className="px-4 py-2 rounded-xl bg-[#00288e] text-white text-xs font-semibold hover:bg-[#1e40af] disabled:opacity-50"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#00288e] text-white text-xs font-semibold hover:bg-[#1e40af] disabled:opacity-50 min-h-[44px] flex items-center justify-center transition-colors"
               >
                 Add Language
               </button>
@@ -1407,17 +1458,17 @@ export default function CandidateProfilePage() {
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3 mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm ${
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className={`w-10 h-10 rounded-xl shrink-0 flex items-center justify-center font-bold text-sm ${
                             isPrimary ? 'bg-[#00288e] text-white' : 'bg-[#eff4ff] text-[#00288e]'
                           }`}>
                             <FileText className="w-5 h-5" />
                           </div>
-                          <div>
-                            <h4 className="text-sm font-bold text-[#0b1c30] line-clamp-1">
+                          <div className="min-w-0 flex-1">
+                            <h4 className="text-sm font-bold text-[#0b1c30] truncate" title={resm.resume_title || 'Resume'}>
                               {resm.resume_title || 'Resume'}
                             </h4>
-                            <p className="text-[11px] text-[#555e6d] truncate max-w-[200px]">
+                            <p className="text-[11px] text-[#555e6d] truncate block w-full max-w-full font-mono mt-0.5" title={resm.file_name}>
                               {resm.file_name}
                             </p>
                           </div>
@@ -1445,7 +1496,7 @@ export default function CandidateProfilePage() {
                       <div className="flex items-center justify-between pt-3 border-t border-slate-100">
                         <button
                           onClick={() => handleViewResume(resm.id)}
-                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#00288e] hover:underline"
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#00288e] hover:bg-blue-50 py-2 px-2.5 rounded-lg min-h-[44px] cursor-pointer"
                         >
                           <Eye className="w-3.5 h-3.5" />
                           View PDF
@@ -1454,7 +1505,7 @@ export default function CandidateProfilePage() {
                         <button
                           onClick={() => handleDeleteResumeRequest(resm.id)}
                           disabled={isDeletingResume}
-                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 hover:text-red-700 disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 py-2 px-2.5 rounded-lg min-h-[44px] cursor-pointer disabled:opacity-50"
                         >
                           Remove
                         </button>
@@ -1470,18 +1521,32 @@ export default function CandidateProfilePage() {
 
         {/* MODAL: ADD / EDIT EDUCATION */}
         {showEduModal && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base font-bold text-[#0b1c30]">
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4"
+            onClick={() => setShowEduModal(false)}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edu-modal-title"
+          >
+            <div
+              className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] overflow-y-auto flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4 shrink-0">
+                <h3 id="edu-modal-title" className="text-base font-bold text-[#0b1c30]">
                   {editingEdu ? 'Edit Education' : 'Add Education'}
                 </h3>
-                <button onClick={() => setShowEduModal(false)}>
-                  <X className="w-4 h-4 text-slate-400" />
+                <button
+                  type="button"
+                  onClick={() => setShowEduModal(false)}
+                  className="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
+                  aria-label="Close modal"
+                >
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <form onSubmit={handleSaveEducation} className="space-y-3">
+              <form onSubmit={handleSaveEducation} className="space-y-3 flex-1">
                 <div>
                   <label className="block text-xs font-bold text-[#444653] mb-1">Degree *</label>
                   <input
@@ -1530,14 +1595,14 @@ export default function CandidateProfilePage() {
                   <button
                     type="button"
                     onClick={() => setShowEduModal(false)}
-                    className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={saveLoading}
-                    className="px-5 py-2 rounded-xl bg-[#00288e] text-white text-xs font-semibold hover:bg-[#1e40af]"
+                    className="px-5 py-2 rounded-xl bg-[#00288e] text-white text-xs font-semibold hover:bg-[#1e40af] cursor-pointer"
                   >
                     {saveLoading ? 'Saving...' : 'Save'}
                   </button>
@@ -1549,18 +1614,32 @@ export default function CandidateProfilePage() {
 
         {/* MODAL: ADD / EDIT EXPERIENCE */}
         {showExpModal && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-xl">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base font-bold text-[#0b1c30]">
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4"
+            onClick={() => setShowExpModal(false)}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="exp-modal-title"
+          >
+            <div
+              className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-xl max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] overflow-y-auto flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4 shrink-0">
+                <h3 id="exp-modal-title" className="text-base font-bold text-[#0b1c30]">
                   {editingExp ? 'Edit Experience' : 'Add Experience'}
                 </h3>
-                <button onClick={() => setShowExpModal(false)}>
-                  <X className="w-4 h-4 text-slate-400" />
+                <button
+                  type="button"
+                  onClick={() => setShowExpModal(false)}
+                  className="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
+                  aria-label="Close modal"
+                >
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <form onSubmit={handleSaveExperience} className="space-y-3">
+              <form onSubmit={handleSaveExperience} className="space-y-3 flex-1">
                 <div>
                   <label className="block text-xs font-bold text-[#444653] mb-1">Organization *</label>
                   <input
@@ -1629,14 +1708,14 @@ export default function CandidateProfilePage() {
                   <button
                     type="button"
                     onClick={() => setShowExpModal(false)}
-                    className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={saveLoading}
-                    className="px-5 py-2 rounded-xl bg-[#00288e] text-white text-xs font-semibold hover:bg-[#1e40af]"
+                    className="px-5 py-2 rounded-xl bg-[#00288e] text-white text-xs font-semibold hover:bg-[#1e40af] cursor-pointer"
                   >
                     {saveLoading ? 'Saving...' : 'Save'}
                   </button>
@@ -1648,18 +1727,32 @@ export default function CandidateProfilePage() {
 
         {/* MODAL: ADD / EDIT PROJECT */}
         {showProjModal && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-xl">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base font-bold text-[#0b1c30]">
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4"
+            onClick={() => setShowProjModal(false)}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="proj-modal-title"
+          >
+            <div
+              className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-xl max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] overflow-y-auto flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4 shrink-0">
+                <h3 id="proj-modal-title" className="text-base font-bold text-[#0b1c30]">
                   {editingProj ? 'Edit Project' : 'Add Project'}
                 </h3>
-                <button onClick={() => setShowProjModal(false)}>
-                  <X className="w-4 h-4 text-slate-400" />
+                <button
+                  type="button"
+                  onClick={() => setShowProjModal(false)}
+                  className="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
+                  aria-label="Close modal"
+                >
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <form onSubmit={handleSaveProject} className="space-y-3">
+              <form onSubmit={handleSaveProject} className="space-y-3 flex-1">
                 <div>
                   <label className="block text-xs font-bold text-[#444653] mb-1">Project Name *</label>
                   <input
@@ -1717,14 +1810,14 @@ export default function CandidateProfilePage() {
                   <button
                     type="button"
                     onClick={() => setShowProjModal(false)}
-                    className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={saveLoading}
-                    className="px-5 py-2 rounded-xl bg-[#00288e] text-white text-xs font-semibold hover:bg-[#1e40af]"
+                    className="px-5 py-2 rounded-xl bg-[#00288e] text-white text-xs font-semibold hover:bg-[#1e40af] cursor-pointer"
                   >
                     {saveLoading ? 'Saving...' : 'Save'}
                   </button>
@@ -1736,17 +1829,26 @@ export default function CandidateProfilePage() {
 
         {/* MODAL: RESUME LIMIT (3 RESUMES REACHED) */}
         {resumeLimitModal && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl">
-              <div className="flex items-center gap-3 text-amber-600 mb-2">
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4"
+            onClick={() => setResumeLimitModal(false)}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="resume-limit-modal-title"
+          >
+            <div
+              className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] overflow-y-auto flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 text-amber-600 mb-2 shrink-0">
                 <AlertCircle className="w-6 h-6" />
-                <h3 className="text-base font-extrabold text-[#0b1c30]">You can have up to 3 resumes</h3>
+                <h3 id="resume-limit-modal-title" className="text-base font-extrabold text-[#0b1c30]">You can have up to 3 resumes</h3>
               </div>
               <p className="text-xs text-[#444653] mb-4 leading-relaxed">
                 You have reached the maximum allowed limit of 3 resumes. Please remove one resume below to free up a slot for your new resume.
               </p>
 
-              <div className="space-y-3 mb-6">
+              <div className="space-y-3 mb-6 flex-1 min-h-0 overflow-y-auto">
                 {(profileData?.resumes || []).map((r) => (
                   <div
                     key={r.id}
@@ -1760,11 +1862,12 @@ export default function CandidateProfilePage() {
                       </div>
                     </div>
                     <button
+                      type="button"
                       onClick={() => {
                         handleDeleteResumeRequest(r.id);
                         setResumeLimitModal(false);
                       }}
-                      className="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 border border-red-200 text-xs font-bold hover:bg-red-100"
+                      className="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 border border-red-200 text-xs font-bold hover:bg-red-100 cursor-pointer"
                     >
                       Remove
                     </button>
@@ -1772,10 +1875,11 @@ export default function CandidateProfilePage() {
                 ))}
               </div>
 
-              <div className="flex justify-end">
+              <div className="flex justify-end shrink-0 pt-2 border-t border-slate-100">
                 <button
+                  type="button"
                   onClick={() => setResumeLimitModal(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-semibold hover:bg-slate-200"
+                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-semibold hover:bg-slate-200 cursor-pointer"
                 >
                   Close
                 </button>

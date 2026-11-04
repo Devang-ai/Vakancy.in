@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Sparkles, Copy, Check, X, Loader2 } from 'lucide-react';
 import API from '../services/api';
+import useModalA11y from '../hooks/useModalA11y';
 
 const AIModal = ({ isOpen, onClose, type = 'resume', initialData = {} }) => {
+  useModalA11y(isOpen, onClose);
   const [formData, setFormData] = useState(initialData);
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
@@ -38,9 +41,12 @@ const AIModal = ({ isOpen, onClose, type = 'resume', initialData = {} }) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-2xl glass-card rounded-2xl border border-white/15 p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+  return createPortal(
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in" role="dialog" aria-modal="true" onClick={onClose}>
+      <div 
+        className="w-full max-w-2xl glass-card rounded-2xl border border-white/15 p-6 shadow-2xl relative max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
@@ -157,7 +163,8 @@ const AIModal = ({ isOpen, onClose, type = 'resume', initialData = {} }) => {
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

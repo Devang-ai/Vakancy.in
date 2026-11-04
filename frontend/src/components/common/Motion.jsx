@@ -37,7 +37,7 @@ const useIntersection = (ref, threshold = 0.1) => {
 };
 
 // Base motion component
-export const RevealOnScroll = ({ children, className = '', delay = 0, threshold = 0.1, y = 24 }) => {
+export const RevealOnScroll = ({ children, className = '', delay = 0, threshold = 0.1, y = 24, ...props }) => {
   const ref = useRef(null);
   const isVisible = useIntersection(ref, threshold);
   const isReduced = useReducedMotion();
@@ -51,13 +51,13 @@ export const RevealOnScroll = ({ children, className = '', delay = 0, threshold 
       };
 
   return (
-    <div ref={ref} className={className} style={style}>
+    <div ref={ref} className={className} style={style} {...props}>
       {children}
     </div>
   );
 };
 
-export const FadeInSection = ({ children, className = '', delay = 0 }) => {
+export const FadeInSection = ({ children, className = '', delay = 0, ...props }) => {
   const ref = useRef(null);
   const isVisible = useIntersection(ref, 0.1);
   return (
@@ -68,6 +68,7 @@ export const FadeInSection = ({ children, className = '', delay = 0 }) => {
         opacity: isVisible ? 1 : 0,
         transition: `opacity 800ms ease-in-out ${delay}ms`
       }}
+      {...props}
     >
       {children}
     </div>

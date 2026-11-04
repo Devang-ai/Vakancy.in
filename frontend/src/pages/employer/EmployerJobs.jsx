@@ -3,12 +3,15 @@ import {  Link , useOutletContext } from 'react-router-dom';
 import { Plus, Briefcase, MapPin, Users, Edit3, Trash2, X, CheckCircle2 } from 'lucide-react';
 import API from '../../services/api';
 import StatusBadge from '../../components/StatusBadge';
+import useModalA11y from '../../hooks/useModalA11y';
 
 const EmployerJobs = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingJob, setEditingJob] = useState(null);
+
+  useModalA11y(isModalOpen, () => setIsModalOpen(false));
 
   const [formData, setFormData] = useState({ title: '', location: '', description: '', status: 'open' });
   const [msg, setMsg] = useState({ type: '', text: '' });
@@ -147,73 +150,92 @@ const EmployerJobs = () => {
 
       {/* Create / Edit Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="w-full max-w-lg glass-card rounded-2xl border border-white/15 p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-            <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
-              <X className="w-5 h-5" />
-            </button>
-
-            <h3 className="text-lg font-bold text-white font-heading mb-4">
-              {editingJob ? 'Edit Job Posting' : 'Post New Job Position'}
-            </h3>
-
-            <form onSubmit={handleFormSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Job Title *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="e.g. Senior React Developer"
-                  className="w-full p-2.5 rounded-xl glass-input text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Location *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  placeholder="e.g. Mumbai (Hybrid) or Remote"
-                  className="w-full p-2.5 rounded-xl glass-input text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Status</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full p-2.5 rounded-xl glass-input text-xs bg-slate-900"
-                >
-                  <option value="open">Open</option>
-                  <option value="draft">Draft</option>
-                  <option value="closed">Closed</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Job Description & Requirements *</label>
-                <textarea
-                  rows={6}
-                  required
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Paste complete job description, key responsibilities, and required qualifications..."
-                  className="w-full p-3 rounded-xl glass-input text-xs leading-relaxed"
-                />
-              </div>
-
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm"
+          onClick={() => setIsModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="post-job-modal-title"
+        >
+          <div
+            className="w-full max-w-lg glass-card rounded-2xl border border-white/15 shadow-2xl relative max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="shrink-0 p-6 pb-4 border-b border-white/10 flex items-center justify-between">
+              <h3 id="post-job-modal-title" className="text-lg font-bold text-white font-heading">
+                {editingJob ? 'Edit Job Posting' : 'Post New Job Position'}
+              </h3>
               <button
-                type="submit"
-                disabled={submitting}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white font-bold text-xs shadow-lg shadow-indigo-500/25"
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg"
+                aria-label="Close modal"
               >
-                {submitting ? 'Saving...' : editingJob ? 'Update Job' : 'Publish Job Posting'}
+                <X className="w-5 h-5" />
               </button>
+            </div>
+
+            <form onSubmit={handleFormSubmit} className="flex-1 min-h-0 flex flex-col overflow-hidden">
+              <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-4 text-xs">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Job Title *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    placeholder="e.g. Senior React Developer"
+                    className="w-full p-2.5 rounded-xl glass-input text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Location *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    placeholder="e.g. Mumbai (Hybrid) or Remote"
+                    className="w-full p-2.5 rounded-xl glass-input text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Status</label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    className="w-full p-2.5 rounded-xl glass-input text-xs bg-slate-900"
+                  >
+                    <option value="open">Open</option>
+                    <option value="draft">Draft</option>
+                    <option value="closed">Closed</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Job Description & Requirements *</label>
+                  <textarea
+                    rows={6}
+                    required
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Paste complete job description, key responsibilities, and required qualifications..."
+                    className="w-full p-3 rounded-xl glass-input text-xs leading-relaxed"
+                  />
+                </div>
+              </div>
+
+              <div className="shrink-0 p-4 border-t border-white/10 bg-slate-950/40">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white font-bold text-xs shadow-lg shadow-indigo-500/25 cursor-pointer disabled:opacity-50"
+                >
+                  {submitting ? 'Saving...' : editingJob ? 'Update Job' : 'Publish Job Posting'}
+                </button>
+              </div>
             </form>
           </div>
         </div>

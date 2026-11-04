@@ -19,14 +19,33 @@ const CandidateJobDetailsPage = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [isApplied, setIsApplied] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-      const [toast, setToast] = useState(null);
-    useEffect(() => {
+  const [toast, setToast] = useState(null);
+  const [similarJobs, setSimilarJobs] = useState([]);
+  const [activeTab, setActiveTab] = useState('overview');
+
+  useEffect(() => {
     fetchJob();
     checkIfAlreadyApplied();
     checkIfSaved();
-    return () => {
-          };
   }, [id]);
+
+  useEffect(() => {
+    if (job) {
+      fetchSimilarJobs();
+    }
+  }, [job?.id, job?.department]);
+
+  const fetchSimilarJobs = async () => {
+    try {
+      const deptQuery = job?.department ? `&department=${encodeURIComponent(job.department)}` : '';
+      const res = await API.get(`/jobs?status=open&limit=4${deptQuery}`);
+      if (res.success && Array.isArray(res.jobs)) {
+        setSimilarJobs(res.jobs.filter(j => String(j.id) !== String(id)).slice(0, 3));
+      }
+    } catch {
+      // ignore
+    }
+  };
 
   const fetchJob = async () => {
     setLoading(true);
@@ -118,20 +137,31 @@ const CandidateJobDetailsPage = () => {
   if (loading) {
     return (
       <CandidatePortalShell>
-  <div className="bg-white p-8 rounded-xl shadow-xs border border-slate-200/80 text-center max-w-md mx-auto space-y-4 mt-20">
-    <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
-      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-      </svg>
-    </div>
-    <h2 className="text-lg font-bold text-[#0b1c30]">Requisition Not Found</h2>
-    <p className="text-xs text-[#444653]">The position you are looking for does not exist or may have been closed by the employer.</p>
-    <Link to="/candidate/jobs" className="inline-block px-4 py-2 bg-[#00288e] text-white rounded-lg font-bold text-xs">
-      Browse Open Jobs
-    </Link>
-  </div>
-  {toast && <Toast {...toast} onClose={() => setToast(null)} />}
-    </CandidatePortalShell>
+        <div className="flex flex-col items-center justify-center min-h-[400px] gap-4" role="status" aria-live="polite">
+          <div className="w-10 h-10 border-4 border-[#00288e]/20 border-t-[#00288e] rounded-full animate-spin" />
+          <p className="text-xs font-semibold text-[#444653]">Loading requisition details...</p>
+        </div>
+      </CandidatePortalShell>
+    );
+  }
+
+  if (!job) {
+    return (
+      <CandidatePortalShell>
+        <div className="bg-white p-8 rounded-xl shadow-xs border border-slate-200/80 text-center max-w-md mx-auto space-y-4 mt-20">
+          <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <h2 className="text-lg font-bold text-[#0b1c30]">Requisition Not Found</h2>
+          <p className="text-xs text-[#444653]">The position you are looking for does not exist or may have been closed by the employer.</p>
+          <Link to="/candidate/jobs" className="inline-block px-4 py-2 bg-[#00288e] text-white rounded-lg font-bold text-xs">
+            Browse Open Jobs
+          </Link>
+        </div>
+        {toast && <Toast {...toast} onClose={() => setToast(null)} />}
+      </CandidatePortalShell>
     );
   }
 
@@ -181,16 +211,40 @@ const CandidateJobDetailsPage = () => {
 
   const cannotApply = isClosed || isExpired;
 
+  // Parse structured or multi-location entries
+  const locationList = job.location ? String(job.location).split(';').map(s => s.trim()).filter(Boolean) : [];
+  const primaryLocation = locationList[0] || job.location || 'Location Unspecified';
+  const additionalLocationsCount = locationList.length > 1 ? locationList.length - 1 : 0;
+
   return (
     <CandidatePortalShell>
 
-            <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-[#444653] text-[11px] font-semibold mb-4">
-              <Link to="/candidate/dashboard" className="hover:text-[#00288e] transition-colors">Workspace</Link>
-              <span className="text-[#757684]">/</span>
-              <Link to="/candidate/jobs" className="hover:text-[#00288e] transition-colors">Find Jobs</Link>
-              <span className="text-[#757684]">/</span>
-              <span className="text-[#0b1c30] font-bold truncate max-w-sm">{companyName} - {job.title}</span>
-            </nav>
+            {/* Back to Jobs & Breadcrumb Header */}
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.history.length > 1) {
+                    navigate(-1);
+                  } else {
+                    navigate('/candidate/jobs');
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#00288e] hover:text-[#1e40af] transition-colors py-1.5 px-3 rounded-lg bg-blue-50/80 hover:bg-blue-100/80 cursor-pointer"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span>Back to Jobs</span>
+              </button>
+              <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-[#444653] text-[11px] font-semibold">
+                <Link to="/candidate/dashboard" className="hover:text-[#00288e] transition-colors">Workspace</Link>
+                <span className="text-[#757684]">/</span>
+                <Link to="/candidate/jobs" className="hover:text-[#00288e] transition-colors">Find Jobs</Link>
+                <span className="text-[#757684]">/</span>
+                <span className="text-[#0b1c30] font-bold truncate max-w-[200px] sm:max-w-xs">{companyName} - {job.title}</span>
+              </nav>
+            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               <div className="lg:col-span-8 flex flex-col gap-6">
@@ -206,22 +260,70 @@ const CandidateJobDetailsPage = () => {
                            {isExpired && !isClosed && <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-[10px] font-bold uppercase rounded-full tracking-wider">Expired</span>}
                         </div>
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-[#444653]">
-                          <div className="flex items-center gap-1.5"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>{companyName}</div>
-                          <div className="flex items-center gap-1.5"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>{job.location || 'Location Unspecified'}</div>
-                          {job.currency && (job.min_salary || job.max_salary) && (
+                          <div className="flex items-center gap-1.5"><svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>{companyName}</div>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span>{primaryLocation}</span>
+                            {additionalLocationsCount > 0 && (
+                              <span
+                                className="px-2 py-0.5 rounded-full bg-blue-50 text-[#00288e] text-[10px] font-bold border border-blue-100"
+                                title={job.location}
+                              >
+                                +{additionalLocationsCount} more
+                              </span>
+                            )}
+                          </div>
+                          {job.experience && (
+                            <div className="flex items-center gap-1.5 text-[#444653]">
+                              <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                              <span>{job.experience}</span>
+                            </div>
+                          )}
+                          {job.currency && (job.min_salary || job.max_salary) ? (
                             <div className="flex items-center gap-1.5 text-[#006a61]">
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                               {formatCurrency(job.min_salary, job.currency)} - {formatCurrency(job.max_salary, job.currency)} {job.salary_period ? `/${job.salary_period}` : ''}
+                            </div>
+                          ) : job.salaryRange ? (
+                            <div className="flex items-center gap-1.5 text-[#006a61]">
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                              <span>{job.salaryRange}</span>
+                            </div>
+                          ) : null}
+                          {job.vacancies && (
+                            <div className="flex items-center gap-1.5 text-slate-500 font-medium">
+                              <span>• {job.vacancies}</span>
                             </div>
                           )}
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <button onClick={handleSaveToggle} className={`p-2.5 rounded-lg border transition-all ${isSaved ? 'bg-[#eff4ff] border-[#00288e] text-[#00288e] shadow-sm' : 'bg-white border-slate-200 text-[#444653] hover:border-[#00288e]/30 hover:bg-[#f8f9ff] hover:text-[#0b1c30]'}`}>
-                          <svg className={`w-4 h-4 ${isSaved ? 'fill-current' : 'fill-none'}`} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+                        <button
+                          type="button"
+                          onClick={handleSaveToggle}
+                          aria-label={isSaved ? "Saved Job" : "Save Job"}
+                          className={`min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl border flex items-center justify-center transition-all cursor-pointer ${
+                            isSaved
+                              ? 'bg-[#eff4ff] border-[#00288e] text-[#00288e] shadow-xs'
+                              : 'bg-white border-slate-200 text-[#444653] hover:border-[#00288e]/30 hover:bg-[#f8f9ff] hover:text-[#0b1c30]'
+                          }`}
+                        >
+                          <svg className={`w-4 h-4 ${isSaved ? 'fill-current' : 'fill-none'}`} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
+                          </svg>
                         </button>
-                        <button onClick={handleShare} className="p-2.5 rounded-lg bg-white border border-slate-200 text-[#444653] hover:border-[#00288e]/30 hover:bg-[#f8f9ff] hover:text-[#0b1c30] transition-all">
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+                        <button
+                          type="button"
+                          onClick={handleShare}
+                          aria-label="Share Job Link"
+                          className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-white border border-slate-200 text-[#444653] hover:border-[#00288e]/30 hover:bg-[#f8f9ff] hover:text-[#0b1c30] transition-all flex items-center justify-center cursor-pointer"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/>
+                          </svg>
                         </button>
                       </div>
                     </div>
@@ -251,73 +353,134 @@ const CandidateJobDetailsPage = () => {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-xs border border-slate-200/80 p-6 flex flex-col gap-6">
-                  {job.description && (
-                    <div className="flex flex-col gap-3">
-                      <h3 className="text-sm font-bold text-[#0b1c30] uppercase tracking-wide">Job Description</h3>
-                      <div className="text-sm text-[#444653] leading-relaxed whitespace-pre-wrap">{job.description}</div>
-                    </div>
-                  )}
+                {/* Mobile Segmented Tab Navigation (Storyboard reference) */}
+                <div className="lg:hidden flex items-center bg-slate-100 p-1 rounded-xl">
+                  {[
+                    { id: 'overview', label: 'Overview' },
+                    { id: 'requirements', label: 'Requirements' },
+                    { id: 'company', label: 'Company' },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                        activeTab === tab.id
+                          ? 'bg-white text-[#00288e] shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
 
-                  {responsibilities.length > 0 && (
-                    <div className="flex flex-col gap-3">
-                      <h3 className="text-sm font-bold text-[#0b1c30] uppercase tracking-wide">Key Responsibilities</h3>
-                      <ul className="flex flex-col gap-2">
-                        {responsibilities.map((r, i) => (
-                          <li key={i} className="flex items-start gap-2.5 text-sm text-[#444653] leading-relaxed">
-                            <svg className="w-4 h-4 text-[#00288e] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
-                            <span>{renderStructuredItem(r)}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {qualifications.length > 0 && (
-                    <div className="flex flex-col gap-3">
-                      <h3 className="text-sm font-bold text-[#0b1c30] uppercase tracking-wide">Qualifications & Requirements</h3>
-                      <ul className="flex flex-col gap-2">
-                        {qualifications.map((r, i) => (
-                          <li key={i} className="flex items-start gap-2.5 text-sm text-[#444653] leading-relaxed">
-                            <svg className="w-4 h-4 text-[#00288e] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
-                            <span>{renderStructuredItem(r)}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  
-                  {perks.length > 0 && (
-                    <div className="flex flex-col gap-3">
-                      <h3 className="text-sm font-bold text-[#0b1c30] uppercase tracking-wide">Perks & Benefits</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {perks.map((p, i) => (
-                          <div key={i} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#f8f9ff] border border-slate-200 rounded-lg text-xs font-semibold text-[#444653]">
-                            <svg className="w-3.5 h-3.5 text-[#006a61]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                            <span>{renderStructuredItem(p)}</span>
-                          </div>
-                        ))}
+                <div className="bg-white rounded-xl shadow-xs border border-slate-200/80 p-5 sm:p-6 flex flex-col gap-6">
+                  {/* Overview Tab Content */}
+                  <div className={`flex flex-col gap-6 ${activeTab === 'overview' ? 'block' : 'hidden lg:flex'}`}>
+                    {job.description && (
+                      <div className="flex flex-col gap-2.5">
+                        <h3 className="text-sm font-bold text-[#0b1c30] uppercase tracking-wide">Job Description</h3>
+                        <div className="text-xs sm:text-sm text-[#444653] leading-relaxed whitespace-pre-wrap">{job.description}</div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {skills.length > 0 && (
-                    <div className="flex flex-col gap-3">
-                      <h3 className="text-sm font-bold text-[#0b1c30] uppercase tracking-wide">Required Skills</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {skills.map((s, i) => (
-                          <span key={i} className="px-3 py-1.5 bg-slate-100 text-[#444653] text-xs font-semibold rounded-md border border-slate-200/50">
-                            {s}
-                          </span>
-                        ))}
+                    {responsibilities.length > 0 && (
+                      <div className="flex flex-col gap-2.5">
+                        <h3 className="text-sm font-bold text-[#0b1c30] uppercase tracking-wide">Key Responsibilities</h3>
+                        <ul className="flex flex-col gap-2">
+                          {responsibilities.map((r, i) => (
+                            <li key={i} className="flex items-start gap-2.5 text-xs sm:text-sm text-[#444653] leading-relaxed">
+                              <svg className="w-4 h-4 text-[#00288e] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                              <span>{renderStructuredItem(r)}</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
+                    )}
+
+                    {locationList.length > 1 && (
+                      <div className="flex flex-col gap-2.5 pt-2 border-t border-slate-100">
+                        <h3 className="text-sm font-bold text-[#0b1c30] uppercase tracking-wide">Available Work Locations</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {locationList.map((loc, idx) => (
+                            <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700">
+                              <svg className="w-3.5 h-3.5 text-[#00288e] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                              <span>{loc}</span>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Requirements Tab Content */}
+                  <div className={`flex flex-col gap-6 ${activeTab === 'requirements' ? 'block' : 'hidden lg:flex'}`}>
+                    {skills.length > 0 && (
+                      <div className="flex flex-col gap-2.5">
+                        <h3 className="text-sm font-bold text-[#0b1c30] uppercase tracking-wide">Required Skills</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {skills.map((s, i) => (
+                            <span key={i} className="px-3 py-1.5 bg-slate-100 text-[#444653] text-xs font-semibold rounded-lg border border-slate-200/50">
+                              {s}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {qualifications.length > 0 && (
+                      <div className="flex flex-col gap-2.5">
+                        <h3 className="text-sm font-bold text-[#0b1c30] uppercase tracking-wide">Qualifications & Requirements</h3>
+                        <ul className="flex flex-col gap-2">
+                          {qualifications.map((r, i) => (
+                            <li key={i} className="flex items-start gap-2.5 text-xs sm:text-sm text-[#444653] leading-relaxed">
+                              <svg className="w-4 h-4 text-[#00288e] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                              <span>{renderStructuredItem(r)}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {perks.length > 0 && (
+                      <div className="flex flex-col gap-2.5">
+                        <h3 className="text-sm font-bold text-[#0b1c30] uppercase tracking-wide">Perks & Benefits</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {perks.map((p, i) => (
+                            <div key={i} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#f8f9ff] border border-slate-200 rounded-lg text-xs font-semibold text-[#444653]">
+                              <svg className="w-3.5 h-3.5 text-[#006a61]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                              <span>{renderStructuredItem(p)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Company Tab Content */}
+                  <div className={`flex flex-col gap-4 ${activeTab === 'company' ? 'block' : 'hidden lg:flex'}`}>
+                    <div className="flex flex-col gap-2">
+                      <h3 className="text-sm font-bold text-[#0b1c30] uppercase tracking-wide">About {companyName}</h3>
+                      <p className="text-xs sm:text-sm text-[#444653] leading-relaxed">
+                        {job.company_about || job.about || `${companyName} is actively hiring through Vakancy.in with verified requisition parameters.`}
+                      </p>
                     </div>
-                  )}
+                    {job.industry && (
+                      <div className="flex items-center gap-2 text-xs text-slate-600">
+                        <span className="font-semibold text-slate-900">Industry:</span>
+                        <span>{job.industry}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {/* RIGHT COLUMN */}
-              <div className="lg:col-span-4 flex flex-col gap-4">
+              <div className="lg:col-span-4 flex flex-col gap-4 pb-20 lg:pb-0">
                 <div className="bg-white p-5 rounded-xl shadow-xs border border-slate-200/80 flex flex-col gap-4">
                   <div className="flex flex-col gap-1.5">
                     <h3 className="text-xs font-bold text-[#0b1c30] uppercase tracking-wide">Action Status</h3>
@@ -339,7 +502,7 @@ const CandidateJobDetailsPage = () => {
                     <button
                       onClick={handleApply}
                       disabled={isSubmitting}
-                      className="w-full flex items-center justify-center gap-2 py-3 bg-[#00288e] hover:bg-[#1e40af] text-white rounded-lg font-bold text-sm shadow-[0_2px_12px_rgba(0,40,142,0.25)] transition-all disabled:opacity-70 disabled:cursor-wait"
+                      className="w-full flex items-center justify-center gap-2 py-3 bg-[#00288e] hover:bg-[#1e40af] text-white rounded-lg font-bold text-sm shadow-[0_2px_12px_rgba(0,40,142,0.25)] transition-all disabled:opacity-70 disabled:cursor-wait min-h-[44px]"
                     >
                       {isSubmitting ? 'Submitting...' : 'Apply Now'}
                       {!isSubmitting && <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>}
@@ -351,7 +514,72 @@ const CandidateJobDetailsPage = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Similar Opportunities */}
+                {similarJobs.length > 0 && (
+                  <div className="bg-white p-5 rounded-xl shadow-xs border border-slate-200/80 flex flex-col gap-3">
+                    <h3 className="text-xs font-bold text-[#0b1c30] uppercase tracking-wide">Similar Opportunities</h3>
+                    <div className="flex flex-col gap-2.5">
+                      {similarJobs.map(sj => (
+                        <Link
+                          key={sj.id}
+                          to={`/candidate/jobs/${sj.id}`}
+                          className="p-3 rounded-lg border border-slate-100 hover:border-[#00288e]/30 hover:bg-[#f8f9ff] transition-all flex flex-col gap-1 group"
+                        >
+                          <span className="font-bold text-xs text-[#0b1c30] group-hover:text-[#00288e] transition-colors line-clamp-1">
+                            {sj.title}
+                          </span>
+                          <span className="text-[11px] text-[#444653] font-medium truncate">
+                            {sj.company || sj.company_name || 'Vakancy Employer'} · {sj.location || 'Location Unspecified'}
+                          </span>
+                          <span className="text-[11px] font-bold text-[#006a61]">
+                            {sj.salaryRange || 'Competitive'}
+                          </span>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
+            </div>
+
+            {/* Mobile Sticky Bottom Action Bar (Storyboard reference) */}
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200/90 p-3 z-30 flex items-center gap-2.5 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
+              <button
+                type="button"
+                onClick={handleSaveToggle}
+                className={`min-h-[44px] px-4 rounded-xl border flex items-center justify-center gap-1.5 text-xs font-bold transition-all shrink-0 ${
+                  isSaved
+                    ? 'bg-blue-50 text-[#00288e] border-blue-200'
+                    : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                }`}
+                aria-label={isSaved ? "Saved Job" : "Save Job"}
+              >
+                <svg className={`w-4 h-4 ${isSaved ? 'fill-current text-[#00288e]' : 'fill-none text-slate-500'}`} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
+                </svg>
+                <span>{isSaved ? 'Saved' : 'Save Job'}</span>
+              </button>
+
+              {isApplied ? (
+                <div className="flex-1 min-h-[44px] px-4 py-2.5 bg-[#e5eeff] text-[#00288e] text-xs font-bold rounded-xl border border-blue-200 flex items-center justify-center gap-1.5">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  Applied
+                </div>
+              ) : cannotApply ? (
+                <div className="flex-1 min-h-[44px] px-4 py-2.5 bg-slate-100 text-slate-400 text-xs font-bold rounded-xl flex items-center justify-center">
+                  {isClosed ? 'Closed' : 'Expired'}
+                </div>
+              ) : (
+                <button
+                  onClick={handleApply}
+                  disabled={isSubmitting}
+                  className="flex-1 min-h-[44px] px-6 py-2.5 bg-[#00288e] hover:bg-[#1e40af] text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5"
+                >
+                  <span>{isSubmitting ? 'Submitting...' : 'Apply Now'}</span>
+                  {!isSubmitting && <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>}
+                </button>
+              )}
             </div>
 </CandidatePortalShell>
   );

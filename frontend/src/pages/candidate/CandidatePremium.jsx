@@ -66,10 +66,11 @@ const CandidatePremium = () => {
           </div>
 
           <button
-            onClick={handleBuyPremium}
-            className="w-full sm:w-auto px-8 py-3 rounded-xl bg-[#00288e] hover:bg-[#1e40af] text-white font-extrabold text-sm shadow-xl shadow-blue-900/25 flex items-center justify-center gap-2 transition-all"
+            disabled
+            title="Payments are not currently available"
+            className="w-full sm:w-auto px-8 py-3 rounded-xl bg-slate-700 text-slate-300 font-extrabold text-sm flex items-center justify-center gap-2 cursor-not-allowed"
           >
-            <Zap className="w-4 h-4" /> Upgrade to Premium for ₹999 / Year
+            <Zap className="w-4 h-4" /> Payments Currently Unavailable
           </button>
         </div>
       )}

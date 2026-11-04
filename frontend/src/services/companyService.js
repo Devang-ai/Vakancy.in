@@ -11,8 +11,9 @@ export const companyService = {
       const response = await api.get('/companies', {
         params: { featured: true, limit },
       });
-      if (response.data && response.data.success && Array.isArray(response.data.companies)) {
-        return response.data.companies.map(c => ({
+      const data = response?.data || response;
+      if (data && data.success && Array.isArray(data.companies)) {
+        return data.companies.map(c => ({
            ...c,
            code: c.name.slice(0, 3).toUpperCase(),
            location: c.location || 'Headquarters',
@@ -30,15 +31,16 @@ export const companyService = {
   getCompanies: async (filters = {}) => {
     try {
       const response = await api.get('/companies', { params: filters });
-      if (response.data && response.data.success && Array.isArray(response.data.companies)) {
+      const data = response?.data || response;
+      if (data && data.success && Array.isArray(data.companies)) {
         return {
-          companies: response.data.companies.map(c => ({
+          companies: data.companies.map(c => ({
             ...c,
             code: c.name.slice(0, 3).toUpperCase(),
             location: c.location || 'Headquarters',
             category: c.industry || 'technology'
           })),
-          total: response.data.companies.length,
+          total: data.companies.length,
           page: 1,
           totalPages: 1
         };
@@ -86,8 +88,9 @@ export const companyService = {
   getCompanyById: async (id) => {
     try {
       const response = await api.get(`/companies/${id}`);
-      if (response.data && response.data.success && response.data.company) {
-        const c = response.data.company;
+      const payload = response?.data || response;
+      if (payload && payload.success && payload.company) {
+        const c = payload.company;
         const dossier = generateCompanyDossier({
           id: c.id,
           name: c.name,
@@ -138,6 +141,12 @@ export const companyService = {
     }
 
     return generateCompanyDossier(base);
+  },
+
+  // Request a callback for a specific job under a company
+  requestJobCallback: async (jobId, callbackData) => {
+    const response = await api.post(`/jobs/${jobId}/callback`, callbackData);
+    return response?.data || response;
   },
 
   // Get primary spotlight dossier company (PhonePe from Stitch Screen ID: ecc9262975f24a68a6069c9bb2b33fce)

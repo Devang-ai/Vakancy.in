@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {  Link, useNavigate , useOutletContext } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Toast from '../../components/ui/Toast';
 import EmployerFooter from '../../components/employer/EmployerFooter';
 import { PageTransition, StaggerContainer, StaggerItem, FadeInSection } from '../../components/common/Motion';
+import useModalA11y from '../../hooks/useModalA11y';
 
 /**
  * Employer Jobs Management Page
@@ -23,7 +25,11 @@ export default function EmployerJobsPage() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { setSidebarOpen, searchQuery } = useOutletContext();
+  const outletCtx = useOutletContext() || {};
+  const [localSearchQuery, setLocalSearchQuery] = useState('');
+  const searchQuery = typeof outletCtx.searchQuery === 'string' ? outletCtx.searchQuery : localSearchQuery;
+  const setSearchQuery = typeof outletCtx.setSearchQuery === 'function' ? outletCtx.setSearchQuery : setLocalSearchQuery;
+  const setSidebarOpen = outletCtx.setSidebarOpen || (() => {});
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [toast, setToast] = useState(null);
 
@@ -35,6 +41,8 @@ export default function EmployerJobsPage() {
   // Job Details Modal
   const [selectedJob, setSelectedJob] = useState(null);
   const [togglingJobId, setTogglingJobId] = useState(null);
+
+  useModalA11y(Boolean(selectedJob), () => setSelectedJob(null));
 
   const toastTimer = useRef(null);
 
@@ -256,49 +264,39 @@ export default function EmployerJobsPage() {
         {/* ─────────────────────────────────────────────
             HERO HEADER SECTION
         ───────────────────────────────────────────── */}
-        <section className="w-full bg-[#f8f9ff] px-4 sm:px-6 pt-6 pb-4">
-          <div className="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-            <div className="space-y-1 max-w-3xl">
+        <section className="w-full bg-[#f8f9ff] px-4 sm:px-6 pt-5 sm:pt-6 pb-4">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+            <div className="space-y-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl sm:text-3xl font-bold text-[#0b1c30] tracking-tight">
+                <h1 className="text-xl sm:text-2xl font-bold text-[#0b1c30] tracking-tight">
                   Jobs &amp; Requisitions
                 </h1>
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#86f2e4]/40 text-[#006f66] text-xs font-bold">
-                  <span className="w-2 h-2 rounded-full bg-[#006a61] animate-pulse" />
-                  {stats.active} Active Requisitions
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#006a61] animate-pulse" />
+                  {stats.active} Active
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#dde1ff] text-[#173bab] text-xs font-semibold">
                   {companyInfo.logo_url && (
                     <img src={companyInfo.logo_url} alt="" className="w-3.5 h-3.5 rounded object-cover" />
                   )}
-                  <span>Entity: {companyInfo.name}</span>
+                  <span className="truncate max-w-[150px] sm:max-w-none">{companyInfo.name}</span>
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-[#444653] leading-relaxed">
-                Manage your published job postings, active requisitions, applicant volume, and status in real-time.
+              <p className="text-xs text-[#444653]">
+                Manage your job postings, active requisitions, and applicant volume in real-time.
               </p>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-2 self-start lg:self-end">
-              <button
-                onClick={handleExportCSV}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white text-[#0b1c30] text-xs font-semibold shadow-xs hover:bg-slate-100 transition-colors border border-slate-200 cursor-pointer"
-              >
-                <svg className="w-4 h-4 text-[#444653]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                <span>Export CSV</span>
-              </button>
-
+            {/* Action Button: Clean Post a Job without Export CSV or duplicate + */}
+            <div className="flex items-center gap-2">
               <Link
                 to="/recruiter/jobs/create"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#00288e] text-white text-xs font-semibold shadow-sm hover:bg-[#1e40af] transition-colors cursor-pointer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#00288e] text-white text-xs font-semibold shadow-xs hover:bg-[#1e40af] transition-colors cursor-pointer min-h-[42px]"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
-                <span>+ Post a New Job</span>
+                <span>Post a Job</span>
               </Link>
             </div>
           </div>
@@ -308,75 +306,72 @@ export default function EmployerJobsPage() {
             METRIC STRIP CARDS (4 Database KPI Cards)
         ───────────────────────────────────────────── */}
         <section className="w-full bg-[#f8fafc] px-4 sm:px-6 py-2">
-          <StaggerContainer className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <StaggerContainer className="max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
             {/* Card 1: Active Jobs */}
-            <StaggerItem index={0} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col justify-between hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] text-[#444653] uppercase tracking-wider font-semibold">
-                  Active Requisitions
+            <StaggerItem index={0} className="bg-white p-3.5 sm:p-5 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col justify-between hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                <span className="text-[10px] sm:text-[11px] text-[#444653] uppercase tracking-wider font-semibold">
+                  Active Jobs
                 </span>
-                <div className="p-1.5 rounded-lg bg-[#eff4ff] text-[#00288e]">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <div className="p-1 sm:p-1.5 rounded-lg bg-[#eff4ff] text-[#00288e]">
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <rect x="2" y="7" width="20" height="14" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
                   </svg>
                 </div>
               </div>
-              <div className="my-1">
-                <span className="text-3xl font-bold text-[#0b1c30] tracking-tight">{stats.active}</span>
+              <div className="my-0.5 sm:my-1">
+                <span className="text-2xl sm:text-3xl font-bold text-[#0b1c30] tracking-tight">{stats.active}</span>
               </div>
             </StaggerItem>
 
             {/* Card 2: Total Applicants */}
-            <StaggerItem index={1} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col justify-between hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] text-[#444653] uppercase tracking-wider font-semibold">
-                  Applicant Influx
+            <StaggerItem index={1} className="bg-white p-3.5 sm:p-5 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col justify-between hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                <span className="text-[10px] sm:text-[11px] text-[#444653] uppercase tracking-wider font-semibold">
+                  Applicants
                 </span>
-                <div className="p-1.5 rounded-lg bg-[#eff4ff] text-[#006a61]">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <div className="p-1 sm:p-1.5 rounded-lg bg-[#eff4ff] text-[#006a61]">
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
               </div>
-              <div className="my-1">
-                <span className="text-3xl font-bold text-[#0b1c30] tracking-tight">{stats.total_applicants}</span>
+              <div className="my-0.5 sm:my-1">
+                <span className="text-2xl sm:text-3xl font-bold text-[#0b1c30] tracking-tight">{stats.total_applicants}</span>
               </div>
             </StaggerItem>
 
             {/* Card 3: Inactive / Drafts */}
-            <StaggerItem index={2} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col justify-between hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] text-[#444653] uppercase tracking-wider font-semibold">
-                  Inactive / Drafts
+            <StaggerItem index={2} className="bg-white p-3.5 sm:p-5 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col justify-between hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                <span className="text-[10px] sm:text-[11px] text-[#444653] uppercase tracking-wider font-semibold">
+                  Drafts
                 </span>
-                <div className="p-1.5 rounded-lg bg-[#eff4ff] text-slate-600">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <div className="p-1 sm:p-1.5 rounded-lg bg-slate-100 text-slate-600">
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
                 </div>
               </div>
-              <div className="my-1 flex items-baseline justify-between">
-                <span className="text-3xl font-bold text-[#0b1c30] tracking-tight">{stats.closed + stats.drafts}</span>
-                <span className="text-xs text-[#444653] font-medium">
-                  {stats.drafts} Drafts · {stats.closed} Closed
-                </span>
+              <div className="my-0.5 sm:my-1">
+                <span className="text-2xl sm:text-3xl font-bold text-[#0b1c30] tracking-tight">{stats.drafts}</span>
               </div>
             </StaggerItem>
 
             {/* Card 4: Total Positions */}
-            <StaggerItem index={3} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col justify-between hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] text-[#444653] uppercase tracking-wider font-semibold">
-                  Total Requisitions
+            <StaggerItem index={3} className="bg-white p-3.5 sm:p-5 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col justify-between hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                <span className="text-[10px] sm:text-[11px] text-[#444653] uppercase tracking-wider font-semibold">
+                  Total Jobs
                 </span>
-                <div className="p-1.5 rounded-lg bg-[#eff4ff] text-[#00288e]">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <div className="p-1 sm:p-1.5 rounded-lg bg-[#eff4ff] text-[#00288e]">
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                 </div>
               </div>
-              <div className="my-1">
-                <span className="text-3xl font-bold text-[#0b1c30] tracking-tight">{stats.total}</span>
+              <div className="my-0.5 sm:my-1">
+                <span className="text-2xl sm:text-3xl font-bold text-[#0b1c30] tracking-tight">{stats.total}</span>
               </div>
             </StaggerItem>
           </StaggerContainer>
@@ -477,68 +472,75 @@ export default function EmployerJobsPage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search by job title, location, or stack..."
-                    className="w-full pl-9 pr-8 py-2 bg-white text-[#0b1c30] placeholder:text-[#444653] text-xs rounded-xl outline-none focus:ring-2 focus:ring-[#00288e] shadow-xs transition-all border border-slate-200"
+                    className="w-full pl-9 pr-9 py-2.5 sm:py-2 bg-white text-[#0b1c30] placeholder:text-[#444653] text-xs rounded-xl outline-none focus:ring-2 focus:ring-[#00288e] shadow-2xs transition-all border border-slate-200"
                   />
                   {searchQuery && (
                     <button
+                      type="button"
                       onClick={() => setSearchQuery('')}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 text-sm font-bold"
+                      aria-label="Clear search"
                     >
                       ×
                     </button>
                   )}
                 </div>
 
-                {/* Location Filter */}
-                <div className="relative">
-                  <select
-                    value={locationFilter}
-                    onChange={(e) => setLocationFilter(e.target.value)}
-                    className="appearance-none pl-3 pr-8 py-2 bg-white text-[#0b1c30] text-xs font-semibold rounded-xl shadow-xs outline-none border border-slate-200 cursor-pointer"
-                  >
-                    <option value="all">Location: All</option>
-                    <option value="mumbai">Mumbai</option>
-                    <option value="bengaluru">Bengaluru</option>
-                    <option value="gurugram">Gurugram</option>
-                    <option value="pune">Pune</option>
-                    <option value="delhi">Delhi NCR</option>
-                    <option value="remote">Remote</option>
-                  </select>
-                  <svg className="w-4 h-4 text-[#444653] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
+                {/* Filters & Actions Row */}
+                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                  {/* Location Filter */}
+                  <div className="relative flex-1 sm:flex-initial">
+                    <select
+                      value={locationFilter}
+                      onChange={(e) => setLocationFilter(e.target.value)}
+                      className="w-full sm:w-auto appearance-none pl-3 pr-8 py-2.5 sm:py-2 bg-white text-[#0b1c30] text-xs font-semibold rounded-xl shadow-2xs outline-none border border-slate-200 hover:border-slate-300 focus:border-[#00288e] focus:ring-1 focus:ring-[#00288e] cursor-pointer transition-colors"
+                    >
+                      <option value="all">Location: All</option>
+                      <option value="mumbai">Mumbai</option>
+                      <option value="bengaluru">Bengaluru</option>
+                      <option value="gurugram">Gurugram</option>
+                      <option value="pune">Pune</option>
+                      <option value="delhi">Delhi NCR</option>
+                      <option value="remote">Remote</option>
+                    </select>
+                    <svg className="w-4 h-4 text-[#444653] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
 
-                {/* Work Mode Filter */}
-                <div className="relative">
-                  <select
-                    value={workModeFilter}
-                    onChange={(e) => setWorkModeFilter(e.target.value)}
-                    className="appearance-none pl-3 pr-8 py-2 bg-white text-[#0b1c30] text-xs font-semibold rounded-xl shadow-xs outline-none border border-slate-200 cursor-pointer"
-                  >
-                    <option value="all">Work Mode: Any</option>
-                    <option value="hybrid">Hybrid</option>
-                    <option value="remote">Full Remote</option>
-                    <option value="onsite">On-site Mandatory</option>
-                  </select>
-                  <svg className="w-4 h-4 text-[#444653] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
+                  {/* Work Mode Filter */}
+                  <div className="relative flex-1 sm:flex-initial">
+                    <select
+                      value={workModeFilter}
+                      onChange={(e) => setWorkModeFilter(e.target.value)}
+                      className="w-full sm:w-auto appearance-none pl-3 pr-8 py-2.5 sm:py-2 bg-white text-[#0b1c30] text-xs font-semibold rounded-xl shadow-2xs outline-none border border-slate-200 hover:border-slate-300 focus:border-[#00288e] focus:ring-1 focus:ring-[#00288e] cursor-pointer transition-colors"
+                    >
+                      <option value="all">Work Mode: Any</option>
+                      <option value="hybrid">Hybrid</option>
+                      <option value="remote">Full Remote</option>
+                      <option value="onsite">On-site Mandatory</option>
+                    </select>
+                    <svg className="w-4 h-4 text-[#444653] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
 
-                {/* Clear Filter Button */}
-                {(searchQuery || locationFilter !== 'all' || workModeFilter !== 'all') && (
-                  <button
-                    onClick={() => {
-                      setSearchQuery('');
-                      setLocationFilter('all');
-                      setWorkModeFilter('all');
-                    }}
-                    className="px-3 py-2 rounded-xl bg-white text-xs text-[#00288e] font-semibold border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
-                  >
-                    Reset Filters
-                  </button>
-                )}
+                  {/* Clear Filter Button */}
+                  {(searchQuery || locationFilter !== 'all' || workModeFilter !== 'all' || activeTab !== 'all') && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery('');
+                        setLocationFilter('all');
+                        setWorkModeFilter('all');
+                        setActiveTab('all');
+                      }}
+                      className="w-full sm:w-auto px-3.5 py-2.5 sm:py-2 rounded-xl bg-white text-xs text-[#00288e] font-semibold border border-blue-100 hover:bg-[#eff4ff] transition-colors cursor-pointer shadow-2xs text-center"
+                    >
+                      Reset Filters
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -580,8 +582,87 @@ export default function EmployerJobsPage() {
                 </Link>
               </div>
             ) : (
-              /* High-Density Enterprise Table */
-              <div className="w-full overflow-x-auto">
+              <>
+                {/* Mobile Cards (Viewports < 768px) */}
+                <div className="block md:hidden divide-y divide-slate-100">
+                  {filteredJobs.map((job) => {
+                    const isActive = job.status === 'active' || job.status === 'open';
+                    const isDraft = job.status === 'draft';
+                    const isToggling = togglingJobId === job.id;
+                    const locs = (job.location || 'Not specified').split(';').map(s => s.trim()).filter(Boolean);
+
+                    const isFixed = job.min_salary != null && job.max_salary != null && Number(job.min_salary) === Number(job.max_salary);
+                    const basisText = job.salary_type && job.salary_type !== 'Fixed' ? ` (${job.salary_type})` : '';
+                    const salText = job.min_salary != null && job.max_salary != null
+                      ? (isFixed
+                          ? `₹${Number(job.min_salary) >= 100000 ? (Number(job.min_salary) / 100000).toFixed(0) : job.min_salary} LPA${basisText}`
+                          : `₹${Number(job.min_salary) >= 100000 ? (Number(job.min_salary) / 100000).toFixed(0) : job.min_salary} - ₹${Number(job.max_salary) >= 100000 ? (Number(job.max_salary) / 100000).toFixed(0) : job.max_salary} LPA${basisText}`
+                        )
+                      : 'Competitive';
+
+                    return (
+                      <div key={job.id} className="p-4 flex flex-col gap-3 bg-white">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <span className="text-[11px] font-semibold text-[#444653] block truncate">{companyInfo.name}</span>
+                            <h4 className="text-base font-bold text-[#0b1c30] line-clamp-1">{job.title}</h4>
+                          </div>
+                          {isActive ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold shrink-0 border border-emerald-200/50">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Active
+                            </span>
+                          ) : isDraft ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold shrink-0">
+                              Draft
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold shrink-0 border border-amber-200/50">
+                              Closed
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-y-1 gap-x-2 text-xs text-[#444653]">
+                          <span className="inline-flex items-center gap-1 text-slate-700 font-medium">
+                            <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            {locs[0] || 'Flexible'}
+                          </span>
+                          <span className="text-slate-300">•</span>
+                          <span>{job.workplace_type || job.work_mode || 'Full-time'}</span>
+                        </div>
+
+                        <div className="flex items-center justify-between text-xs pt-0.5">
+                          <span className="font-bold text-[#00288e]">{salText}</span>
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#eff4ff] text-[#00288e] font-semibold text-[11px]">
+                            {job.applicant_count || 0} applicants
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+                          <Link
+                            to={`/recruiter/jobs/${job.id}/applicants`}
+                            className="min-h-[44px] px-3 py-2 rounded-xl border border-blue-100 bg-[#eff4ff] text-[#00288e] text-xs font-bold hover:bg-[#dce9ff] transition-all flex items-center justify-center gap-1 shadow-2xs text-center"
+                          >
+                            <span>View Applicants</span>
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedJob(job)}
+                            className="min-h-[44px] px-3 py-2 rounded-xl bg-[#00288e] text-white text-xs font-bold hover:bg-[#1e40af] transition-all flex items-center justify-center gap-1 shadow-xs text-center"
+                          >
+                            <span>View Details</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* High-Density Enterprise Table (Desktop & Tablet) */}
+                <div className="hidden md:block w-full overflow-x-auto">
                 <table className="w-full text-left text-xs text-[#0b1c30] border-collapse min-w-[960px]">
                   <thead>
                     <tr className="bg-[#eff4ff] text-[#444653] uppercase text-[11px] font-semibold tracking-wider h-10 border-b border-slate-200">
@@ -635,15 +716,30 @@ export default function EmployerJobsPage() {
                               <p className="text-[11px] text-[#444653] line-clamp-1 max-w-md">
                                 {job.description || 'Full-stack engineering requisition'}
                               </p>
-                              <div className="flex items-center gap-1.5 mt-0.5">
+                              <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                                 <span className="px-2 py-0.5 rounded bg-[#eff4ff] text-[#0b1c30] font-mono text-[10px] font-medium border border-blue-50">
                                   {job.employment_type || 'Full-time'}
                                 </span>
                                 {job.min_salary && job.max_salary && (
                                   <span className="px-2 py-0.5 rounded bg-[#eff4ff] text-[#006a61] font-mono text-[10px] font-bold border border-blue-50">
-                                    ₹{Math.round(job.min_salary / 100000)}L - ₹{Math.round(job.max_salary / 100000)}L
+                                    {Number(job.min_salary) === Number(job.max_salary)
+                                      ? `₹${Math.round(job.min_salary / 100000)}L${job.salary_type && job.salary_type !== 'Fixed' ? ` (${job.salary_type})` : ''}`
+                                      : `₹${Math.round(job.min_salary / 100000)}L - ₹${Math.round(job.max_salary / 100000)}L${job.salary_type && job.salary_type !== 'Fixed' ? ` (${job.salary_type})` : ''}`
+                                    }
                                   </span>
                                 )}
+                                <span
+                                  id={`badge-candidate-access-${job.id}`}
+                                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold border ${
+                                    (job.allow_candidate_access === 1 || job.allow_candidate_access === true)
+                                      ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                      : 'bg-amber-50 text-amber-800 border-amber-200'
+                                  }`}
+                                  title={(job.allow_candidate_access === 1 || job.allow_candidate_access === true) ? 'Candidate Access ON: Direct Viewing' : 'Candidate Access OFF: Locked with Callback Gate'}
+                                >
+                                  <span className={`w-1.5 h-1.5 rounded-full ${(job.allow_candidate_access === 1 || job.allow_candidate_access === true) ? 'bg-emerald-600' : 'bg-amber-600'}`} />
+                                  Candidate Access {(job.allow_candidate_access === 1 || job.allow_candidate_access === true) ? 'ON' : 'OFF'}
+                                </span>
                               </div>
                             </div>
                           </td>
@@ -765,6 +861,7 @@ export default function EmployerJobsPage() {
 
                               {/* Review Applicants CTA */}
                               <Link
+                                id={`btn-review-applicants-${job.id}`}
                                 to={`/recruiter/jobs/${job.id}/applicants`}
                                 title="Review Applicants"
                                 className="p-1.5 rounded-lg bg-[#00288e] text-white hover:bg-[#1e40af] transition-colors cursor-pointer"
@@ -781,7 +878,8 @@ export default function EmployerJobsPage() {
                   </tbody>
                 </table>
               </div>
-            )}
+            </>
+          )}
           </div>
         </FadeInSection>
 
@@ -793,22 +891,33 @@ export default function EmployerJobsPage() {
       {/* ─────────────────────────────────────────────
           3. JOB DETAILS MODAL
       ───────────────────────────────────────────── */}
-      {selectedJob && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-[#0b1c30]/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl border border-slate-100 flex flex-col max-h-[90vh] overflow-hidden animate-fade-in">
+      {selectedJob && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] bg-[#0b1c30]/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4"
+          onClick={() => setSelectedJob(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="job-details-modal-title"
+        >
+          <div
+            className="bg-white w-full max-w-xl rounded-2xl shadow-2xl border border-slate-100 flex flex-col max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] overflow-hidden animate-fade-in"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-[#eff4ff]">
+            <div className="shrink-0 px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-[#eff4ff]">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#00288e]">
                   Requisition Details
                 </span>
-                <h3 className="font-bold text-base text-[#0b1c30]">
+                <h3 id="job-details-modal-title" className="font-bold text-base text-[#0b1c30]">
                   {selectedJob.title}
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setSelectedJob(null)}
                 className="p-1.5 rounded-lg text-[#444653] hover:bg-slate-200 transition-colors cursor-pointer"
+                aria-label="Close modal"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -817,7 +926,7 @@ export default function EmployerJobsPage() {
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 space-y-4 overflow-y-auto text-xs text-[#0b1c30]">
+            <div className="flex-1 min-h-0 p-6 space-y-4 overflow-y-auto text-xs text-[#0b1c30]">
               <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-[#eff4ff]">
                 <div>
                   <span className="text-[10px] text-[#444653] uppercase font-semibold">Location</span>
@@ -848,8 +957,9 @@ export default function EmployerJobsPage() {
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-3 border-t border-slate-100 flex items-center justify-between bg-slate-50">
+            <div className="shrink-0 px-6 py-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 bg-slate-50">
               <button
+                type="button"
                 onClick={() => {
                   handleToggleStatus(selectedJob);
                   setSelectedJob(null);
@@ -863,7 +973,7 @@ export default function EmployerJobsPage() {
                 {selectedJob.status === 'active' ? 'Mark as Inactive' : 'Mark as Active'}
               </button>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Link
                   to={`/recruiter/jobs/${selectedJob.id}/applicants`}
                   className="px-4 py-2 rounded-xl bg-[#eff4ff] text-[#00288e] text-xs font-semibold hover:bg-[#dce9ff] transition-colors inline-flex items-center gap-1.5"
@@ -885,6 +995,7 @@ export default function EmployerJobsPage() {
                 </Link>
 
                 <button
+                  type="button"
                   onClick={() => setSelectedJob(null)}
                   className="px-4 py-2 rounded-xl bg-slate-200 text-[#0b1c30] text-xs font-semibold hover:bg-slate-300 transition-colors cursor-pointer"
                 >
@@ -893,7 +1004,8 @@ export default function EmployerJobsPage() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </PageTransition>
   );

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import API from '../../services/api';
+import useModalA11y from '../../hooks/useModalA11y';
 
 import Toast from '../../components/common/Toast';
 /**
@@ -96,6 +97,16 @@ export const CandidatePrivacyPage = () => {
   const [maxBracket, setMaxBracket] = useState('75');
   const [deletionReason, setDeletionReason] = useState('Accepted an executive offer elsewhere');
   const [deletionConfirmed, setDeletionConfirmed] = useState(false);
+
+  const isAnyModalOpen = deletionModalOpen || deactivateModalOpen || infoModalOpen || correctionModalOpen || nomineeModalOpen || bracketModalOpen;
+  useModalA11y(isAnyModalOpen, () => {
+    setDeletionModalOpen(false);
+    setDeactivateModalOpen(false);
+    setInfoModalOpen(false);
+    setCorrectionModalOpen(false);
+    setNomineeModalOpen(false);
+    setBracketModalOpen(false);
+  });
 
   // Toast feedback
   const [toast, setToast] = useState(null);
@@ -1089,9 +1100,17 @@ export const CandidatePrivacyPage = () => {
 
       {/* 1. Deletion Step-by-Step Flow Modal */}
       {deletionModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-xl max-w-xl w-full p-6 shadow-2xl flex flex-col gap-4 relative border border-slate-200 animate-scale-in">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setDeletionModalOpen(false)}
+        >
+          <div 
+            className="relative w-full max-w-xl max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="shrink-0 px-6 py-4 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-2 text-[#ba1a1a] font-semibold text-sm">
                 <svg className="w-5 h-5 text-[#ba1a1a]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -1107,47 +1126,49 @@ export const CandidatePrivacyPage = () => {
               </button>
             </div>
 
-            <div className="flex items-center justify-between bg-[#eff4ff] px-4 py-2 rounded-lg text-xs font-semibold">
-              <span className="text-[#00288e] font-bold">Step 1: Reason</span>
-              <span className="text-[#c4c5d5]">→</span>
-              <span className="text-[#444653]">Step 2: Legal Impact</span>
-              <span className="text-[#c4c5d5]">→</span>
-              <span className="text-[#444653]">Step 3: OTP Check</span>
-              <span className="text-[#c4c5d5]">→</span>
-              <span className="text-[#444653]">Step 4: Purge</span>
+            <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-4">
+              <div className="flex items-center justify-between bg-[#eff4ff] px-4 py-2 rounded-lg text-xs font-semibold">
+                <span className="text-[#00288e] font-bold">Step 1: Reason</span>
+                <span className="text-[#c4c5d5]">→</span>
+                <span className="text-[#444653]">Step 2: Legal Impact</span>
+                <span className="text-[#c4c5d5]">→</span>
+                <span className="text-[#444653]">Step 3: OTP Check</span>
+                <span className="text-[#c4c5d5]">→</span>
+                <span className="text-[#444653]">Step 4: Purge</span>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-[#0b1c30]">
+                  Why are you closing your Vakancy.in candidate account?
+                </label>
+                <select
+                  value={deletionReason}
+                  onChange={(e) => setDeletionReason(e.target.value)}
+                  className="w-full bg-[#eff4ff] text-[#0b1c30] px-3 py-2 rounded-lg text-xs border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#00288e]/20"
+                >
+                  <option value="Accepted an executive offer elsewhere">Accepted an offer elsewhere</option>
+                  <option value="Transitioning into independent consulting / startup venture">Transitioning into consulting or startup</option>
+                  <option value="Privacy concerns regarding recruiter data indexation">Privacy preferences</option>
+                  <option value="Temporary retirement or career hiatus">Temporary career break</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div className="bg-[#ffdad6]/30 p-3.5 rounded-lg flex items-start gap-2 border border-[#ffdad6]">
+                <input
+                  id="confirm-check"
+                  type="checkbox"
+                  checked={deletionConfirmed}
+                  onChange={(e) => setDeletionConfirmed(e.target.checked)}
+                  className="mt-0.5 rounded text-[#ba1a1a] focus:ring-[#ba1a1a]"
+                />
+                <label htmlFor="confirm-check" className="text-xs text-[#0b1c30] leading-relaxed cursor-pointer">
+                  I understand that this action is permanent and irreversible under Section 12 of the DPDP Act. My applications, resume variants, and account records will be permanently removed.
+                </label>
+              </div>
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-[#0b1c30]">
-                Why are you closing your Vakancy.in candidate account?
-              </label>
-              <select
-                value={deletionReason}
-                onChange={(e) => setDeletionReason(e.target.value)}
-                className="w-full bg-[#eff4ff] text-[#0b1c30] px-3 py-2 rounded-lg text-xs border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#00288e]/20"
-              >
-                <option value="Accepted an executive offer elsewhere">Accepted an offer elsewhere</option>
-                <option value="Transitioning into independent consulting / startup venture">Transitioning into consulting or startup</option>
-                <option value="Privacy concerns regarding recruiter data indexation">Privacy preferences</option>
-                <option value="Temporary retirement or career hiatus">Temporary career break</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-
-            <div className="bg-[#ffdad6]/30 p-3.5 rounded-lg flex items-start gap-2 border border-[#ffdad6]">
-              <input
-                id="confirm-check"
-                type="checkbox"
-                checked={deletionConfirmed}
-                onChange={(e) => setDeletionConfirmed(e.target.checked)}
-                className="mt-0.5 rounded text-[#ba1a1a] focus:ring-[#ba1a1a]"
-              />
-              <label htmlFor="confirm-check" className="text-xs text-[#0b1c30] leading-relaxed cursor-pointer">
-                I understand that this action is permanent and irreversible under Section 12 of the DPDP Act. My applications, resume variants, and account records will be permanently removed.
-              </label>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2">
+            <div className="shrink-0 px-6 py-3.5 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setDeletionModalOpen(false)}
@@ -1178,8 +1199,16 @@ export const CandidatePrivacyPage = () => {
 
       {/* 2. Temporary Deactivation Modal */}
       {deactivateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-4 border border-slate-200">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setDeactivateModalOpen(false)}
+        >
+          <div 
+            className="relative w-full max-w-md max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] bg-white rounded-2xl p-6 shadow-2xl flex flex-col gap-4 border border-slate-200 overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center gap-3 text-[#00288e]">
               <div className="w-10 h-10 rounded-full bg-[#eff4ff] flex items-center justify-center shrink-0">
                 <svg className="w-5 h-5 text-[#00288e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1194,7 +1223,7 @@ export const CandidatePrivacyPage = () => {
             <p className="text-xs text-[#444653] leading-relaxed">
               Your profile will be hidden from recruiter searches and alerts will be paused. Existing applications will remain safely saved in our database. You can reactivate anytime by simply logging back in.
             </p>
-            <div className="flex items-center justify-end gap-2 pt-2">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
               <button
                 type="button"
                 onClick={() => setDeactivateModalOpen(false)}
@@ -1220,9 +1249,17 @@ export const CandidatePrivacyPage = () => {
 
       {/* 3. Inspect Data Summary Modal (Right to Information) */}
       {infoModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-4 border border-slate-200 max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setInfoModalOpen(false)}
+        >
+          <div 
+            className="relative w-full max-w-lg max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] bg-white rounded-2xl shadow-2xl flex flex-col border border-slate-200 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="shrink-0 px-6 py-4 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-2 text-[#00288e] font-bold text-sm">
                 <svg className="w-5 h-5 text-[#00288e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -1238,30 +1275,32 @@ export const CandidatePrivacyPage = () => {
               </button>
             </div>
 
-            <p className="text-xs text-[#444653]">
-              Summary of personal data categories processed under Section 11(1) of the DPDP Act 2023 for Candidate #{STITCH_PRIVACY_FALLBACK.candidateId}:
-            </p>
+            <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-4">
+              <p className="text-xs text-[#444653]">
+                Summary of personal data categories processed under Section 11(1) of the DPDP Act 2023 for Candidate #{STITCH_PRIVACY_FALLBACK.candidateId}:
+              </p>
 
-            <div className="flex flex-col gap-2.5 text-xs text-[#0b1c30]">
-              <div className="p-3 bg-[#eff4ff] rounded-lg border border-slate-200">
-                <span className="font-semibold text-[#00288e] block mb-1">1. Identity &amp; Contact Records</span>
-                <p className="text-[#444653]">Full name, verified email, phone number, and location coordinates.</p>
-              </div>
-              <div className="p-3 bg-[#eff4ff] rounded-lg border border-slate-200">
-                <span className="font-semibold text-[#00288e] block mb-1">2. Professional Experience &amp; Resumes</span>
-                <p className="text-[#444653]">Uploaded resumes, previous employers, job titles, and verified credentials.</p>
-              </div>
-              <div className="p-3 bg-[#eff4ff] rounded-lg border border-slate-200">
-                <span className="font-semibold text-[#00288e] block mb-1">3. Job Application Activity</span>
-                <p className="text-[#444653]">Applied positions, recruiter review timestamps, screening responses, and interview status.</p>
-              </div>
-              <div className="p-3 bg-[#eff4ff] rounded-lg border border-slate-200">
-                <span className="font-semibold text-[#00288e] block mb-1">4. Privacy Preferences &amp; Access Log</span>
-                <p className="text-[#444653]">Active consent records, discovery toggles, salary brackets, and recruiter view records.</p>
+              <div className="flex flex-col gap-2.5 text-xs text-[#0b1c30]">
+                <div className="p-3 bg-[#eff4ff] rounded-lg border border-slate-200">
+                  <span className="font-semibold text-[#00288e] block mb-1">1. Identity &amp; Contact Records</span>
+                  <p className="text-[#444653]">Full name, verified email, phone number, and location coordinates.</p>
+                </div>
+                <div className="p-3 bg-[#eff4ff] rounded-lg border border-slate-200">
+                  <span className="font-semibold text-[#00288e] block mb-1">2. Professional Experience &amp; Resumes</span>
+                  <p className="text-[#444653]">Uploaded resumes, previous employers, job titles, and verified credentials.</p>
+                </div>
+                <div className="p-3 bg-[#eff4ff] rounded-lg border border-slate-200">
+                  <span className="font-semibold text-[#00288e] block mb-1">3. Job Application Activity</span>
+                  <p className="text-[#444653]">Applied positions, recruiter review timestamps, screening responses, and interview status.</p>
+                </div>
+                <div className="p-3 bg-[#eff4ff] rounded-lg border border-slate-200">
+                  <span className="font-semibold text-[#00288e] block mb-1">4. Privacy Preferences &amp; Access Log</span>
+                  <p className="text-[#444653]">Active consent records, discovery toggles, salary brackets, and recruiter view records.</p>
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-end pt-2">
+            <div className="shrink-0 px-6 py-3.5 border-t border-slate-100 bg-slate-50 flex items-center justify-end">
               <button
                 type="button"
                 onClick={() => setInfoModalOpen(false)}
@@ -1276,9 +1315,17 @@ export const CandidatePrivacyPage = () => {
 
       {/* 4. Request Correction Modal */}
       {correctionModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-4 border border-slate-200">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setCorrectionModalOpen(false)}
+        >
+          <div 
+            className="relative w-full max-w-md max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] bg-white rounded-2xl shadow-2xl flex flex-col border border-slate-200 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="shrink-0 px-6 py-4 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-2 text-[#00288e] font-bold text-sm">
                 <svg className="w-5 h-5 text-[#00288e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -1294,19 +1341,21 @@ export const CandidatePrivacyPage = () => {
               </button>
             </div>
 
-            <p className="text-xs text-[#444653]">
-              Specify the inaccurate or outdated information in your profile that you wish to correct or update:
-            </p>
+            <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-4">
+              <p className="text-xs text-[#444653]">
+                Specify the inaccurate or outdated information in your profile that you wish to correct or update:
+              </p>
 
-            <textarea
-              rows={4}
-              value={correctionText}
-              onChange={(e) => setCorrectionText(e.target.value)}
-              placeholder="e.g., Update past employer title or correct degree graduation year..."
-              className="w-full bg-[#eff4ff] text-[#0b1c30] p-3 rounded-lg text-xs border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#00288e]/20"
-            />
+              <textarea
+                rows={4}
+                value={correctionText}
+                onChange={(e) => setCorrectionText(e.target.value)}
+                placeholder="e.g., Update past employer title or correct degree graduation year..."
+                className="w-full bg-[#eff4ff] text-[#0b1c30] p-3 rounded-lg text-xs border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#00288e]/20"
+              />
+            </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2">
+            <div className="shrink-0 px-6 py-3.5 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setCorrectionModalOpen(false)}
@@ -1336,9 +1385,17 @@ export const CandidatePrivacyPage = () => {
 
       {/* 5. Configure Nominee Modal */}
       {nomineeModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-4 border border-slate-200">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setNomineeModalOpen(false)}
+        >
+          <div 
+            className="relative w-full max-w-md max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] bg-white rounded-2xl shadow-2xl flex flex-col border border-slate-200 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="shrink-0 px-6 py-4 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-2 text-[#00288e] font-bold text-sm">
                 <svg className="w-5 h-5 text-[#00288e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
@@ -1354,11 +1411,11 @@ export const CandidatePrivacyPage = () => {
               </button>
             </div>
 
-            <p className="text-xs text-[#444653]">
-              Under Section 14 of the DPDP Act 2023, designate a trusted nominee authorized to exercise your data rights if you are unable to:
-            </p>
+            <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-3">
+              <p className="text-xs text-[#444653]">
+                Under Section 14 of the DPDP Act 2023, designate a trusted nominee authorized to exercise your data rights if you are unable to:
+              </p>
 
-            <div className="flex flex-col gap-3">
               <div>
                 <label className="text-xs font-semibold text-[#0b1c30] block mb-1">Nominee Full Name</label>
                 <input
@@ -1393,7 +1450,7 @@ export const CandidatePrivacyPage = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2">
+            <div className="shrink-0 px-6 py-3.5 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setNomineeModalOpen(false)}
@@ -1422,9 +1479,17 @@ export const CandidatePrivacyPage = () => {
 
       {/* 6. Adjust Target Salary Bracket Modal */}
       {bracketModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-4 border border-slate-200">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setBracketModalOpen(false)}
+        >
+          <div 
+            className="relative w-full max-w-md max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] bg-white rounded-2xl shadow-2xl flex flex-col border border-slate-200 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="shrink-0 px-6 py-4 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-2 text-[#00288e] font-bold text-sm">
                 <svg className="w-5 h-5 text-[#00288e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1440,41 +1505,43 @@ export const CandidatePrivacyPage = () => {
               </button>
             </div>
 
-            <p className="text-xs text-[#444653]">
-              Set the target compensation bracket visible to verified recruiters searching for candidates:
-            </p>
+            <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-4">
+              <p className="text-xs text-[#444653]">
+                Set the target compensation bracket visible to verified recruiters searching for candidates:
+              </p>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-semibold text-[#0b1c30] block mb-1">Minimum Bracket</label>
-                <div className="flex items-center bg-[#eff4ff] rounded-lg px-3 py-2 border border-slate-200">
-                  <span className="text-xs text-[#444653] mr-1">₹</span>
-                  <input
-                    type="number"
-                    value={minBracket}
-                    onChange={(e) => setMinBracket(e.target.value)}
-                    className="w-full bg-transparent text-xs text-[#0b1c30] outline-none"
-                  />
-                  <span className="text-xs text-[#444653]">L</span>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-[#0b1c30] block mb-1">Minimum Bracket</label>
+                  <div className="flex items-center bg-[#eff4ff] rounded-lg px-3 py-2 border border-slate-200">
+                    <span className="text-xs text-[#444653] mr-1">₹</span>
+                    <input
+                      type="number"
+                      value={minBracket}
+                      onChange={(e) => setMinBracket(e.target.value)}
+                      className="w-full bg-transparent text-xs text-[#0b1c30] outline-none"
+                    />
+                    <span className="text-xs text-[#444653]">L</span>
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="text-xs font-semibold text-[#0b1c30] block mb-1">Maximum Bracket</label>
-                <div className="flex items-center bg-[#eff4ff] rounded-lg px-3 py-2 border border-slate-200">
-                  <span className="text-xs text-[#444653] mr-1">₹</span>
-                  <input
-                    type="number"
-                    value={maxBracket}
-                    onChange={(e) => setMaxBracket(e.target.value)}
-                    className="w-full bg-transparent text-xs text-[#0b1c30] outline-none"
-                  />
-                  <span className="text-xs text-[#444653]">L</span>
+                <div>
+                  <label className="text-xs font-semibold text-[#0b1c30] block mb-1">Maximum Bracket</label>
+                  <div className="flex items-center bg-[#eff4ff] rounded-lg px-3 py-2 border border-slate-200">
+                    <span className="text-xs text-[#444653] mr-1">₹</span>
+                    <input
+                      type="number"
+                      value={maxBracket}
+                      onChange={(e) => setMaxBracket(e.target.value)}
+                      className="w-full bg-transparent text-xs text-[#0b1c30] outline-none"
+                    />
+                    <span className="text-xs text-[#444653]">L</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2">
+            <div className="shrink-0 px-6 py-3.5 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setBracketModalOpen(false)}
@@ -1518,18 +1585,12 @@ export const CandidatePrivacyPage = () => {
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#eff4ff] text-[#006a61] text-[11px] font-semibold">
                   <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                  ISO 9001:2015
-                </span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#eff4ff] text-[#006a61] text-[11px] font-semibold">
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
                   DPDP Compliant
                 </span>
               </div>
-              <p className="text-[11px] text-[#444653] pt-2">© 2025 Vakancy.in. All rights reserved.</p>
+              <p className="text-[11px] text-[#444653] pt-2">© {new Date().getFullYear()} Vakancy.in. All rights reserved.</p>
             </div>
 
             {/* Col 2 */}
@@ -1548,7 +1609,7 @@ export const CandidatePrivacyPage = () => {
             <div className="flex flex-col gap-2">
               <h3 className="text-xs uppercase tracking-wider text-[#0b1c30] font-bold">For Employers</h3>
               <ul className="flex flex-col gap-1.5 text-xs text-[#444653]">
-                <li><Link to="/pricing" className="hover:text-[#00288e] transition-colors">Post a Job</Link></li>
+                <li><Link to="/for-employers" className="hover:text-[#00288e] transition-colors">Hiring Solutions</Link></li>
                 <li><Link to="/companies" className="hover:text-[#00288e] transition-colors">Employer Solutions</Link></li>
                 <li><Link to="/about" className="hover:text-[#00288e] transition-colors">Enterprise Talent</Link></li>
                 <li><Link to="/about-us" className="hover:text-[#00288e] transition-colors">Recruitment API</Link></li>
@@ -1568,14 +1629,8 @@ export const CandidatePrivacyPage = () => {
 
             {/* Col 5 */}
             <div className="flex flex-col gap-2">
-              <h3 className="text-xs uppercase tracking-wider text-[#0b1c30] font-bold">Platform Status</h3>
-              <p className="text-xs text-[#444653]">Global recruitment infrastructure operating with 99.9% uptime.</p>
-              <div className="pt-2">
-                <span className="inline-flex items-center gap-1 text-xs text-[#006a61] font-semibold">
-                  <span className="w-2 h-2 rounded-full bg-[#006a61]" />
-                  All Systems Operational
-                </span>
-              </div>
+              <h3 className="text-xs uppercase tracking-wider text-[#0b1c30] font-bold">Support</h3>
+              <p className="text-xs text-[#444653]">Dedicated candidate and employer recruitment support desk.</p>
             </div>
           </div>
 

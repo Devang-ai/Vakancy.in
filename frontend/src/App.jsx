@@ -1,77 +1,70 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 
 // Layouts
-import GuestLayout from './components/layout/GuestLayout';
-import CandidateLayout from './components/layout/CandidateLayout';
-import EmployerLayout from './components/layout/EmployerLayout';
+const GuestLayout = lazy(() => import('./components/layout/GuestLayout'));
+const CandidateLayout = lazy(() => import('./components/layout/CandidateLayout'));
+const EmployerLayout = lazy(() => import('./components/layout/EmployerLayout'));
 
 // Route Protection
 import ProtectedRoute from './components/common/ProtectedRoute';
+import ScrollToTop from './components/common/ScrollToTop';
 
 // Guest Portal Pages (Phase 1 Foundation)
-import HomePage from './pages/guest/HomePage';
-import JobSearchPage from './pages/guest/JobSearchPage';
-import JobDetailPage from './pages/guest/JobDetailPage';
-import CompaniesPage from './pages/guest/CompaniesPage';
-import CompanyDetailPage from './pages/guest/CompanyDetailPage';
-import AboutPage from './pages/guest/AboutPage';
-import ContactPage from './pages/guest/ContactPage';
-import ForEmployersPage from './pages/guest/ForEmployersPage';
-import ExecutiveSearchPage from './pages/guest/ExecutiveSearchPage';
-import PricingPage from './pages/guest/PricingPage';
-import LoginPage from './pages/guest/LoginPage';
-import RegisterPage from './pages/guest/RegisterPage';
-import TermsPage from './pages/guest/TermsPage';
-import PrivacyPage from './pages/guest/PrivacyPage';
-import CandidateRegisterPage from './pages/guest/CandidateRegisterPage';
-import EmployerRegisterPage from './pages/guest/EmployerRegisterPage';
+const HomePage = lazy(() => import('./pages/guest/HomePage'));
+const JobSearchPage = lazy(() => import('./pages/guest/JobSearchPage'));
+const JobDetailPage = lazy(() => import('./pages/guest/JobDetailPage'));
+const CompaniesPage = lazy(() => import('./pages/guest/CompaniesPage'));
+const CompanyDetailPage = lazy(() => import('./pages/guest/CompanyDetailPage'));
+const AboutPage = lazy(() => import('./pages/guest/AboutPage'));
+const ContactPage = lazy(() => import('./pages/guest/ContactPage'));
+const ForEmployersPage = lazy(() => import('./pages/guest/ForEmployersPage'));
+const ExecutiveSearchPage = lazy(() => import('./pages/guest/ExecutiveSearchPage'));
+const PricingPage = lazy(() => import('./pages/guest/PricingPage'));
+const LoginPage = lazy(() => import('./pages/guest/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/guest/RegisterPage'));
+const TermsPage = lazy(() => import('./pages/guest/TermsPage'));
+const PrivacyPage = lazy(() => import('./pages/guest/PrivacyPage'));
 
 // Candidate Portal Pages (Phase 2)
-import CandidateDashboard from './pages/candidate/CandidateDashboard';
-import CandidateFindJobsPage from './pages/candidate/CandidateFindJobsPage';
-import CandidateJobDetailsPage from './pages/candidate/CandidateJobDetailsPage';
-import CandidateApplicationWizardPage from './pages/candidate/CandidateApplicationWizardPage';
-import CandidateApplicationReviewPage from './pages/candidate/CandidateApplicationReviewPage';
-import CandidateApplicationSuccessPage from './pages/candidate/CandidateApplicationSuccessPage';
-import CandidateApplicationsPage from './pages/candidate/CandidateApplicationsPage';
-import CandidateSavedJobsPage from './pages/candidate/CandidateSavedJobsPage';
-import CandidateProfilePage from './pages/candidate/CandidateProfilePage';
-import CandidateResumePage from './pages/candidate/CandidateResumePage';
-import CandidateAIResumeBuilderPage from './pages/candidate/CandidateAIResumeBuilderPage';
-import CandidatePremiumPage from './pages/candidate/CandidatePremiumPage';
-import CandidateCredentialVerificationPage from './pages/candidate/CandidateCredentialVerificationPage';
-import CandidateOnboardingPage from './pages/candidate/CandidateOnboardingPage';
-import CandidateNotificationsPage from './pages/candidate/CandidateNotificationsPage';
-import CandidateSettingsPage from './pages/candidate/CandidateSettingsPage';
-import CandidatePrivacyPage from './pages/candidate/CandidatePrivacyPage';
-import EmployerDashboardPage from './pages/employer/EmployerDashboardPage';
-import EmployerCompanyProfilePage from './pages/employer/EmployerCompanyProfilePage';
-import EmployerOnboardingPage from './pages/employer/EmployerOnboardingPage';
-import EmployerJobsPage from './pages/employer/EmployerJobsPage';
-import EmployerCreateJobPage from './pages/employer/EmployerCreateJobPage';
-import EmployerJobDescriptionPage from './pages/employer/EmployerJobDescriptionPage';
-import EmployerScreeningQuestionsPage from './pages/employer/EmployerScreeningQuestionsPage';
-import EmployerJobReviewPage from './pages/employer/EmployerJobReviewPage';
-import EmployerApplicantsPage from './pages/employer/EmployerApplicantsPage';
-import EmployerChangePasswordPage from './pages/employer/EmployerChangePasswordPage';
+const CandidateDashboard = lazy(() => import('./pages/candidate/CandidateDashboard'));
+const CandidateFindJobsPage = lazy(() => import('./pages/candidate/CandidateFindJobsPage'));
+const CandidateJobDetailsPage = lazy(() => import('./pages/candidate/CandidateJobDetailsPage'));
+const CandidateApplicationWizardPage = lazy(() => import('./pages/candidate/CandidateApplicationWizardPage'));
+const CandidateApplicationReviewPage = lazy(() => import('./pages/candidate/CandidateApplicationReviewPage'));
+const CandidateApplicationSuccessPage = lazy(() => import('./pages/candidate/CandidateApplicationSuccessPage'));
+const CandidateApplicationsPage = lazy(() => import('./pages/candidate/CandidateApplicationsPage'));
+const CandidateSavedJobsPage = lazy(() => import('./pages/candidate/CandidateSavedJobsPage'));
+const CandidateProfilePage = lazy(() => import('./pages/candidate/CandidateProfilePage'));
+const CandidateAIResumeBuilderPage = lazy(() => import('./pages/candidate/CandidateAIResumeBuilderPage'));
+const CandidatePremiumPage = lazy(() => import('./pages/candidate/CandidatePremiumPage'));
+const CandidateCredentialVerificationPage = lazy(() => import('./pages/candidate/CandidateCredentialVerificationPage'));
+const CandidateOnboardingPage = lazy(() => import('./pages/candidate/CandidateOnboardingPage'));
+const CandidateNotificationsPage = lazy(() => import('./pages/candidate/CandidateNotificationsPage'));
+const CandidateSettingsPage = lazy(() => import('./pages/candidate/CandidateSettingsPage'));
+const CandidatePrivacyPage = lazy(() => import('./pages/candidate/CandidatePrivacyPage'));
+const EmployerDashboardPage = lazy(() => import('./pages/employer/EmployerDashboardPage'));
+const EmployerCompanyProfilePage = lazy(() => import('./pages/employer/EmployerCompanyProfilePage'));
+const EmployerOnboardingPage = lazy(() => import('./pages/employer/EmployerOnboardingPage'));
+const EmployerJobsPage = lazy(() => import('./pages/employer/EmployerJobsPage'));
+const EmployerCreateJobPage = lazy(() => import('./pages/employer/EmployerCreateJobPage'));
+const EmployerJobDescriptionPage = lazy(() => import('./pages/employer/EmployerJobDescriptionPage'));
+const EmployerScreeningQuestionsPage = lazy(() => import('./pages/employer/EmployerScreeningQuestionsPage'));
+const EmployerJobReviewPage = lazy(() => import('./pages/employer/EmployerJobReviewPage'));
+const EmployerApplicantsPage = lazy(() => import('./pages/employer/EmployerApplicantsPage'));
+const EmployerChangePasswordPage = lazy(() => import('./pages/employer/EmployerChangePasswordPage'));
 
-// Admin & Recruitment Operations Portal
-import AdminLayout from './components/layout/AdminLayout';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminCandidates from './pages/admin/AdminCandidates';
-import AdminJobs from './pages/admin/AdminJobs';
-import AdminApplications from './pages/admin/AdminApplications';
-import AdminCandidateSharing from './pages/admin/AdminCandidateSharing';
-import AdminEnquiries from './pages/admin/AdminEnquiries';
-import AdminEmployers from './pages/admin/AdminEmployers';
-import AdminLeads from './pages/admin/AdminLeads';
-import AdminTeam from './pages/admin/AdminTeam';
-import AdminRoles from './pages/admin/AdminRoles';
-import AdminActivity from './pages/admin/AdminActivity';
-import SharedCandidateProfilePage from './pages/admin/SharedCandidateProfilePage';
+const LegacyAdminRedirect = lazy(() => import('./components/common/LegacyAdminRedirect'));
+const SharedCandidateProfilePage = lazy(() => import('./pages/admin/SharedCandidateProfilePage'));
+const ExecutiveSearchShortlistPage = lazy(() => import('./pages/executive/ExecutiveSearchShortlistPage'));
+
+const RouteLoading = () => (
+  <div className="min-h-screen flex items-center justify-center bg-white text-slate-600" role="status" aria-live="polite">
+    Loading…
+  </div>
+);
 
 
 /**
@@ -87,6 +80,8 @@ function App() {
     <AuthProvider>
       <NotificationProvider>
         <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <ScrollToTop />
+          <Suspense fallback={<RouteLoading />}>
           <Routes>
             {/* PHASE 1: Guest / Public Portal Routes */}
             <Route element={<GuestLayout />}>
@@ -101,7 +96,7 @@ function App() {
               <Route path="/employers" element={<ForEmployersPage />} />
               <Route path="/executive-search" element={<ExecutiveSearchPage />} />
               <Route path="/executive" element={<ExecutiveSearchPage />} />
-              <Route path="/pricing" element={<PricingPage />} />
+              <Route path="/pricing" element={<Navigate to="/for-employers" replace />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/contact-us" element={<ContactPage />} />
               <Route path="/privacy-policy" element={<PrivacyPage />} />
@@ -135,6 +130,15 @@ function App() {
             />
             <Route
               path="/candidate/jobs/:id"
+              element={
+                <ProtectedRoute requiredRole="candidate">
+                  <CandidateJobDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            {/* Alias /candidate/job/:id to CandidateJobDetailsPage */}
+            <Route
+              path="/candidate/job/:id"
               element={
                 <ProtectedRoute requiredRole="candidate">
                   <CandidateJobDetailsPage />
@@ -282,6 +286,7 @@ function App() {
               <Route path="jobs/:id/screening" element={<EmployerScreeningQuestionsPage />} />
               <Route path="jobs/:id/review" element={<EmployerJobReviewPage />} />
               <Route path="jobs/:id/applicants" element={<EmployerApplicantsPage />} />
+              <Route path="candidates" element={<Navigate to="/recruiter/jobs" replace />} />
               <Route path="settings/security" element={<EmployerChangePasswordPage />} />
               <Route path="applicants" element={<Navigate to="/recruiter/jobs" replace />} />
               <Route path="*" element={<Navigate to="/recruiter" replace />} />
@@ -308,6 +313,7 @@ function App() {
               <Route path="jobs/:id/screening" element={<EmployerScreeningQuestionsPage />} />
               <Route path="jobs/:id/review" element={<EmployerJobReviewPage />} />
               <Route path="jobs/:id/applicants" element={<EmployerApplicantsPage />} />
+              <Route path="candidates" element={<Navigate to="/recruiter/jobs" replace />} />
               <Route path="settings/security" element={<EmployerChangePasswordPage />} />
               <Route path="applicants" element={<Navigate to="/employer/jobs" replace />} />
               <Route path="*" element={<Navigate to="/employer" replace />} />
@@ -315,35 +321,18 @@ function App() {
 
             {/* Confidential Client Shared Candidate Profile Link */}
             <Route path="/admin/share/:token" element={<SharedCandidateProfilePage />} />
+            <Route path="/executive-search/shortlist/:token" element={<ExecutiveSearchShortlistPage />} />
+            <Route path="/shared/shortlist/:token" element={<ExecutiveSearchShortlistPage />} />
 
-            {/* PHASE 4: Admin & Recruitment Operations Portal */}
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute requiredRole={['director', 'main_admin', 'admin', 'bd_lead', 'tl_coordinator', 'recruiter']}>
-                  <AdminLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<Navigate to="/admin/dashboard" replace />} />
-              <Route path="dashboard" element={<AdminDashboard />} />
-              <Route path="candidates" element={<AdminCandidates />} />
-              <Route path="jobs" element={<AdminJobs />} />
-              <Route path="applications" element={<AdminApplications />} />
-              <Route path="sharing" element={<AdminCandidateSharing />} />
-              <Route path="enquiries" element={<AdminEnquiries />} />
-              <Route path="employers" element={<AdminEmployers />} />
-              <Route path="leads" element={<AdminLeads />} />
-              <Route path="team" element={<AdminTeam />} />
-              <Route path="roles" element={<AdminRoles />} />
-              <Route path="activity" element={<AdminActivity />} />
-              <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
-            </Route>
+            {/* Legacy internal Admin URLs now hand off to the canonical Admin app. */}
+            <Route path="/leads" element={<LegacyAdminRedirect />} />
+            <Route path="/admin/*" element={<LegacyAdminRedirect />} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
 
           </Routes>
+          </Suspense>
         </Router>
       </NotificationProvider>
     </AuthProvider>

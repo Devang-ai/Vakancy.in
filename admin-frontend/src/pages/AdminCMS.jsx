@@ -48,6 +48,10 @@ const AdminCMS = () => {
         <p className="text-xs text-slate-500 mt-1">Edit Terms of Service, Privacy Policy, About Us, Trust & Safety content</p>
       </div>
 
+      <p className="ep-card p-4 text-xs text-slate-600">
+        CMS page editing is currently unavailable because the backend does not expose CMS/Banner endpoints.
+      </p>
+
       {msg && (
         <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4 text-emerald-600" /> {msg}

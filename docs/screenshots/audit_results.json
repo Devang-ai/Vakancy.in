@@ -1,0 +1,15 @@
+{
+  "pages": [],
+  "overflows": [],
+  "foldMetrics": {
+    "viewportHeight": 844,
+    "totalCategoryTiles": 16,
+    "visibleTilesCount": 16,
+    "searchFormTop": 300.75,
+    "searchFormBottom": 466.75
+  },
+  "consoleErrors": [
+    "[CONSOLE_ERROR] [GSI_LOGGER]: The given origin is not allowed for the given client ID.",
+    "[CONSOLE_ERROR] [GSI_LOGGER]: The given origin is not allowed for the given client ID."
+  ]
+}

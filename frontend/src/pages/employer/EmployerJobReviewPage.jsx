@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import Toast from '../../components/ui/Toast';
 import JobCreationStepGuard from '../../components/employer/JobCreationStepGuard';
 import { PageTransition, StaggerContainer, StaggerItem, FadeInSection } from '../../components/common/Motion';
+import useModalA11y from '../../hooks/useModalA11y';
 
 export default function EmployerJobReviewPage() {
   const { id: paramJobId } = useParams();
@@ -21,6 +22,8 @@ export default function EmployerJobReviewPage() {
   const [toast, setToast] = useState(null);
   const { setSidebarOpen } = useOutletContext();
   const [lastSavedTime, setLastSavedTime] = useState(null);
+
+  useModalA11y(showPreviewModal, () => setShowPreviewModal(false));
 
   const toastTimer = useRef(null);
 
@@ -876,15 +879,24 @@ export default function EmployerJobReviewPage() {
             5. CANDIDATE VIEW PREVIEW MODAL
         ───────────────────────────────────────────── */}
         {showPreviewModal && (
-          <div className="fixed inset-0 z-50 bg-[#0b1c30]/50 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="w-full max-w-3xl max-h-[85vh] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-fade-in">
+          <div
+            className="fixed inset-0 z-50 bg-[#0b1c30]/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4"
+            onClick={() => setShowPreviewModal(false)}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="preview-modal-title"
+          >
+            <div
+              className="w-full max-w-3xl max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-fade-in"
+              onClick={(e) => e.stopPropagation()}
+            >
               {/* Modal Header */}
-              <div className="px-6 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+              <div className="shrink-0 px-6 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-0.5 rounded bg-[#00288e] text-white text-[10px] font-bold uppercase">
                     Candidate Portal Preview
                   </span>
-                  <span className="text-xs font-semibold text-[#0b1c30] truncate">
+                  <span id="preview-modal-title" className="text-xs font-semibold text-[#0b1c30] truncate">
                     {job?.title || 'Position'}
                   </span>
                 </div>
@@ -892,13 +904,14 @@ export default function EmployerJobReviewPage() {
                   type="button"
                   onClick={() => setShowPreviewModal(false)}
                   className="p-1.5 rounded-lg text-slate-400 hover:text-[#0b1c30] hover:bg-slate-200/60 transition-colors"
+                  aria-label="Close modal"
                 >
                   ✕
                 </button>
               </div>
 
               {/* Modal Body */}
-              <div className="p-6 overflow-y-auto space-y-5">
+              <div className="flex-1 min-h-0 p-6 overflow-y-auto space-y-5 text-xs text-[#0b1c30]">
                 {/* Candidate Job Card Header */}
                 <div className="flex items-start gap-4 p-4 rounded-xl bg-[#f8f9ff] border border-slate-200/80">
                   <div className="w-12 h-12 rounded-xl bg-[#00288e] text-white font-bold text-lg flex items-center justify-center shrink-0">
@@ -965,7 +978,7 @@ export default function EmployerJobReviewPage() {
               </div>
 
               {/* Modal Footer */}
-              <div className="px-6 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+              <div className="shrink-0 px-6 py-3 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
                 <span className="text-[11px] text-[#757684]">
                   This is how candidate job seekers will view your posting on Vakancy.in
                 </span>

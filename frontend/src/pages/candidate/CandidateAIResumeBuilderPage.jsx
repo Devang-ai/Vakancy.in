@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Sparkles,
@@ -17,10 +17,13 @@ import {
   ArrowRight,
   Loader2,
   X,
-  Trash2
+  Trash2,
+  Maximize2
 } from 'lucide-react';
 import API from '../../services/api';
 import CandidatePortalShell from '../../components/candidate/CandidatePortalShell';
+import useModalA11y from '../../hooks/useModalA11y';
+
 export default function CandidateAIResumeBuilderPage() {
   const navigate = useNavigate();
 
@@ -33,12 +36,22 @@ export default function CandidateAIResumeBuilderPage() {
   const [generatedResult, setGeneratedResult] = useState(null);
   // generatedResult has { structuredData, pdfBase64 }
 
+  // Mobile layout & A4 scaling state
+  const [mobileTab, setMobileTab] = useState('profile'); // 'profile' | 'preview'
+  const [zoomLevel, setZoomLevel] = useState(null); // null = auto fit
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const previewRef = useRef(null);
+  const [containerScale, setContainerScale] = useState(1);
+
   // Save Modal state
   const [showTitleModal, setShowTitleModal] = useState(false);
   const [resumeTitle, setResumeTitle] = useState('');
   const [savingResume, setSavingResume] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState('');
+
+  useModalA11y(showTitleModal, () => setShowTitleModal(false));
+  useModalA11y(isFullscreen, () => setIsFullscreen(false));
 
   // 3-resume limit state in-flow
   const [resumeLimitReached, setResumeLimitReached] = useState(false);
@@ -47,6 +60,22 @@ export default function CandidateAIResumeBuilderPage() {
   useEffect(() => {
     loadCandidateProfile();
   }, []);
+
+  useEffect(() => {
+    const updateScale = () => {
+      if (previewRef.current) {
+        const clientW = previewRef.current.clientWidth;
+        if (clientW > 0) {
+          // 794px is canonical A4 width at 96 DPI
+          const fitScale = Math.min(1, Math.max(0.35, (clientW - 16) / 794));
+          setContainerScale(fitScale);
+        }
+      }
+    };
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    return () => window.removeEventListener('resize', updateScale);
+  }, [mobileTab, generatedResult]);
 
   const loadCandidateProfile = async () => {
     try {
@@ -85,6 +114,7 @@ export default function CandidateAIResumeBuilderPage() {
           ? `${profileData.professional_headline} Resume`
           : 'Professional Resume';
         setResumeTitle(defaultTitle);
+        setMobileTab('preview');
       } else {
         setGenError(res?.message || 'AI Resume Builder is temporarily unavailable. Please try again later.');
       }
@@ -171,17 +201,181 @@ export default function CandidateAIResumeBuilderPage() {
   }
 
   const structured = generatedResult?.structuredData;
+  const effectiveScale = zoomLevel !== null ? zoomLevel : containerScale;
+
+  const renderResumePaper = (scale = 1, isModal = false) => (
+    <div
+      style={{
+        width: '794px',
+        minHeight: '1123px',
+        transform: `scale(${scale})`,
+        transformOrigin: isModal ? 'top center' : 'top left',
+      }}
+      className="bg-white border border-slate-300 rounded-xl p-10 shadow-sm font-sans text-[#222933] select-text"
+    >
+      {/* Name & Headline */}
+      <div className="text-center pb-3 border-b border-slate-300 mb-4">
+        <h3 className="text-2xl font-extrabold text-[#0b1c30] tracking-tight">
+          {structured?.name || profileData?.name}
+        </h3>
+        {structured?.headline && (
+          <p className="text-sm font-semibold text-[#00288e] mt-0.5">
+            {structured.headline}
+          </p>
+        )}
+        <div className="flex flex-wrap items-center justify-center text-[11px] text-slate-600 mt-2">
+          {structured?.contact?.location && <span className="mr-2">{structured.contact.location}</span>}
+          {structured?.contact?.location && (structured?.contact?.phone || structured?.contact?.email) && <span className="mx-1 text-slate-400">|</span>}
+          {structured?.contact?.phone && <span className="mx-2">{structured.contact.phone}</span>}
+          {structured?.contact?.phone && structured?.contact?.email && <span className="mx-1 text-slate-400">|</span>}
+          {structured?.contact?.email && (
+            <a href={`mailto:${structured.contact.email}`} className="mx-2 hover:text-[#00288e]">{structured.contact.email}</a>
+          )}
+          {(() => {
+            const links = structured?.contact?.links || [];
+            const li = links.find(l => String(l).toLowerCase().includes('linkedin'));
+            const po = links.find(l => String(l).toLowerCase().includes('portfolio') || String(l).toLowerCase().includes('devang'));
+            const gh = links.find(l => String(l).toLowerCase().includes('github'));
+            
+            return (
+              <>
+                {li && <><span className="mx-1 text-slate-400">|</span><a href={li} target="_blank" rel="noreferrer" className="mx-2 hover:text-[#00288e]">LinkedIn</a></>}
+                {po && <><span className="mx-1 text-slate-400">|</span><a href={po} target="_blank" rel="noreferrer" className="mx-2 hover:text-[#00288e]">Portfolio</a></>}
+                {gh && <><span className="mx-1 text-slate-400">|</span><a href={gh} target="_blank" rel="noreferrer" className="mx-2 hover:text-[#00288e]">GitHub</a></>}
+              </>
+            );
+          })()}
+        </div>
+      </div>
+
+      {/* Summary */}
+      {structured?.summary && (
+        <div className="mb-4">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-[#00288e] border-b border-slate-200 pb-1 mb-2">
+            Professional Summary
+          </h4>
+          <p className="text-xs leading-relaxed text-justify text-slate-700">
+            {structured.summary}
+          </p>
+        </div>
+      )}
+
+      {/* Experience */}
+      {Array.isArray(structured?.experience) && structured.experience.length > 0 && (
+        <div className="mb-4">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-[#00288e] border-b border-slate-200 pb-1 mb-2">
+            Work Experience
+          </h4>
+          <div className="space-y-3">
+            {structured.experience.map((exp, idx) => (
+              <div key={idx}>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-[#0b1c30]">
+                    {exp.title} — <span className="text-slate-600 font-normal">{exp.company}</span>
+                  </span>
+                  {exp.period && <span className="text-slate-500 font-medium text-[11px]">{exp.period}</span>}
+                </div>
+                {Array.isArray(exp.bullets) && exp.bullets.length > 0 && (
+                  <ul className="list-disc list-inside text-xs text-slate-700 mt-1 space-y-1">
+                    {exp.bullets.map((b, bIdx) => (
+                      <li key={bIdx} className="leading-relaxed">{b}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Projects */}
+      {Array.isArray(structured?.projects) && structured.projects.length > 0 && (
+        <div className="mb-4">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-[#00288e] border-b border-slate-200 pb-1 mb-2">
+            Projects
+          </h4>
+          <div className="space-y-2">
+            {structured.projects.map((proj, idx) => (
+              <div key={idx} className="text-xs">
+                <span className="font-bold text-[#0b1c30]">{proj.name}</span>
+                {proj.role && <span className="text-slate-500"> | {proj.role}</span>}
+                {Array.isArray(proj.technologies) && proj.technologies.length > 0 && (
+                  <span className="italic text-slate-600"> [Tech: {proj.technologies.join(', ')}]</span>
+                )}
+                {Array.isArray(proj.bullets) && proj.bullets.length > 0 ? (
+                  <ul className="list-disc list-inside text-xs text-slate-700 mt-1 space-y-0.5">
+                    {proj.bullets.map((b, bIdx) => (
+                      <li key={bIdx} className="leading-relaxed">{b}</li>
+                    ))}
+                  </ul>
+                ) : proj.description ? (
+                  <p className="text-slate-700 mt-0.5 leading-relaxed">{proj.description}</p>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Education */}
+      {Array.isArray(structured?.education) && structured.education.length > 0 && (
+        <div className="mb-4">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-[#00288e] border-b border-slate-200 pb-1 mb-2">
+            Education
+          </h4>
+          <div className="space-y-1.5">
+            {structured.education.map((edu, idx) => (
+              <div key={idx} className="text-xs flex items-center justify-between">
+                <div>
+                  <span className="font-bold text-[#0b1c30]">{edu.degree}</span>
+                  <span className="text-slate-600"> — {edu.institution}</span>
+                  {edu.details && <span className="text-slate-500 text-[11px]"> ({edu.details})</span>}
+                </div>
+                {edu.year && <span className="text-slate-500 text-[11px]">{edu.year}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Languages */}
+      {Array.isArray(structured?.languages) && structured.languages.length > 0 && (
+        <div className="mb-4">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-[#00288e] border-b border-slate-200 pb-1 mb-2">
+            Languages
+          </h4>
+          <p className="text-xs text-slate-700">
+            {structured.languages.join('  •  ')}
+          </p>
+        </div>
+      )}
+
+      {/* Skills */}
+      {Array.isArray(structured?.skills) && structured.skills.length > 0 && (
+        <div>
+          <h4 className="text-xs font-bold uppercase tracking-wider text-[#00288e] border-b border-slate-200 pb-1 mb-2">
+            Skills
+          </h4>
+          <ul className="list-disc list-outside ml-4 text-xs text-slate-700 leading-relaxed space-y-1">
+            {structured.skills.map((skill, idx) => (
+              <li key={idx}>{skill}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <CandidatePortalShell>
         {/* Top Overview Banner */}
-        <div className="bg-white rounded-2xl border border-[#e5eeff] p-6 shadow-xs mb-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="bg-white rounded-2xl border border-[#e5eeff] p-5 sm:p-6 shadow-xs mb-5 sm:mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
           <div>
             <div className="flex items-center gap-2 text-amber-600 mb-1">
               <Sparkles className="w-4 h-4" />
               <span className="text-xs font-bold uppercase tracking-wider">AI Resume Builder</span>
             </div>
-            <h1 className="text-xl font-extrabold text-[#0b1c30]">
+            <h1 className="text-lg sm:text-xl font-extrabold text-[#0b1c30]">
               Generate Your ATS-Friendly Professional Resume
             </h1>
             <p className="text-xs text-[#444653] mt-1 max-w-2xl">
@@ -194,7 +388,7 @@ export default function CandidateAIResumeBuilderPage() {
             <button
               onClick={handleGenerateAIResume}
               disabled={generating}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#00288e] hover:bg-[#1e40af] text-white font-semibold text-xs transition-all shadow-sm shadow-blue-900/10 disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#00288e] hover:bg-[#1e40af] text-white font-semibold text-xs transition-all shadow-sm shadow-blue-900/10 disabled:opacity-50 min-h-[44px] w-full sm:w-auto"
             >
               {generating ? (
                 <>
@@ -209,6 +403,29 @@ export default function CandidateAIResumeBuilderPage() {
               )}
             </button>
           </div>
+        </div>
+
+        {/* Mobile Tab Switcher (Storyboard 2 Screen 6 Reference) */}
+        <div className="lg:hidden flex items-center bg-slate-200/80 p-1 rounded-xl mb-4">
+          <button
+            type="button"
+            onClick={() => setMobileTab('preview')}
+            className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+              mobileTab === 'preview' ? 'bg-white text-[#00288e] shadow-xs' : 'text-slate-600'
+            }`}
+          >
+            <span>Preview</span>
+            {generatedResult && <span className="w-2 h-2 rounded-full bg-emerald-500" />}
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileTab('profile')}
+            className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all ${
+              mobileTab === 'profile' ? 'bg-white text-[#00288e] shadow-xs' : 'text-slate-600'
+            }`}
+          >
+            <span>Build / Edit</span>
+          </button>
         </div>
 
         {/* Error Alert */}
@@ -243,7 +460,7 @@ export default function CandidateAIResumeBuilderPage() {
         {/* 2-Column Layout: Left = Candidate Data Review, Right = Live Generated Resume / Canvas */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column: Source of Truth Candidate Profile (5 cols) */}
-          <div className="lg:col-span-5 space-y-4">
+          <div className={`lg:col-span-5 space-y-4 ${mobileTab === 'profile' ? 'block' : 'hidden lg:block'}`}>
             <div className="bg-white rounded-2xl border border-[#e5eeff] p-5 shadow-xs">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
                 <h2 className="text-xs font-bold uppercase tracking-wider text-[#444653]">
@@ -348,19 +565,19 @@ export default function CandidateAIResumeBuilderPage() {
           </div>
 
           {/* Right Column: Live ATS Resume Output Canvas (7 cols) */}
-          <div className="lg:col-span-7 space-y-4">
+          <div className={`lg:col-span-7 space-y-4 ${mobileTab === 'preview' ? 'block' : 'hidden lg:block'}`}>
             {generatedResult ? (
-              <div className="bg-white rounded-2xl border border-[#e5eeff] p-6 shadow-sm">
+              <div className="bg-white rounded-2xl border border-[#e5eeff] p-4 sm:p-6 shadow-sm">
                 {/* Action Bar */}
-                <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 mb-4 gap-3">
                   <div>
                     <h2 className="text-sm font-bold text-[#0b1c30]">ATS Resume Document Canvas</h2>
-                    <p className="text-xs text-slate-500">Structurally optimized for ATS parsers (single-column format)</p>
+                    <p className="text-xs text-slate-500">Structurally optimized for ATS parsers (single-column A4 format)</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handleDownloadPDF}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50"
+                      className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 min-h-[40px]"
                     >
                       <Download className="w-3.5 h-3.5" />
                       Download PDF
@@ -370,7 +587,7 @@ export default function CandidateAIResumeBuilderPage() {
                         setShowTitleModal(true);
                         setSaveError('');
                       }}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#00288e] hover:bg-[#1e40af] text-white text-xs font-semibold shadow-xs"
+                      className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-[#00288e] hover:bg-[#1e40af] text-white text-xs font-semibold shadow-xs min-h-[40px]"
                     >
                       <FileCheck2 className="w-3.5 h-3.5" />
                       Save to Profile
@@ -378,163 +595,66 @@ export default function CandidateAIResumeBuilderPage() {
                   </div>
                 </div>
 
-                {/* ATS Resume Preview Paper */}
-                <div className="bg-white border border-slate-300 rounded-xl p-8 shadow-xs max-w-2xl mx-auto font-sans text-[#222933]">
-                  {/* Name & Headline */}
-                  <div className="text-center pb-3 border-b border-slate-300 mb-4">
-                    <h3 className="text-2xl font-extrabold text-[#0b1c30] tracking-tight">
-                      {structured?.name || profileData?.name}
-                    </h3>
-                    {structured?.headline && (
-                      <p className="text-sm font-semibold text-[#00288e] mt-0.5">
-                        {structured.headline}
-                      </p>
-                    )}
-                    <div className="flex flex-wrap items-center justify-center text-[11px] text-slate-600 mt-2">
-                      {structured?.contact?.location && <span className="mr-2">{structured.contact.location}</span>}
-                      {structured?.contact?.location && (structured?.contact?.phone || structured?.contact?.email) && <span className="mx-1 text-slate-400">|</span>}
-                      {structured?.contact?.phone && <span className="mx-2">{structured.contact.phone}</span>}
-                      {structured?.contact?.phone && structured?.contact?.email && <span className="mx-1 text-slate-400">|</span>}
-                      {structured?.contact?.email && (
-                        <a href={`mailto:${structured.contact.email}`} className="mx-2 hover:text-[#00288e]">{structured.contact.email}</a>
-                      )}
-                      
-                      {(() => {
-                        const links = structured?.contact?.links || [];
-                        const li = links.find(l => String(l).toLowerCase().includes('linkedin'));
-                        const po = links.find(l => String(l).toLowerCase().includes('portfolio') || String(l).toLowerCase().includes('devang'));
-                        const gh = links.find(l => String(l).toLowerCase().includes('github'));
-                        
-                        return (
-                          <>
-                            {li && <><span className="mx-1 text-slate-400">|</span><a href={li} target="_blank" rel="noreferrer" className="mx-2 hover:text-[#00288e]">LinkedIn</a></>}
-                            {po && <><span className="mx-1 text-slate-400">|</span><a href={po} target="_blank" rel="noreferrer" className="mx-2 hover:text-[#00288e]">Portfolio</a></>}
-                            {gh && <><span className="mx-1 text-slate-400">|</span><a href={gh} target="_blank" rel="noreferrer" className="mx-2 hover:text-[#00288e]">GitHub</a></>}
-                          </>
-                        );
-                      })()}
-                    </div>
+                {/* Preview Scale & Zoom Toolbar */}
+                <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 mb-4 text-xs">
+                  <span className="font-semibold text-slate-600 text-[11px]">
+                    A4 View: {Math.round(effectiveScale * 100)}%
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setZoomLevel(Math.max(0.35, (zoomLevel ?? containerScale) - 0.1))}
+                      className="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-sm"
+                      title="Zoom out"
+                    >
+                      -
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setZoomLevel(null)}
+                      className={`px-2.5 py-1 rounded-lg font-semibold text-[11px] ${zoomLevel === null ? 'bg-[#00288e] text-white' : 'bg-white border border-slate-200 text-slate-700'}`}
+                    >
+                      Fit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setZoomLevel(Math.min(1.2, (zoomLevel ?? containerScale) + 0.1))}
+                      className="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-sm"
+                      title="Zoom in"
+                    >
+                      +
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsFullscreen(true)}
+                      className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold text-[11px] flex items-center gap-1 ml-1"
+                      title="Fullscreen preview"
+                    >
+                      <Maximize2 className="w-3.5 h-3.5 text-slate-600" />
+                      <span className="hidden sm:inline">Fullscreen</span>
+                    </button>
                   </div>
+                </div>
 
-                  {/* Summary */}
-                  {structured?.summary && (
-                    <div className="mb-4">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-[#00288e] border-b border-slate-200 pb-1 mb-2">
-                        Professional Summary
-                      </h4>
-                      <p className="text-xs leading-relaxed text-justify text-slate-700">
-                        {structured.summary}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Experience */}
-                  {Array.isArray(structured?.experience) && structured.experience.length > 0 && (
-                    <div className="mb-4">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-[#00288e] border-b border-slate-200 pb-1 mb-2">
-                        Work Experience
-                      </h4>
-                      <div className="space-y-3">
-                        {structured.experience.map((exp, idx) => (
-                          <div key={idx}>
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="font-bold text-[#0b1c30]">
-                                {exp.title} — <span className="text-slate-600 font-normal">{exp.company}</span>
-                              </span>
-                              {exp.period && <span className="text-slate-500 font-medium text-[11px]">{exp.period}</span>}
-                            </div>
-                            {Array.isArray(exp.bullets) && exp.bullets.length > 0 && (
-                              <ul className="list-disc list-inside text-xs text-slate-700 mt-1 space-y-1">
-                                {exp.bullets.map((b, bIdx) => (
-                                  <li key={bIdx} className="leading-relaxed">{b}</li>
-                                ))}
-                              </ul>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Projects */}
-                  {Array.isArray(structured?.projects) && structured.projects.length > 0 && (
-                    <div className="mb-4">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-[#00288e] border-b border-slate-200 pb-1 mb-2">
-                        Projects
-                      </h4>
-                      <div className="space-y-2">
-                        {structured.projects.map((proj, idx) => (
-                          <div key={idx} className="text-xs">
-                            <span className="font-bold text-[#0b1c30]">{proj.name}</span>
-                            {proj.role && <span className="text-slate-500"> | {proj.role}</span>}
-                            {Array.isArray(proj.technologies) && proj.technologies.length > 0 && (
-                              <span className="italic text-slate-600"> [Tech: {proj.technologies.join(', ')}]</span>
-                            )}
-                            {Array.isArray(proj.bullets) && proj.bullets.length > 0 ? (
-                              <ul className="list-disc list-inside text-xs text-slate-700 mt-1 space-y-0.5">
-                                {proj.bullets.map((b, bIdx) => (
-                                  <li key={bIdx} className="leading-relaxed">{b}</li>
-                                ))}
-                              </ul>
-                            ) : proj.description ? (
-                              <p className="text-slate-700 mt-0.5 leading-relaxed">{proj.description}</p>
-                            ) : null}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Education */}
-                  {Array.isArray(structured?.education) && structured.education.length > 0 && (
-                    <div className="mb-4">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-[#00288e] border-b border-slate-200 pb-1 mb-2">
-                        Education
-                      </h4>
-                      <div className="space-y-1.5">
-                        {structured.education.map((edu, idx) => (
-                          <div key={idx} className="text-xs flex items-center justify-between">
-                            <div>
-                              <span className="font-bold text-[#0b1c30]">{edu.degree}</span>
-                              <span className="text-slate-600"> — {edu.institution}</span>
-                              {edu.details && <span className="text-slate-500 text-[11px]"> ({edu.details})</span>}
-                            </div>
-                            {edu.year && <span className="text-slate-500 text-[11px]">{edu.year}</span>}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Languages */}
-                  {Array.isArray(structured?.languages) && structured.languages.length > 0 && (
-                    <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-[#00288e] border-b border-slate-200 pb-1 mb-2">
-                        Languages
-                      </h4>
-                      <p className="text-xs text-slate-700">
-                        {structured.languages.join('  •  ')}
-                      </p>
-                    </div>
-                  )}
-                
-                  {/* Skills */}
-                  {Array.isArray(structured?.skills) && structured.skills.length > 0 && (
-                    <div className="mt-6 mb-4">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-[#00288e] border-b border-slate-200 pb-1 mb-2">
-                        SKILLS
-                      </h4>
-
-                        <ul className="list-disc list-outside ml-4 text-xs text-slate-700 leading-relaxed space-y-1">
-                          {structured.skills.map((skill, idx) => (
-                            <li key={idx}>{skill}</li>
-                          ))}
-                        </ul>
-
-                    </div>
-                  )}
-
-              </div>
+                {/* Scaled A4 Viewport Wrapper */}
+                <div
+                  ref={previewRef}
+                  className="w-full overflow-hidden flex justify-center items-start bg-slate-100/70 p-2 sm:p-4 rounded-xl border border-slate-200"
+                  style={{
+                    minHeight: `${Math.round(1123 * effectiveScale) + 24}px`
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${Math.round(794 * effectiveScale)}px`,
+                      height: `${Math.round(1123 * effectiveScale)}px`,
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    {renderResumePaper(effectiveScale)}
+                  </div>
+                </div>
               </div>
             ) : (
               /* Empty / Pre-Generation State */
@@ -572,11 +692,19 @@ export default function CandidateAIResumeBuilderPage() {
 
         {/* MODAL: ENTER RESUME TITLE BEFORE SAVING */}
         {showTitleModal && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl">
+          <div 
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4"
+            role="dialog"
+            aria-modal="true"
+            onClick={() => setShowTitleModal(false)}
+          >
+            <div 
+              className="relative w-full max-w-md max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] bg-white rounded-2xl p-6 shadow-2xl border border-slate-200 overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-bold text-[#0b1c30]">Name Your Resume</h3>
-                <button onClick={() => setShowTitleModal(false)}>
+                <button type="button" onClick={() => setShowTitleModal(false)}>
                   <X className="w-4 h-4 text-slate-400" />
                 </button>
               </div>
@@ -665,6 +793,34 @@ export default function CandidateAIResumeBuilderPage() {
                   </div>
                 </form>
               )}
+            </div>
+          </div>
+        )}
+        {/* FULLSCREEN A4 PREVIEW MODAL */}
+        {isFullscreen && (
+          <div
+            className="fixed inset-0 z-50 bg-[#0b1c30]/85 backdrop-blur-sm flex flex-col p-2 sm:p-6"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="flex items-center justify-between bg-white px-4 py-3 rounded-t-2xl border-b border-slate-200 shrink-0">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-[#0b1c30]">A4 Resume Document Preview</h3>
+                <span className="text-[11px] bg-blue-50 text-[#00288e] px-2 py-0.5 rounded-full font-semibold">100% Scale</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsFullscreen(false)}
+                className="w-8 h-8 rounded-lg text-slate-500 hover:bg-slate-100 flex items-center justify-center transition-colors"
+                title="Close fullscreen preview"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 bg-slate-200/90 overflow-auto p-4 flex justify-center items-start rounded-b-2xl">
+              <div style={{ width: '794px', minHeight: '1123px' }}>
+                {renderResumePaper(1, true)}
+              </div>
             </div>
           </div>
         )}

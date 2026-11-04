@@ -53,7 +53,7 @@ const EmployerSubscriptions = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-extrabold text-white font-heading">Employer Subscription Plans</h1>
-        <p className="text-xs text-slate-400">Unlock candidate database access and resume contacts with Razorpay payment</p>
+        <p className="text-xs text-slate-400">Plan checkout and paid candidate unlocks are currently unavailable.</p>
       </div>
 
       {/* Active Subscription Summary */}
@@ -101,10 +101,11 @@ const EmployerSubscriptions = () => {
             </div>
 
             <button
-              onClick={() => handleBuyPlan(p)}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white font-bold text-xs shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-1.5 transition-all"
+              disabled
+              title="Payments are not currently available"
+              className="w-full py-3 rounded-xl bg-slate-700 text-slate-300 font-bold text-xs flex items-center justify-center gap-1.5 cursor-not-allowed"
             >
-              <Zap className="w-4 h-4" /> Subscribe via Razorpay
+              <Zap className="w-4 h-4" /> Payments Currently Unavailable
             </button>
           </div>
         ))}

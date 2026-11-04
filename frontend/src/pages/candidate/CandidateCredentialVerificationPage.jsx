@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import useModalA11y from '../../hooks/useModalA11y';
 
 import Toast from '../../components/common/Toast';
 /**
@@ -258,6 +259,8 @@ export default function CandidateCredentialVerificationPage() {
   const [tempPhone, setTempPhone] = useState(phone);
   const [toastMessage, setToastMessage] = useState(null);
   const [isVerifying, setIsVerifying] = useState(false);
+
+  useModalA11y(isChangeContactModalOpen, () => setIsChangeContactModalOpen(false));
 
   // Countdown timer effect
   useEffect(() => {
@@ -660,9 +663,17 @@ export default function CandidateCredentialVerificationPage() {
           CHANGE CONTACT MODAL
       ───────────────────────────────────────────── */}
       {isChangeContactModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-scaleUp">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setIsChangeContactModalOpen(false)}
+        >
+          <div 
+            className="relative w-full max-w-md max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col animate-scaleUp"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="shrink-0 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <svg className="w-5 h-5 text-[#00288e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
@@ -672,42 +683,44 @@ export default function CandidateCredentialVerificationPage() {
               <button
                 type="button"
                 onClick={() => setIsChangeContactModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1"
+                className="text-slate-400 hover:text-slate-600 p-1 rounded"
               >
                 ✕
               </button>
             </div>
-            <form onSubmit={handleSaveNewContact} className="mt-4 flex flex-col gap-4">
-              <p className="text-xs text-[#444653] leading-relaxed">
-                Update your preferred primary email and mobile number. A fresh 6-digit verification passcode will be sent immediately upon saving.
-              </p>
-              <div>
-                <label className="block text-xs font-semibold text-[#0b1c30] mb-1">
-                  Primary Work Email
-                </label>
-                <input
-                  type="email"
-                  value={tempEmail}
-                  onChange={(e) => setTempEmail(e.target.value)}
-                  placeholder="e.g. rahul.sharma@example.com"
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00288e]"
-                  required
-                />
+            <form onSubmit={handleSaveNewContact} className="flex-1 min-h-0 flex flex-col overflow-hidden">
+              <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-4">
+                <p className="text-xs text-[#444653] leading-relaxed">
+                  Update your preferred primary email and mobile number. A fresh 6-digit verification passcode will be sent immediately upon saving.
+                </p>
+                <div>
+                  <label className="block text-xs font-semibold text-[#0b1c30] mb-1">
+                    Primary Work Email
+                  </label>
+                  <input
+                    type="email"
+                    value={tempEmail}
+                    onChange={(e) => setTempEmail(e.target.value)}
+                    placeholder="e.g. rahul.sharma@example.com"
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00288e]"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#0b1c30] mb-1">
+                    Primary Mobile Number (SMS &amp; WhatsApp)
+                  </label>
+                  <input
+                    type="tel"
+                    value={tempPhone}
+                    onChange={(e) => setTempPhone(e.target.value)}
+                    placeholder="e.g. +91 98765 43210 or +971 50 123 4567"
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00288e]"
+                    required
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-[#0b1c30] mb-1">
-                  Primary Mobile Number (SMS &amp; WhatsApp)
-                </label>
-                <input
-                  type="tel"
-                  value={tempPhone}
-                  onChange={(e) => setTempPhone(e.target.value)}
-                  placeholder="e.g. +91 98765 43210 or +971 50 123 4567"
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00288e]"
-                  required
-                />
-              </div>
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <div className="shrink-0 px-6 py-3.5 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsChangeContactModalOpen(false)}

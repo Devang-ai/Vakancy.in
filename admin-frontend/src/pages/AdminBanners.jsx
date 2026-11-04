@@ -50,8 +50,12 @@ const AdminBanners = () => {
         <p className="text-xs text-slate-500 mt-1">Configure promotional hero banners and announcement slides displayed on public portal</p>
       </div>
 
+      <p className="ep-card p-4 text-xs text-slate-600">
+        Promotional banner management is currently unavailable because the backend does not expose CMS/Banner endpoints.
+      </p>
+
       {/* Add Banner Form */}
-      <form onSubmit={handleAddBanner} className="ep-card p-5 space-y-4">
+      <form onSubmit={(e) => e.preventDefault()} className="ep-card p-5 space-y-4 opacity-75">
         <h3 className="text-sm font-bold text-slate-900 font-heading">Add New Promotional Banner</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <input

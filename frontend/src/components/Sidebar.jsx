@@ -38,7 +38,6 @@ const Sidebar = () => {
     { to: '/employer/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/employer/profile', label: 'Company Profile', icon: Building },
     { to: '/employer/jobs', label: 'Manage Jobs', icon: Briefcase },
-    { to: '/employer/candidate-db', label: 'Candidate Database', icon: Users },
     { to: '/employer/subscriptions', label: 'Subscriptions', icon: CreditCard },
     { to: '/employer/ai-jd', label: 'AI JD Generator', icon: Sparkles }
   ];

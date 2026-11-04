@@ -5,19 +5,48 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('user');
-    return savedUser ? JSON.parse(savedUser) : null;
+    try {
+      const savedUser = localStorage.getItem('user');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch {
+      localStorage.removeItem('user');
+      return null;
+    }
   });
   const [token, setToken] = useState(() => localStorage.getItem('token') || null);
+  const [permissions, setPermissions] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const clearSession = () => {
+    setToken(null);
+    setUser(null);
+    setPermissions([]);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  };
+
+  useEffect(() => {
+    const handleExpiredSession = () => clearSession();
+    window.addEventListener('vakancy:auth-expired', handleExpiredSession);
+    return () => window.removeEventListener('vakancy:auth-expired', handleExpiredSession);
+  }, []);
 
   useEffect(() => {
     if (token) {
       API.get('/auth/me')
-        .then((res) => {
+        .then(async (res) => {
           if (res.success && res.user) {
             setUser(res.user);
             localStorage.setItem('user', JSON.stringify(res.user));
+            try {
+              const profileResponse = await API.get('/admin/profile/me');
+              setPermissions(profileResponse.profile?.permissions || []);
+            } catch (profileError) {
+              if (profileError.status === 401) throw profileError;
+              setPermissions([]);
+            }
+          } else {
+            logout();
           }
         })
         .catch(() => {
@@ -40,19 +69,23 @@ export const AuthProvider = ({ children }) => {
       setUser(res.user);
       localStorage.setItem('token', res.token);
       localStorage.setItem('user', JSON.stringify(res.user));
+      try {
+        const profileResponse = await API.get('/admin/profile/me');
+        setPermissions(profileResponse.profile?.permissions || []);
+      } catch (profileError) {
+        if (profileError.status === 401) throw profileError;
+        setPermissions([]);
+      }
     }
     return res;
   };
 
   const logout = () => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    clearSession();
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, token, permissions, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -6,7 +6,13 @@ import API from '../../services/api';
 
 export default function CandidatePortalShell({ children }) {
   const [counts, setCounts] = useState({ applications: 0, saved: 0, notifications: 0 });
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const location = useLocation();
+
+  // Close mobile drawer on route transition
+  useEffect(() => {
+    setIsMobileOpen(false);
+  }, [location.pathname]);
 
   // Determine standard title/subtitle from current route
   let title = 'Candidate Portal';
@@ -62,10 +68,10 @@ export default function CandidatePortalShell({ children }) {
       className="w-full min-h-screen bg-[#f8f9ff] font-sans text-[#0b1c30] antialiased flex"
       style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}
     >
-      <CandidateSidebar counts={counts} />
-      <div className="flex-1 ml-64 flex flex-col h-screen overflow-hidden relative">
-        <CandidateHeader title={title} subtitle={subtitle} />
-        <main className="flex-1 overflow-y-auto pt-20 pb-16 px-8 h-full w-full">
+      <CandidateSidebar counts={counts} isMobileOpen={isMobileOpen} setIsMobileOpen={setIsMobileOpen} />
+      <div className="flex-1 xl:ml-64 ml-0 flex flex-col h-screen overflow-hidden relative min-w-0">
+        <CandidateHeader title={title} subtitle={subtitle} isMobileOpen={isMobileOpen} setIsMobileOpen={setIsMobileOpen} />
+        <main className="flex-1 overflow-y-auto pt-16 sm:pt-20 pb-16 px-4 sm:px-6 lg:px-8 h-full w-full">
           <div className="max-w-[80rem] mx-auto w-full flex flex-col gap-6">
             {children}
           </div>

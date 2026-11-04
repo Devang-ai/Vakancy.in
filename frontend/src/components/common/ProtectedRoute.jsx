@@ -1,6 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+
+const AdminAppRedirect = () => {
+  const adminUrl = (import.meta.env.VITE_ADMIN_APP_URL || (import.meta.env.DEV ? 'http://localhost:5174' : 'https://admin.vakancy.in')).replace(/\/$/, '');
+
+  useEffect(() => {
+    window.location.replace(`${adminUrl}/dashboard`);
+  }, [adminUrl]);
+
+  return <div className="min-h-screen flex items-center justify-center" role="status">Opening Vakancy Admin…</div>;
+};
 
 /**
  * ProtectedRoute
@@ -36,8 +46,8 @@ const ProtectedRoute = ({ children, requiredRole }) => {
     if (!isAllowed) {
       if (user.role === 'candidate') {
         return <Navigate to="/candidate/dashboard" replace />;
-      } else if (['director', 'main_admin', 'admin', 'bd_lead', 'tl_coordinator'].includes(user.role)) {
-        return <Navigate to="/admin/dashboard" replace />;
+      } else if (['director', 'main_admin', 'admin', 'bd_lead', 'tl_coordinator', 'recruiter'].includes(user.role)) {
+        return <AdminAppRedirect />;
       } else if (user.role === 'employer') {
         return <Navigate to="/recruiter" replace />;
       }

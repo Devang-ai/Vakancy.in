@@ -1,0 +1,45 @@
+{
+  "timestamp": "2026-10-31T05:49:02.970Z",
+  "tests": [
+    {
+      "name": "Footer Scroll Restoration",
+      "passed": true,
+      "scrollY": 0
+    },
+    {
+      "name": "JobCard Salary Label",
+      "passed": true,
+      "details": {
+        "cardCount": 6,
+        "compensationCount": 0,
+        "salaryCount": 12,
+        "minHeight": 317,
+        "maxHeight": 351,
+        "heightDiff": 34
+      }
+    },
+    {
+      "name": "Hide Visible Job ID",
+      "passed": true
+    },
+    {
+      "name": "Circular Candidate Avatar",
+      "passed": true,
+      "metrics": {
+        "width": 56,
+        "height": 56,
+        "isCircular": true,
+        "isSquare": true
+      }
+    },
+    {
+      "name": "Privacy Policy Provider Accuracy",
+      "passed": true,
+      "details": {
+        "hasSection": true,
+        "mentionsResend": false,
+        "mentionsHostinger": true
+      }
+    }
+  ]
+}

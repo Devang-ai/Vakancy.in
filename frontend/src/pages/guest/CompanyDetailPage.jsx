@@ -22,12 +22,18 @@ import {
   Briefcase,
   Bell,
   Sparkles,
+  PhoneCall,
+  X,
+  Send,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
 
 import companyService from '../../services/companyService';
 import CompanyCard from '../../components/common/CompanyCard';
 import LoadingSkeleton from '../../components/ui/LoadingSkeleton';
 import EmptyState from '../../components/ui/EmptyState';
+import { useAuth } from '../../context/AuthContext';
 
 /**
  * CompanyDetailPage
@@ -44,16 +50,97 @@ export const CompanyDetailPage = () => {
   const [selectedDept, setSelectedDept] = useState('all');
 
   // Interactive user states
+  const { user } = useAuth();
   const [isFollowing, setIsFollowing] = useState(false);
   const [savedRoleIds, setSavedRoleIds] = useState(new Set());
   const [alertEmail, setAlertEmail] = useState('');
   const [toastMessage, setToastMessage] = useState(null);
+
+  // Job Callback Modal state
+  const [callbackModalOpen, setCallbackModalOpen] = useState(false);
+  const [selectedRoleForCallback, setSelectedRoleForCallback] = useState(null);
+  const [callbackForm, setCallbackForm] = useState({
+    full_name: '',
+    email: '',
+    phone: '',
+    preferred_time: 'anytime',
+    notes: '',
+  });
+  const [callbackSubmitting, setCallbackSubmitting] = useState(false);
+  const [callbackSuccess, setCallbackSuccess] = useState(false);
+  const [callbackError, setCallbackError] = useState(null);
 
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage((cur) => (cur === msg ? null : cur));
     }, 3500);
+  };
+
+  const handleOpenCallbackModal = (role) => {
+    setSelectedRoleForCallback(role);
+    setCallbackForm({
+      full_name: user?.name || '',
+      email: user?.email || '',
+      phone: user?.phone || '',
+      preferred_time: 'anytime',
+      notes: '',
+    });
+    setCallbackSuccess(false);
+    setCallbackError(null);
+    setCallbackModalOpen(true);
+  };
+
+  const handleCloseCallbackModal = () => {
+    if (callbackSubmitting) return;
+    setCallbackModalOpen(false);
+    setSelectedRoleForCallback(null);
+    setCallbackSuccess(false);
+    setCallbackError(null);
+  };
+
+  const handleSubmitCallback = async (e) => {
+    e.preventDefault();
+    if (!callbackForm.full_name?.trim()) {
+      setCallbackError('Please provide your full name');
+      return;
+    }
+    if (!callbackForm.email?.trim() || !/^\S+@\S+\.\S+$/.test(callbackForm.email.trim())) {
+      setCallbackError('Please provide a valid email address');
+      return;
+    }
+    const cleanPhone = callbackForm.phone?.replace(/[^0-9]/g, '');
+    if (!cleanPhone || cleanPhone.length < 10) {
+      setCallbackError('Please provide a valid 10-digit phone number');
+      return;
+    }
+
+    setCallbackSubmitting(true);
+    setCallbackError(null);
+
+    try {
+      await companyService.requestJobCallback({
+        company_id: company?.id,
+        job_id: selectedRoleForCallback?.id || null,
+        job_title: selectedRoleForCallback?.title || 'General Requisition Inquiry',
+        full_name: callbackForm.full_name.trim(),
+        email: callbackForm.email.trim(),
+        phone: callbackForm.phone.trim(),
+        preferred_time: callbackForm.preferred_time || 'anytime',
+        notes: callbackForm.notes?.trim() || '',
+      });
+
+      setCallbackSuccess(true);
+      showToast(`Callback requested for ${selectedRoleForCallback?.title}! Our team will call you.`);
+      setTimeout(() => {
+        handleCloseCallbackModal();
+      }, 3000);
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Unable to submit callback request. Please try again.';
+      setCallbackError(msg);
+    } finally {
+      setCallbackSubmitting(false);
+    }
   };
 
   // Fetch company data on ID change
@@ -655,14 +742,25 @@ export const CompanyDetailPage = () => {
                       </div>
 
                       {/* Role Bottom Bar */}
-                      <div className="flex items-center justify-between pt-2 border-t border-slate-200/50 text-xs text-slate-500">
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200/50 text-xs text-slate-500">
                         <span>{role.posted} • {role.applicants}</span>
-                        <Link
-                          to="/jobs"
-                          className="px-3.5 py-1 rounded-md bg-[#1e40af] hover:bg-[#00288e] text-white font-semibold text-xs transition-colors shadow-xs"
-                        >
-                          Apply on Vakancy.in
-                        </Link>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenCallbackModal(role)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-semibold text-xs transition-colors shadow-2xs"
+                            title="Request a call from our executive recruiter about this role"
+                          >
+                            <PhoneCall className="w-3.5 h-3.5 text-emerald-600" />
+                            Request Callback
+                          </button>
+                          <Link
+                            to="/jobs"
+                            className="px-3.5 py-1 rounded-md bg-[#1e40af] hover:bg-[#00288e] text-white font-semibold text-xs transition-colors shadow-xs"
+                          >
+                            Apply on Vakancy.in
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   );
@@ -905,6 +1003,178 @@ export const CompanyDetailPage = () => {
           </div>
         </div>
       </main>
+
+      {/* Recruiter Callback Modal Dialog */}
+      {isCallbackModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200"
+          onClick={() => !isSubmittingCallback && setIsCallbackModalOpen(false)}
+        >
+          <div
+            className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 overflow-hidden relative animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header banner */}
+            <div className="bg-gradient-to-r from-[#00288e] to-[#1e40af] p-5 text-white">
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 text-white text-2xs font-semibold uppercase tracking-wider mb-2 backdrop-blur-xs">
+                    <PhoneCall className="w-3 h-3" /> Executive Search
+                  </span>
+                  <h3 className="text-lg font-bold tracking-tight">Request Recruiter Callback</h3>
+                  <p className="text-blue-100 text-xs mt-1">
+                    Connect directly with our senior talent acquisition team regarding opportunities at {company.name}.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsCallbackModalOpen(false)}
+                  disabled={isSubmittingCallback}
+                  className="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {selectedRoleForCallback && (
+                <div className="mt-3.5 p-2.5 rounded-lg bg-white/10 border border-white/20 text-xs text-white flex items-center justify-between">
+                  <div>
+                    <span className="text-blue-200 text-2xs uppercase tracking-wide block">Inquiring About:</span>
+                    <span className="font-semibold">{selectedRoleForCallback.title}</span>
+                  </div>
+                  <span className="px-2 py-0.5 rounded bg-white/20 text-2xs font-medium">
+                    {selectedRoleForCallback.salary}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Body / Form */}
+            {callbackSuccess ? (
+              <div className="p-8 text-center">
+                <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+                </div>
+                <h4 className="text-base font-bold text-slate-900">Callback Requested!</h4>
+                <p className="text-slate-600 text-xs mt-1.5 max-w-sm mx-auto">
+                  An executive recruiter from the {company.name} practice has received your details and will call you during your selected time window.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setIsCallbackModalOpen(false)}
+                  className="mt-5 px-5 py-2 rounded-lg bg-[#00288e] text-white text-xs font-semibold hover:bg-[#1e40af] transition-colors"
+                >
+                  Done
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmitCallback} className="p-6 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-2xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={callbackForm.candidate_name}
+                      onChange={(e) => setCallbackForm({ ...callbackForm, candidate_name: e.target.value })}
+                      placeholder="e.g. Rahul Sharma"
+                      className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-[#00288e] focus:ring-1 focus:ring-[#00288e]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-2xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                      Phone Number *
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={callbackForm.candidate_phone}
+                      onChange={(e) => setCallbackForm({ ...callbackForm, candidate_phone: e.target.value })}
+                      placeholder="+91 98765 43210"
+                      className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-[#00288e] focus:ring-1 focus:ring-[#00288e]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-2xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={callbackForm.candidate_email}
+                      onChange={(e) => setCallbackForm({ ...callbackForm, candidate_email: e.target.value })}
+                      placeholder="rahul@example.com"
+                      className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-[#00288e] focus:ring-1 focus:ring-[#00288e]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-2xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                      Preferred Call Time
+                    </label>
+                    <select
+                      value={callbackForm.preferred_time}
+                      onChange={(e) => setCallbackForm({ ...callbackForm, preferred_time: e.target.value })}
+                      className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-[#00288e] focus:ring-1 focus:ring-[#00288e] bg-white"
+                    >
+                      <option value="Anytime">Anytime during business hours</option>
+                      <option value="Morning (9 AM - 12 PM)">Morning (9 AM - 12 PM)</option>
+                      <option value="Afternoon (12 PM - 4 PM)">Afternoon (12 PM - 4 PM)</option>
+                      <option value="Evening (4 PM - 8 PM)">Evening (4 PM - 8 PM)</option>
+                      <option value="Weekend">Weekend</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-2xs font-bold uppercase tracking-wider text-slate-600 mb-1">
+                    Notes or Current Notice Period / Experience (Optional)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={callbackForm.notes}
+                    onChange={(e) => setCallbackForm({ ...callbackForm, notes: e.target.value })}
+                    placeholder="e.g. 8 years exp in React/Node, 30 days notice period"
+                    className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-[#00288e] focus:ring-1 focus:ring-[#00288e]"
+                  />
+                </div>
+
+                <div className="pt-2 flex items-center justify-end gap-2.5 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setIsCallbackModalOpen(false)}
+                    disabled={isSubmittingCallback}
+                    className="px-4 py-2 rounded-lg text-slate-700 bg-slate-100 hover:bg-slate-200 text-xs font-semibold transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingCallback}
+                    className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-[#00288e] hover:bg-[#1e40af] text-white text-xs font-semibold transition-colors shadow-xs disabled:opacity-50"
+                  >
+                    {isSubmittingCallback ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <PhoneCall className="w-3.5 h-3.5" />
+                        Confirm Callback
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Interactive Floating Toast Notification */}
       {toastMessage && (

@@ -1,0 +1,1567 @@
+{
+  "total": 120,
+  "passed": 120,
+  "failed": 0,
+  "results": [
+    {
+      "type": "Guest",
+      "route": "home",
+      "viewport": 320,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "home",
+      "viewport": 360,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 360,
+        "scrollWidth": 360,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "home",
+      "viewport": 390,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "home",
+      "viewport": 768,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "home",
+      "viewport": 1440,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "jobs",
+      "viewport": 320,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "jobs",
+      "viewport": 360,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 360,
+        "scrollWidth": 360,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "jobs",
+      "viewport": 390,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "jobs",
+      "viewport": 768,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "jobs",
+      "viewport": 1440,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "for_employers",
+      "viewport": 320,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "for_employers",
+      "viewport": 360,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 360,
+        "scrollWidth": 360,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "for_employers",
+      "viewport": 390,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "for_employers",
+      "viewport": 768,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "for_employers",
+      "viewport": 1440,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "executive_search",
+      "viewport": 320,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "executive_search",
+      "viewport": 360,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 360,
+        "scrollWidth": 360,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "executive_search",
+      "viewport": 390,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "executive_search",
+      "viewport": 768,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "executive_search",
+      "viewport": 1440,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "contact_us",
+      "viewport": 320,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "contact_us",
+      "viewport": 360,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 360,
+        "scrollWidth": 360,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "contact_us",
+      "viewport": 390,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "contact_us",
+      "viewport": 768,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "contact_us",
+      "viewport": 1440,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "pricing",
+      "viewport": 320,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "pricing",
+      "viewport": 360,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 360,
+        "scrollWidth": 360,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "pricing",
+      "viewport": 390,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "pricing",
+      "viewport": 768,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "pricing",
+      "viewport": 1440,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "login",
+      "viewport": 320,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "login",
+      "viewport": 360,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 360,
+        "scrollWidth": 360,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "login",
+      "viewport": 390,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "login",
+      "viewport": 768,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Guest",
+      "route": "login",
+      "viewport": 1440,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_dashboard",
+      "viewport": 320,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_dashboard",
+      "viewport": 360,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 360,
+        "scrollWidth": 360,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_dashboard",
+      "viewport": 390,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_dashboard",
+      "viewport": 768,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_dashboard",
+      "viewport": 1440,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_jobs",
+      "viewport": 320,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_jobs",
+      "viewport": 360,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 360,
+        "scrollWidth": 360,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_jobs",
+      "viewport": 390,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_jobs",
+      "viewport": 768,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_jobs",
+      "viewport": 1440,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_applications",
+      "viewport": 320,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_applications",
+      "viewport": 360,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 360,
+        "scrollWidth": 360,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_applications",
+      "viewport": 390,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_applications",
+      "viewport": 768,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_applications",
+      "viewport": 1440,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_profile",
+      "viewport": 320,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_profile",
+      "viewport": 360,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 360,
+        "scrollWidth": 360,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_profile",
+      "viewport": 390,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_profile",
+      "viewport": 768,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_profile",
+      "viewport": 1440,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_ai_builder",
+      "viewport": 320,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_ai_builder",
+      "viewport": 360,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 360,
+        "scrollWidth": 360,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_ai_builder",
+      "viewport": 390,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_ai_builder",
+      "viewport": 768,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_ai_builder",
+      "viewport": 1440,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_settings",
+      "viewport": 320,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_settings",
+      "viewport": 360,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 360,
+        "scrollWidth": 360,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_settings",
+      "viewport": 390,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_settings",
+      "viewport": 768,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Candidate",
+      "route": "candidate_settings",
+      "viewport": 1440,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Employer",
+      "route": "employer_dashboard",
+      "viewport": 320,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Employer",
+      "route": "employer_dashboard",
+      "viewport": 360,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 360,
+        "scrollWidth": 360,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Employer",
+      "route": "employer_dashboard",
+      "viewport": 390,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Employer",
+      "route": "employer_dashboard",
+      "viewport": 768,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Employer",
+      "route": "employer_dashboard",
+      "viewport": 1440,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Employer",
+      "route": "employer_jobs",
+      "viewport": 320,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Employer",
+      "route": "employer_jobs",
+      "viewport": 360,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 360,
+        "scrollWidth": 360,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Employer",
+      "route": "employer_jobs",
+      "viewport": 390,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Employer",
+      "route": "employer_jobs",
+      "viewport": 768,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Employer",
+      "route": "employer_jobs",
+      "viewport": 1440,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Employer",
+      "route": "employer_wizard",
+      "viewport": 320,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Employer",
+      "route": "employer_wizard",
+      "viewport": 360,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 360,
+        "scrollWidth": 360,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Employer",
+      "route": "employer_wizard",
+      "viewport": 390,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Employer",
+      "route": "employer_wizard",
+      "viewport": 768,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Employer",
+      "route": "employer_wizard",
+      "viewport": 1440,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Employer",
+      "route": "employer_company",
+      "viewport": 320,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Employer",
+      "route": "employer_company",
+      "viewport": 360,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 360,
+        "scrollWidth": 360,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Employer",
+      "route": "employer_company",
+      "viewport": 390,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Employer",
+      "route": "employer_company",
+      "viewport": 768,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Employer",
+      "route": "employer_company",
+      "viewport": 1440,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_dashboard",
+      "viewport": 320,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_dashboard",
+      "viewport": 360,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 360,
+        "scrollWidth": 360,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_dashboard",
+      "viewport": 390,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_dashboard",
+      "viewport": 768,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_dashboard",
+      "viewport": 1440,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_leads",
+      "viewport": 320,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_leads",
+      "viewport": 360,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 360,
+        "scrollWidth": 360,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_leads",
+      "viewport": 390,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_leads",
+      "viewport": 768,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_leads",
+      "viewport": 1440,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_applications",
+      "viewport": 320,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_applications",
+      "viewport": 360,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 360,
+        "scrollWidth": 360,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_applications",
+      "viewport": 390,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_applications",
+      "viewport": 768,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_applications",
+      "viewport": 1440,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_jobs",
+      "viewport": 320,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_jobs",
+      "viewport": 360,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 360,
+        "scrollWidth": 360,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_jobs",
+      "viewport": 390,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_jobs",
+      "viewport": 768,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_jobs",
+      "viewport": 1440,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_enquiries",
+      "viewport": 320,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_enquiries",
+      "viewport": 360,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 360,
+        "scrollWidth": 360,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_enquiries",
+      "viewport": 390,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_enquiries",
+      "viewport": 768,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_enquiries",
+      "viewport": 1440,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_callbacks",
+      "viewport": 320,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_callbacks",
+      "viewport": 360,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 360,
+        "scrollWidth": 360,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_callbacks",
+      "viewport": 390,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_callbacks",
+      "viewport": 768,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_callbacks",
+      "viewport": 1440,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_team",
+      "viewport": 320,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_team",
+      "viewport": 360,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 360,
+        "scrollWidth": 360,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_team",
+      "viewport": 390,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_team",
+      "viewport": 768,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "diff": 0,
+        "offenders": []
+      }
+    },
+    {
+      "type": "Admin",
+      "route": "admin_team",
+      "viewport": 1440,
+      "pass": true,
+      "details": {
+        "hasOverflow": false,
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "diff": 0,
+        "offenders": []
+      }
+    }
+  ]
+}

@@ -39,7 +39,7 @@ import LoadingSkeleton from '../../components/ui/LoadingSkeleton';
 import EmptyState from '../../components/ui/EmptyState';
 import API from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import SystemStatusIndicator from '../../components/common/SystemStatusIndicator';
+import useModalA11y from '../../hooks/useModalA11y';
 
 /**
  * Format salary to full annual Indian amount (e.g. ₹5,00,000 – ₹7,00,000 / year)
@@ -112,8 +112,15 @@ export const JobDetailsPage = () => {
   const { id } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const fileInputRef = useRef(null);
+
+  // If an authenticated candidate visits public job details, smoothly transition them into candidate portal
+  useEffect(() => {
+    if (!authLoading && user && user.role === 'candidate') {
+      navigate(`/candidate/jobs/${id}${window.location.search}${window.location.hash}`, { replace: true });
+    }
+  }, [user, authLoading, id, navigate]);
 
   const [job, setJob] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -121,9 +128,12 @@ export const JobDetailsPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalReason, setAuthModalReason] = useState('save'); // 'save' | 'apply' | 'upload_cv'
+
+  useModalA11y(showAuthModal, () => setShowAuthModal(false));
   const [toast, setToast] = useState(null);
   const [copiedToast, setCopiedToast] = useState(false);
   const [selectedToken, setSelectedToken] = useState('Distributed Systems');
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'requirements' | 'company'
 
   // Application flow states
   const [isApplying, setIsApplying] = useState(false);
@@ -426,7 +436,38 @@ export const JobDetailsPage = () => {
       </div>
 
       {/* 2. MAIN CONTAINER */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 w-full">
+        {/* Mobile Top Navigation Bar (Storyboard reference) */}
+        <div className="sm:hidden flex items-center justify-between mb-3">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 hover:text-[#00288e] cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Job Details</span>
+          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleShare}
+              aria-label="Share Job"
+              className="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 shadow-2xs hover:bg-slate-50 cursor-pointer"
+            >
+              <Share2 className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveJob}
+              disabled={isSaving}
+              aria-label="Save Job"
+              className="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 shadow-2xs hover:bg-slate-50 cursor-pointer"
+            >
+              <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-[#00288e] text-[#00288e]' : ''}`} />
+            </button>
+          </div>
+        </div>
+
         {/* HERO JOB HEADER CARD */}
         <div className="bg-white rounded-xl p-5 sm:p-8 border border-slate-200/80 shadow-xs">
           <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
@@ -437,20 +478,13 @@ export const JobDetailsPage = () => {
               </div>
 
               <div className="flex flex-col gap-1 min-w-0">
-                {/* Badges Row */}
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500 text-xs font-medium">
-                    Job ID: {job.id}
-                  </span>
-                </div>
-
                 {/* Job Title */}
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight mt-1 font-heading">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight font-heading">
                   {title}
                 </h1>
 
                 {/* Company & Meta line */}
-                <div className="flex flex-wrap items-center gap-2 text-slate-500 text-xs sm:text-sm mt-0.5">
+                <div className="flex flex-wrap items-center gap-2 text-slate-600 text-xs sm:text-sm mt-0.5">
                   <Link
                     to={`/jobs?search=${company}`}
                     className="font-bold text-[#00288e] hover:underline"
@@ -463,38 +497,40 @@ export const JobDetailsPage = () => {
               </div>
             </div>
 
-            {/* Right: Actions Cluster */}
-            <div className="flex flex-wrap items-center gap-2.5 lg:self-start shrink-0">
+            {/* Right: Actions Cluster (Responsive: Cohesive mobile bar + desktop buttons) */}
+            <div className="flex items-center gap-2 w-full sm:w-auto mt-2 lg:mt-0 lg:self-start shrink-0">
               {/* Save Job */}
               <button
                 type="button"
                 onClick={handleSaveJob}
                 disabled={isSaving}
-                className={`inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-2.5 rounded-lg border transition-all cursor-pointer ${
+                aria-label={isSaved ? "Saved Job" : "Save Job"}
+                className={`min-w-[44px] min-h-[44px] w-11 h-11 sm:w-auto sm:h-auto sm:px-4 sm:py-2.5 rounded-xl border flex items-center justify-center gap-1.5 text-xs font-semibold transition-all cursor-pointer ${
                   isSaved
                     ? 'bg-blue-50 border-blue-200 text-[#00288e]'
                     : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
                 }`}
               >
-                <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-[#00288e]' : ''}`} />
-                <span>{isSaved ? 'Saved' : 'Save Job'}</span>
+                <Bookmark className={`w-4 h-4 shrink-0 ${isSaved ? 'fill-[#00288e]' : ''}`} />
+                <span className="hidden sm:inline">{isSaved ? 'Saved' : 'Save Job'}</span>
               </button>
 
               {/* Share */}
               <button
                 type="button"
                 onClick={handleShare}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-2.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 transition-all cursor-pointer"
+                aria-label="Share Job URL"
+                className="min-w-[44px] min-h-[44px] w-11 h-11 sm:w-auto sm:h-auto sm:px-4 sm:py-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center gap-1.5 text-xs font-semibold transition-all cursor-pointer"
               >
-                <Share2 className="w-4 h-4 text-slate-500" />
-                <span>Share</span>
+                <Share2 className="w-4 h-4 text-slate-500 shrink-0" />
+                <span className="hidden sm:inline">Share</span>
               </button>
 
               {/* Apply Now Scroll Anchor */}
               <a
                 href="#applicationPane"
                 onClick={scrollToApplication}
-                className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold px-5 py-2.5 rounded-lg bg-[#00288e] text-white hover:bg-[#1e40af] transition-all shadow-sm cursor-pointer"
+                className="flex-1 sm:flex-initial min-h-[44px] inline-flex items-center justify-center gap-2 text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl bg-[#00288e] hover:bg-[#1e40af] text-white transition-all shadow-xs cursor-pointer"
               >
                 <span>Apply Now</span>
                 <ArrowRight className="w-4 h-4" />
@@ -552,114 +588,161 @@ export const JobDetailsPage = () => {
           </div>
         </div>
 
+        {/* Mobile Segmented Tab Navigation (Storyboard reference) */}
+        <div className="lg:hidden flex items-center bg-slate-100 p-1 rounded-xl mt-4 mb-2">
+          {[
+            { id: 'overview', label: 'Overview' },
+            { id: 'requirements', label: 'Requirements' },
+            { id: 'company', label: 'Company' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                activeTab === tab.id
+                  ? 'bg-white text-[#00288e] shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         {/* 3. PRIMARY 2-COLUMN LAYOUT */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-4 lg:mt-6 items-start">
           {/* LEFT CONTENT COLUMN (8 cols) */}
           <div className="lg:col-span-8 flex flex-col gap-6 w-full">
-            {/* Role Overview Card */}
-            {description && (
+            {/* Tab 1: Overview Content */}
+            <div className={`flex flex-col gap-6 ${activeTab === 'overview' ? 'flex' : 'hidden lg:flex'}`}>
+              {/* Role Overview Card */}
+              {description && (
+                <section className="bg-white rounded-xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Workflow className="w-5 h-5 text-[#00288e]" />
+                    <h2 className="text-lg font-bold text-slate-900 font-heading">Role Overview</h2>
+                  </div>
+                  <div className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+                    {description}
+                  </div>
+                </section>
+              )}
+
+              {/* Key Responsibilities Card */}
               <section className="bg-white rounded-xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
                 <div className="flex items-center gap-2 mb-4">
-                  <Workflow className="w-5 h-5 text-[#00288e]" />
-                  <h2 className="text-lg font-bold text-slate-900 font-heading">Role Overview</h2>
+                  <Network className="w-5 h-5 text-[#00288e]" />
+                  <h2 className="text-lg font-bold text-slate-900 font-heading">Key Architectural Responsibilities</h2>
                 </div>
-                <div className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
-                  {description}
-                </div>
+                <ul className="flex flex-col gap-3 text-xs sm:text-sm text-slate-600">
+                  {responsibilities.map((resp, idx) => (
+                    <li key={idx} className="flex items-start gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-[#00288e] mt-0.5 shrink-0" />
+                      <div>
+                        <strong className="text-slate-900 font-semibold">{resp.title}: </strong>
+                        <span>{resp.desc}</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               </section>
-            )}
 
-            {/* Key Responsibilities Card */}
-            <section className="bg-white rounded-xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
-              <div className="flex items-center gap-2 mb-4">
-                <Network className="w-5 h-5 text-[#00288e]" />
-                <h2 className="text-lg font-bold text-slate-900 font-heading">Key Architectural Responsibilities</h2>
-              </div>
-              <ul className="flex flex-col gap-3 text-xs sm:text-sm text-slate-600">
-                {responsibilities.map((resp, idx) => (
-                  <li key={idx} className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-[#00288e] mt-0.5 shrink-0" />
-                    <div>
-                      <strong className="text-slate-900 font-semibold">{resp.title}: </strong>
-                      <span>{resp.desc}</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </section>
-
-            {/* Required Core Stack & Competencies Card */}
-            {skills && skills.length > 0 && (
-              <section className="bg-white rounded-xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
-                <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-                  <div className="flex items-center gap-2">
-                    <Terminal className="w-5 h-5 text-[#00288e]" />
-                    <h2 className="text-lg font-bold text-slate-900 font-heading">Required Core Stack &amp; Competencies</h2>
+              {/* Multiple Locations Card */}
+              {displayLocations.length > 1 && (
+                <section className="bg-white rounded-xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
+                  <div className="flex items-center gap-2 mb-3">
+                    <MapPin className="w-5 h-5 text-[#00288e]" />
+                    <h2 className="text-lg font-bold text-slate-900 font-heading">Available Work Locations</h2>
                   </div>
-                </div>
+                  <div className="flex flex-wrap gap-2">
+                    {displayLocations.map((loc, idx) => (
+                      <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700">
+                        <MapPin className="w-3.5 h-3.5 text-[#00288e] shrink-0" />
+                        <span>{loc}</span>
+                      </span>
+                    ))}
+                  </div>
+                </section>
+              )}
+            </div>
 
-                <div className="flex flex-wrap gap-2">
-                  {skills.map((token, idx) => (
-                    <span
-                      key={idx}
-                      className="px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200/60"
-                    >
-                      {token}
-                    </span>
+            {/* Tab 2: Requirements Content */}
+            <div className={`flex flex-col gap-6 ${activeTab === 'requirements' ? 'flex' : 'hidden lg:flex'}`}>
+              {/* Required Core Stack & Competencies Card */}
+              {skills && skills.length > 0 && (
+                <section className="bg-white rounded-xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
+                  <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <Terminal className="w-5 h-5 text-[#00288e]" />
+                      <h2 className="text-lg font-bold text-slate-900 font-heading">Required Core Stack &amp; Competencies</h2>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {skills.map((token, idx) => (
+                      <span
+                        key={idx}
+                        className="px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200/60"
+                      >
+                        {token}
+                      </span>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Preferred Qualifications Card */}
+              <section className="bg-white rounded-xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
+                <div className="flex items-center gap-2 mb-4">
+                  <Award className="w-5 h-5 text-[#00288e]" />
+                  <h2 className="text-lg font-bold text-slate-900 font-heading">Preferred Qualifications</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm text-slate-600">
+                  {qualifications.map((q, idx) => (
+                    <div key={idx} className="flex items-start gap-2.5">
+                      <Award className="w-4 h-4 text-[#006a61] mt-0.5 shrink-0" />
+                      <div>
+                        <strong className="text-slate-900 font-semibold">{q.category}: </strong>
+                        <span>{q.desc}</span>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </section>
-            )}
 
-            {/* Preferred Qualifications Card */}
-            <section className="bg-white rounded-xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
-              <div className="flex items-center gap-2 mb-4">
-                <Award className="w-5 h-5 text-[#00288e]" />
-                <h2 className="text-lg font-bold text-slate-900 font-heading">Preferred Qualifications</h2>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm text-slate-600">
-                {qualifications.map((q, idx) => (
-                  <div key={idx} className="flex items-start gap-2.5">
-                    <Award className="w-4 h-4 text-[#006a61] mt-0.5 shrink-0" />
-                    <div>
-                      <strong className="text-slate-900 font-semibold">{q.category}: </strong>
-                      <span>{q.desc}</span>
-                    </div>
+              {/* Compensation, Equity & Perks Card */}
+              {perks && perks.length > 0 && (
+                <section className="bg-white rounded-xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
+                  <div className="flex items-center gap-2 mb-2">
+                    <IndianRupee className="w-5 h-5 text-[#00288e]" />
+                    <h2 className="text-lg font-bold text-slate-900 font-heading">Compensation, Equity &amp; Perks</h2>
                   </div>
-                ))}
-              </div>
-            </section>
+                  <p className="text-xs sm:text-sm text-slate-500 mb-4">
+                    Offered perks and benefits curated for this opening to support employee wellbeing and professional growth.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    {perks.map((p, idx) => {
+                      const title = typeof p === 'string' ? p : p.title;
+                      const desc = typeof p === 'string' ? 'Company-provided benefit' : (p.desc || 'Standard company benefit');
+                      return (
+                        <div key={idx} className="p-4 bg-[#eff4ff] rounded-lg border border-blue-100">
+                          <h3 className="font-bold text-xs sm:text-sm text-slate-900 mb-1 flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5 text-[#00288e]" />
+                            {title}
+                          </h3>
+                          <p className="text-xs text-slate-600 leading-relaxed">{desc}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              )}
+            </div>
 
-            {/* Compensation, Equity & Perks Card */}
-            {perks && perks.length > 0 && (
-              <section className="bg-white rounded-xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
-                <div className="flex items-center gap-2 mb-2">
-                  <IndianRupee className="w-5 h-5 text-[#00288e]" />
-                  <h2 className="text-lg font-bold text-slate-900 font-heading">Compensation, Equity &amp; Perks</h2>
-                </div>
-                <p className="text-xs sm:text-sm text-slate-500 mb-4">
-                  Offered perks and benefits curated for this opening to support employee wellbeing and professional growth.
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  {perks.map((p, idx) => {
-                    const title = typeof p === 'string' ? p : p.title;
-                    const desc = typeof p === 'string' ? 'Company-provided benefit' : (p.desc || 'Standard company benefit');
-                    return (
-                      <div key={idx} className="p-4 bg-[#eff4ff] rounded-lg border border-blue-100">
-                        <h3 className="font-bold text-xs sm:text-sm text-slate-900 mb-1 flex items-center gap-1.5">
-                          <Sparkles className="w-3.5 h-3.5 text-[#00288e]" />
-                          {title}
-                        </h3>
-                        <p className="text-xs text-slate-600 leading-relaxed">{desc}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
-
-            {/* About The Employer Card */}
-            {company_about && (
+            {/* Tab 3: Company Content */}
+            <div className={`flex flex-col gap-6 ${activeTab === 'company' ? 'flex' : 'hidden lg:flex'}`}>
+              {/* About The Employer Card */}
               <section className="bg-white rounded-xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div>
@@ -671,14 +754,65 @@ export const JobDetailsPage = () => {
                 </div>
 
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  {company_about}
+                  {company_about || `${company} is actively recruiting through Vakancy.in with verified requisition parameters.`}
                 </p>
               </section>
-            )}
+            </div>
           </div>
 
           {/* RIGHT SIDEBAR / APPLICATION PANE (4 cols) */}
           <div className="lg:col-span-4 flex flex-col gap-5 sticky top-24 w-full" id="applicationPane">
+            {/* Card 0: Structured Job Overview (Matching Storyboard Screen 3) */}
+            <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/90 shadow-xs flex flex-col gap-4">
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                <Briefcase className="w-4 h-4 text-[#00288e]" />
+                <span>Job Overview</span>
+              </h3>
+              <div className="flex flex-col gap-2.5 text-xs">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                  <span className="text-slate-500 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Posted On</span>
+                  </span>
+                  <span className="font-semibold text-slate-800">{postedAgo}</span>
+                </div>
+
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                  <span className="text-slate-500 flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Work Mode</span>
+                  </span>
+                  <span className="font-semibold text-slate-800">{workplaceType}</span>
+                </div>
+
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                  <span className="text-slate-500 flex items-center gap-1.5">
+                    <Briefcase className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Job Type</span>
+                  </span>
+                  <span className="font-semibold text-slate-800">{job?.job_type || 'Full-time'}</span>
+                </div>
+
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                  <span className="text-slate-500 flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Experience</span>
+                  </span>
+                  <span className="font-semibold text-slate-800">{experience}</span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500 flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Locations</span>
+                  </span>
+                  <span className="font-semibold text-slate-800 text-right truncate max-w-[150px]">
+                    {displayLocations.join(', ')}
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {/* Card 1: Offered Package & Apply CTA */}
             <div className="bg-white rounded-2xl p-6 sm:p-6 border border-slate-200/90 shadow-sm transition-shadow hover:shadow-md">
               {/* Header: Label & Salary */}
@@ -776,13 +910,38 @@ export const JobDetailsPage = () => {
           </div>
         </div>
 
-        {/* Page Bottom System Status & Assurance Bar */}
-        <div className="mt-10 pt-5 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+        {/* Page Bottom Assurance Bar */}
+        <div className="mt-10 pt-5 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 pb-16 sm:pb-0">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-[#00288e]" />
             <span>Verified Vakancy.in Requisition • Direct Employer Application</span>
           </div>
-          <SystemStatusIndicator />
+        </div>
+
+        {/* Mobile Sticky Bottom Action Bar (Storyboard reference) */}
+        <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200/90 p-3 z-30 flex items-center gap-2.5 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
+          <button
+            type="button"
+            onClick={handleSaveJob}
+            disabled={isSaving}
+            className={`min-h-[44px] px-4 rounded-xl border flex items-center justify-center gap-1.5 text-xs font-bold transition-all shrink-0 ${
+              isSaved
+                ? 'bg-blue-50 text-[#00288e] border-blue-200'
+                : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+            }`}
+          >
+            <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current text-[#00288e]' : 'fill-none text-slate-500'}`} />
+            <span>{isSaved ? 'Saved' : 'Save Job'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleApplySubmit}
+            disabled={isApplying || isApplied}
+            className="flex-1 min-h-[44px] px-6 py-2.5 bg-[#00288e] hover:bg-[#1e40af] text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5"
+          >
+            <span>{isApplied ? 'Applied' : 'Apply Now'}</span>
+            {!isApplied && <ArrowRight className="w-4 h-4" />}
+          </button>
         </div>
       </div>
 
@@ -838,7 +997,7 @@ export const JobDetailsPage = () => {
             onClick={() => setShowAuthModal(false)}
           >
             <div
-              className="relative w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 p-6 sm:p-7 overflow-hidden animate-in zoom-in-95 duration-150"
+              className="relative w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 p-6 sm:p-7 overflow-hidden animate-in zoom-in-95 duration-150 max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Close Button */}

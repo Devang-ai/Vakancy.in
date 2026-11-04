@@ -1,0 +1,114 @@
+{
+  "timestamp": "2026-10-31T08:36:21.891Z",
+  "viewports": [
+    {
+      "viewport": "320px",
+      "width": 320,
+      "height": 700,
+      "metrics": {
+        "width": 320,
+        "height": 700,
+        "top": 0,
+        "bottom": 700,
+        "left": 0,
+        "isLogoSquare": true,
+        "hasHorizontalOverflow": false
+      },
+      "passed": true
+    },
+    {
+      "viewport": "360px",
+      "width": 360,
+      "height": 800,
+      "metrics": {
+        "width": 360,
+        "height": 800,
+        "top": 0,
+        "bottom": 800,
+        "left": 0,
+        "isLogoSquare": false,
+        "hasHorizontalOverflow": false
+      },
+      "passed": true
+    },
+    {
+      "viewport": "390px",
+      "width": 390,
+      "height": 844,
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "top": 0,
+        "bottom": 844,
+        "left": 0,
+        "isLogoSquare": false,
+        "hasHorizontalOverflow": false
+      },
+      "passed": true
+    },
+    {
+      "viewport": "430px",
+      "width": 430,
+      "height": 932,
+      "metrics": {
+        "width": 430,
+        "height": 932,
+        "top": 0,
+        "bottom": 932,
+        "left": 0,
+        "isLogoSquare": false,
+        "hasHorizontalOverflow": false
+      },
+      "passed": true
+    },
+    {
+      "viewport": "768px",
+      "width": 768,
+      "height": 1024,
+      "metrics": {
+        "width": 720,
+        "height": 922,
+        "top": 51,
+        "bottom": 973,
+        "left": 24,
+        "isLogoSquare": false,
+        "hasHorizontalOverflow": false
+      },
+      "passed": true
+    },
+    {
+      "viewport": "1440px",
+      "width": 1440,
+      "height": 900,
+      "metrics": {
+        "width": 896,
+        "height": 810,
+        "top": 45,
+        "bottom": 855,
+        "left": 272,
+        "isLogoSquare": false,
+        "hasHorizontalOverflow": false
+      },
+      "passed": true
+    }
+  ],
+  "validationTest": {
+    "passed": true,
+    "details": {
+      "hasErrorMsg": true,
+      "errorText": "Company name is required.",
+      "dialogStillOpen": true
+    }
+  },
+  "cancelTest": {
+    "passed": true,
+    "initialTagline": "Innovating Enterprise CloIInnovating Enterprise Cloud - Verified 4699novating Enterprise Cloud - Verified 8672d - Verified 6011",
+    "afterCancelTagline": "Innovating Enterprise CloIInnovating Enterprise Cloud - Verified 4699novating Enterprise Cloud - Verified 8672d - Verified 6011"
+  },
+  "persistenceTest": {
+    "passed": true,
+    "savedTagline": "Innovating Enterprise Cloud - Verified 9669",
+    "saveReflectedOnPage": true,
+    "persistedAfterReload": true
+  }
+}

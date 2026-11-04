@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import useModalA11y from '../../hooks/useModalA11y';
 
 import Toast from '../../components/common/Toast';
 /**
@@ -272,6 +273,11 @@ export default function CandidatePremiumPage() {
   const [tempGstin, setTempGstin] = useState(STITCH_PREMIUM_PROFILE_FALLBACK.gstin);
   const [toastMessage, setToastMessage] = useState(null);
 
+  useModalA11y(isGstinModalOpen || isBillingModalOpen, () => {
+    setIsGstinModalOpen(false);
+    setIsBillingModalOpen(false);
+  });
+
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => {
@@ -400,13 +406,14 @@ export default function CandidatePremiumPage() {
                       <button
                         id="btn-manage-billing"
                         type="button"
-                        onClick={() => setIsBillingModalOpen(true)}
-                        className="w-full flex items-center justify-center gap-2 bg-[#1e40af] text-white text-xs font-semibold py-2 px-4 rounded-lg hover:bg-[#00288e] transition-colors shadow-sm"
+                        disabled
+                        title="Payments and billing are not currently available"
+                        className="w-full flex items-center justify-center gap-2 bg-slate-200 text-slate-500 text-xs font-semibold py-2 px-4 rounded-lg cursor-not-allowed"
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" />
                         </svg>
-                        <span>Manage Billing &amp; Invoices</span>
+                        <span>Payments Currently Unavailable</span>
                       </button>
                       <button
                         id="btn-download-gst-invoices"
@@ -1016,9 +1023,17 @@ export default function CandidatePremiumPage() {
           9. GSTIN UPDATE MODAL
       ───────────────────────────────────────────── */}
       {isGstinModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-scaleUp">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setIsGstinModalOpen(false)}
+        >
+          <div 
+            className="relative w-full max-w-md max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col animate-scaleUp"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="shrink-0 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <svg className="w-5 h-5 text-[#00288e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
@@ -1028,33 +1043,35 @@ export default function CandidatePremiumPage() {
               <button
                 type="button"
                 onClick={() => setIsGstinModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1"
+                className="text-slate-400 hover:text-slate-600 p-1 rounded"
               >
                 ✕
               </button>
             </div>
-            <form onSubmit={handleSaveGstin} className="mt-4 flex flex-col gap-4">
-              <p className="text-xs text-[#444653] leading-relaxed">
-                Provide your valid 15-character Goods and Services Tax Identification Number (GSTIN) to enable Input Tax Credit (ITC) on all future and retroactive platform invoices.
-              </p>
-              <div>
-                <label className="block text-xs font-semibold text-[#0b1c30] mb-1">
-                  GST Identification Number (GSTIN)
-                </label>
-                <input
-                  type="text"
-                  value={tempGstin}
-                  onChange={(e) => setTempGstin(e.target.value)}
-                  placeholder="e.g. 29AAACV2459N1Z0"
-                  maxLength={15}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00288e] font-mono uppercase"
-                  required
-                />
-                <span className="text-[11px] text-slate-500 mt-1 block">
-                  State Code: 29 (Karnataka) • Legal Entity PAN format
-                </span>
+            <form onSubmit={handleSaveGstin} className="flex-1 min-h-0 flex flex-col overflow-hidden">
+              <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-4">
+                <p className="text-xs text-[#444653] leading-relaxed">
+                  Provide your valid 15-character Goods and Services Tax Identification Number (GSTIN) to enable Input Tax Credit (ITC) on all future and retroactive platform invoices.
+                </p>
+                <div>
+                  <label className="block text-xs font-semibold text-[#0b1c30] mb-1">
+                    GST Identification Number (GSTIN)
+                  </label>
+                  <input
+                    type="text"
+                    value={tempGstin}
+                    onChange={(e) => setTempGstin(e.target.value)}
+                    placeholder="e.g. 29AAACV2459N1Z0"
+                    maxLength={15}
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00288e] font-mono uppercase"
+                    required
+                  />
+                  <span className="text-[11px] text-slate-500 mt-1 block">
+                    State Code: 29 (Karnataka) • Legal Entity PAN format
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <div className="shrink-0 px-6 py-3.5 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsGstinModalOpen(false)}
@@ -1078,9 +1095,17 @@ export default function CandidatePremiumPage() {
           10. BILLING & SUBSCRIPTION DRAWER / MODAL
       ───────────────────────────────────────────── */}
       {isBillingModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 animate-scaleUp">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setIsBillingModalOpen(false)}
+        >
+          <div 
+            className="relative w-full max-w-lg max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col animate-scaleUp"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="shrink-0 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <svg className="w-5 h-5 text-[#00288e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" />
@@ -1090,13 +1115,13 @@ export default function CandidatePremiumPage() {
               <button
                 type="button"
                 onClick={() => setIsBillingModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1"
+                className="text-slate-400 hover:text-slate-600 p-1 rounded"
               >
                 ✕
               </button>
             </div>
 
-            <div className="mt-4 flex flex-col gap-4">
+            <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-4">
               <div className="p-4 rounded-lg bg-[#eff4ff] border border-[#dce9ff] flex items-center justify-between">
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-[#00288e] uppercase tracking-wider">Active Subscription</span>
@@ -1126,26 +1151,26 @@ export default function CandidatePremiumPage() {
                 <span>Registered Billing Entity:</span>
                 <strong className="text-[#0b1c30] font-mono">{gstin}</strong>
               </div>
+            </div>
 
-              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsBillingModalOpen(false);
-                    showToast('Auto-renew settings updated. Your active entitlement remains until May 28, 2025.');
-                  }}
-                  className="text-xs text-rose-600 hover:text-rose-700 font-semibold"
-                >
-                  Cancel Auto-Renew
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsBillingModalOpen(false)}
-                  className="px-4 py-2 text-xs font-bold text-white bg-[#00288e] hover:bg-[#1e40af] rounded-lg transition-colors shadow-sm"
-                >
-                  Done
-                </button>
-              </div>
+            <div className="shrink-0 px-6 py-3.5 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsBillingModalOpen(false);
+                  showToast('Auto-renew settings updated. Your active entitlement remains until May 28, 2025.');
+                }}
+                className="text-xs text-rose-600 hover:text-rose-700 font-semibold"
+              >
+                Cancel Auto-Renew
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsBillingModalOpen(false)}
+                className="px-4 py-2 text-xs font-bold text-white bg-[#00288e] hover:bg-[#1e40af] rounded-lg transition-colors shadow-sm"
+              >
+                Done
+              </button>
             </div>
           </div>
         </div>

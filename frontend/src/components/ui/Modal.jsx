@@ -1,7 +1,9 @@
-import React, { useEffect } from 'react';
+import React from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import useModalA11y from '../../hooks/useModalA11y';
 
 const cn = (...inputs) => twMerge(clsx(inputs));
 
@@ -14,29 +16,13 @@ export const Modal = ({
   maxWidth = 'max-w-lg',
   className = '',
 }) => {
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
+  useModalA11y(isOpen, onClose);
 
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      window.addEventListener('keydown', handleKeyDown);
-    }
+  if (!isOpen || typeof document === 'undefined') return null;
 
-    return () => {
-      document.body.style.overflow = '';
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
-
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-[1000] flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-xs animate-in fade-in duration-150"
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? 'modal-title' : undefined}
@@ -48,7 +34,7 @@ export const Modal = ({
       {/* Modal Surface */}
       <div
         className={cn(
-          'relative w-full ep-card shadow-dropdown border border-white/15 bg-surface-900 z-10 max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150',
+          'relative w-full ep-card shadow-dropdown border border-white/15 bg-surface-900 z-10 max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150',
           maxWidth,
           className
         )}
@@ -77,11 +63,12 @@ export const Modal = ({
         </div>
 
         {/* Modal Body */}
-        <div className="p-5 overflow-y-auto flex-1 text-sm text-slate-200">
+        <div className="p-5 overflow-y-auto flex-1 min-h-0 text-sm text-slate-200">
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

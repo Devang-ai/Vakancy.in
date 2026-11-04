@@ -165,9 +165,9 @@ export const EmployerDashboardPage = () => {
         <main className="w-full flex-1 bg-[#f8fafc]">
           <StaggerContainer className="px-6 py-6 max-w-[80rem] mx-auto w-full space-y-6">
             {/* Clean Screen Header */}
-            <StaggerItem index={0} className="flex flex-col gap-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div className="flex items-center gap-3.5">
+            <StaggerItem index={0} className="flex flex-col gap-4 bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200/60">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center gap-3.5 min-w-0">
                   <div className="w-12 h-12 rounded-xl bg-[#00288e] text-white flex items-center justify-center font-bold text-base shrink-0 shadow-xs overflow-hidden">
                     {logoUrl && !logoError ? (
                       <img
@@ -180,23 +180,23 @@ export const EmployerDashboardPage = () => {
                       companyName.charAt(0) || 'E'
                     )}
                   </div>
-                  <div className="space-y-0.5">
-                    <h1 className="text-2xl font-bold text-[#0b1c30] tracking-tight">
-                      {greeting}, {companyName}
+                  <div className="min-w-0 flex-1">
+                    <h1 className="text-lg sm:text-2xl font-bold text-[#0b1c30] tracking-tight truncate">
+                      {greeting}, <span className="font-extrabold">{companyName}</span>
                     </h1>
-                    <p className="text-sm font-semibold text-[#444653]">
+                    <p className="text-xs sm:text-sm font-semibold text-[#444653] truncate">
                       {userDisplayName} · Primary Recruiter
                     </p>
                   </div>
                 </div>
 
-                {/* Primary Actions Toolbar */}
-                <div className="flex flex-wrap items-center gap-2">
+                {/* Primary Actions Toolbar - Responsive pair */}
+                <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
                   <Link
                     to="/recruiter/jobs"
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#eff4ff] text-[#0b1c30] text-xs font-semibold hover:bg-[#dce9ff] transition-colors border border-slate-200/60"
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-[#eff4ff] text-[#00288e] text-xs sm:text-sm font-semibold hover:bg-[#dce9ff] transition-colors border border-blue-100 min-h-[42px] shadow-2xs text-center"
                   >
-                    <svg className="w-4 h-4 text-[#00288e]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <svg className="w-4 h-4 text-[#00288e] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <rect x="2" y="7" width="20" height="14" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
                     </svg>
                     <span>View Jobs</span>
@@ -204,9 +204,9 @@ export const EmployerDashboardPage = () => {
 
                   <Link
                     to="/recruiter/jobs/create"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#00288e] text-white text-xs font-semibold shadow-sm hover:bg-[#1e40af] transition-colors"
+                    className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#00288e] text-white text-xs sm:text-sm font-semibold shadow-xs hover:bg-[#1e40af] transition-colors min-h-[42px] text-center"
                   >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                     </svg>
                     <span>Post a Job</span>
@@ -215,8 +215,8 @@ export const EmployerDashboardPage = () => {
               </div>
             </StaggerItem>
 
-            {/* 4 Clean Database-Backed Statistics Cards */}
-            <StaggerItem index={1} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* 4 Clean Database-Backed Statistics Cards (2x2 Grid on Mobile) */}
+            <StaggerItem index={1} className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {/* Metric 1: Active Jobs */}
               <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col justify-between hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between">
@@ -370,7 +370,56 @@ export const EmployerDashboardPage = () => {
                   </Link>
                 </div>
               ) : (
-                <div className="overflow-x-auto w-full">
+                <>
+                  {/* Mobile Job Cards View (Storyboard 3 Screen 1 Reference) */}
+                  <div className="sm:hidden divide-y divide-slate-100">
+                    {filteredJobs.map((job) => {
+                      const isOpen = job.status === 'open' || job.status === 'active';
+                      return (
+                        <div key={job.id} className="p-4 flex flex-col gap-2.5 bg-white">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <Link
+                                to={`/recruiter/jobs/${job.id}/basic`}
+                                className="font-bold text-sm text-[#0b1c30] hover:text-[#00288e] line-clamp-1"
+                              >
+                                {job.title}
+                              </Link>
+                              <span className="text-[11px] text-[#444653] block mt-0.5">
+                                {job.location ? job.location.split(';')[0]?.trim() : 'Location flexible'} • {job.workplace_type || 'Full-time'}
+                              </span>
+                            </div>
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
+                              isOpen ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'
+                            }`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${isOpen ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                              {isOpen ? 'Active' : 'Draft'}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                            <span className="text-xs font-semibold text-slate-600">
+                              {job.applicant_count || 0} applicants
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <Link
+                                to={`/recruiter/jobs/${job.id}/applicants`}
+                                className="px-3 py-1.5 rounded-lg bg-[#eff4ff] text-[#00288e] text-xs font-semibold hover:bg-[#00288e] hover:text-white transition-all inline-flex items-center gap-1"
+                              >
+                                <span>Applicants</span>
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                </svg>
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Desktop Table View */}
+                  <div className="hidden sm:block overflow-x-auto w-full">
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
                       <tr className="bg-[#eff4ff] text-[#444653] font-semibold uppercase tracking-wider text-[10px] border-b border-slate-100">
@@ -484,6 +533,7 @@ export const EmployerDashboardPage = () => {
                     </tbody>
                   </table>
                 </div>
+              </>
               )}
             </StaggerItem>
 
@@ -491,11 +541,19 @@ export const EmployerDashboardPage = () => {
                 5. RECENT APPLICATIONS STREAM
             ───────────────────────────────────────────── */}
             <StaggerItem index={3} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/60 space-y-4">
-              <div className="border-b border-slate-100 pb-3">
-                <h2 className="text-base font-bold text-[#0b1c30]">Recent Applications</h2>
-                <p className="text-xs text-[#444653]">
-                  Latest candidate submissions across your active jobs
-                </p>
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                  <h2 className="text-base font-bold text-[#0b1c30]">Recent Applicants</h2>
+                  <p className="text-xs text-[#444653]">
+                    Latest candidate submissions across your active jobs
+                  </p>
+                </div>
+                <Link
+                  to="/recruiter/jobs"
+                  className="text-xs font-bold text-[#00288e] hover:underline"
+                >
+                  View All
+                </Link>
               </div>
 
               {/* Applicant Cards */}
@@ -514,56 +572,42 @@ export const EmployerDashboardPage = () => {
                     const refCode = app.reference_number || `APP-${app.id.replace(/-/g, '').substring(0, 6).toUpperCase()}`;
 
                     return (
-                      <div
+                      <Link
                         key={app.id}
-                        className="p-3.5 bg-[#eff4ff]/60 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-[#eff4ff] transition-colors border border-slate-100"
+                        to={`/recruiter/jobs/${app.job_id}/applicants`}
+                        className="p-3.5 bg-[#eff4ff]/60 rounded-xl flex items-center justify-between gap-3 hover:bg-[#eff4ff] transition-colors border border-slate-100 group"
                       >
-                        <div className="flex items-start gap-3 min-w-0">
-                          <div className="w-9 h-9 rounded-xl bg-[#00288e] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-full bg-[#00288e] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                            {(app.candidate_name || 'C').charAt(0).toUpperCase()}
                           </div>
 
                           <div className="min-w-0 space-y-0.5">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="text-xs font-mono font-bold text-[#00288e] bg-[#dde1ff] px-2 py-0.5 rounded">
-                                {refCode}
-                              </span>
-                              <span className="text-xs text-[#444653]">applied for</span>
-                              <span className="text-xs font-bold text-[#0b1c30]">
-                                {app.job_title || 'Job Opening'}
-                              </span>
-                            </div>
-
-                            <div className="flex flex-wrap items-center gap-2 text-xs text-[#444653]">
-                              <span>
-                                Received{' '}
-                                {app.applied_at
-                                  ? new Date(app.applied_at).toLocaleDateString('en-IN', {
-                                      day: 'numeric',
-                                      month: 'short',
-                                      year: 'numeric'
-                                    })
-                                  : 'recently'}
-                              </span>
-                            </div>
+                            <h4 className="text-xs font-bold text-[#0b1c30] group-hover:text-[#00288e] transition-colors truncate">
+                              {app.candidate_name || refCode}
+                            </h4>
+                            <p className="text-[11px] text-[#444653] truncate">
+                              Applied for <span className="font-semibold text-slate-700">{app.job_title || 'Job Opening'}</span>
+                            </p>
+                            <span className="text-[10px] text-slate-400 block">
+                              {app.applied_at
+                                ? new Date(app.applied_at).toLocaleDateString('en-IN', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric'
+                                  })
+                                : 'Recently'}
+                            </span>
                           </div>
                         </div>
 
-                        {/* Action Link: Review / View in Job Applicants */}
-                        <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
-                          <Link
-                            to={`/recruiter/jobs/${app.job_id}/applicants`}
-                            className="px-3 py-1.5 rounded-lg bg-[#00288e] text-white hover:bg-[#1e40af] text-xs font-semibold transition-all shadow-xs inline-flex items-center gap-1"
-                          >
-                            <span>View Requisition</span>
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                            </svg>
-                          </Link>
+                        {/* Chevron Icon (Storyboard 3 Screen 1 Reference) */}
+                        <div className="shrink-0 text-slate-400 group-hover:text-[#00288e] group-hover:translate-x-0.5 transition-all">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                          </svg>
                         </div>
-                      </div>
+                      </Link>
                     );
                   })}
                 </div>

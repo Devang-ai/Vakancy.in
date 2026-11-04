@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Kanban, History, MessageSquare, ArrowRightLeft, Plus, X, Clock, User, CheckCircle2, Loader2 } from 'lucide-react';
 import API from '../../services/api';
 import StatusBadge from '../../components/StatusBadge';
+import useModalA11y from '../../hooks/useModalA11y';
 
 const ATSPipelineBoard = () => {
   const [board, setBoard] = useState([]);
@@ -23,6 +24,12 @@ const ATSPipelineBoard = () => {
   // Notes Modal State
   const [notesModal, setNotesModal] = useState({ isOpen: false, candidateId: null, notes: [] });
   const [newNoteText, setNewNoteText] = useState('');
+
+  useModalA11y(moveModal.isOpen || historyModal.isOpen || notesModal.isOpen, () => {
+    setMoveModal({ isOpen: false, item: null, targetStageId: '' });
+    setHistoryModal({ isOpen: false, pipelineId: null, history: [] });
+    setNotesModal({ isOpen: false, candidateId: null, notes: [] });
+  });
 
   useEffect(() => {
     fetchInitialData();
@@ -232,9 +239,21 @@ const ATSPipelineBoard = () => {
 
       {/* Move Stage Modal */}
       {moveModal.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="w-full max-w-md glass-card rounded-2xl border border-white/15 p-6 shadow-2xl relative">
-            <button onClick={() => setMoveModal({ isOpen: false, item: null })} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setMoveModal({ isOpen: false, item: null })}
+        >
+          <div 
+            className="relative w-full max-w-md max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] glass-card rounded-2xl border border-white/15 p-6 shadow-2xl overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button 
+              type="button"
+              onClick={() => setMoveModal({ isOpen: false, item: null })} 
+              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded"
+            >
               <X className="w-5 h-5" />
             </button>
 
@@ -284,9 +303,21 @@ const ATSPipelineBoard = () => {
 
       {/* Stage History Audit Log Modal */}
       {historyModal.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="w-full max-w-lg glass-card rounded-2xl border border-white/15 p-6 shadow-2xl relative max-h-[85vh] overflow-y-auto">
-            <button onClick={() => setHistoryModal({ isOpen: false, pipelineId: null, history: [] })} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setHistoryModal({ isOpen: false, pipelineId: null, history: [] })}
+        >
+          <div 
+            className="relative w-full max-w-lg max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] glass-card rounded-2xl border border-white/15 p-6 shadow-2xl overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button 
+              type="button"
+              onClick={() => setHistoryModal({ isOpen: false, pipelineId: null, history: [] })} 
+              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded"
+            >
               <X className="w-5 h-5" />
             </button>
 
@@ -319,9 +350,21 @@ const ATSPipelineBoard = () => {
 
       {/* Recruiter Notes Modal */}
       {notesModal.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="w-full max-w-lg glass-card rounded-2xl border border-white/15 p-6 shadow-2xl relative max-h-[85vh] overflow-y-auto">
-            <button onClick={() => setNotesModal({ isOpen: false, candidateId: null, notes: [] })} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setNotesModal({ isOpen: false, candidateId: null, notes: [] })}
+        >
+          <div 
+            className="relative w-full max-w-lg max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] glass-card rounded-2xl border border-white/15 p-6 shadow-2xl overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button 
+              type="button"
+              onClick={() => setNotesModal({ isOpen: false, candidateId: null, notes: [] })} 
+              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded"
+            >
               <X className="w-5 h-5" />
             </button>
 

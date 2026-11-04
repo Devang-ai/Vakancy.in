@@ -5,10 +5,32 @@ import authService from '../services/authService';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem('user');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch {
+      localStorage.removeItem('user');
+      return null;
+    }
+  });
   const [profile, setProfile] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token') || null);
   const [loading, setLoading] = useState(true);
+
+  const clearSession = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setToken(null);
+    setUser(null);
+    setProfile(null);
+  };
+
+  useEffect(() => {
+    const handleExpiredSession = () => clearSession();
+    window.addEventListener('vakancy:auth-expired', handleExpiredSession);
+    return () => window.removeEventListener('vakancy:auth-expired', handleExpiredSession);
+  }, []);
 
   useEffect(() => {
     if (token) {
@@ -27,6 +49,9 @@ export const AuthProvider = ({ children }) => {
       if (res.success) {
         setUser(res.user);
         setProfile(res.profile);
+        localStorage.setItem('user', JSON.stringify(res.user));
+      } else {
+        logout();
       }
     } catch (err) {
       console.warn('Failed to restore session:', err.message);
@@ -67,16 +92,54 @@ export const AuthProvider = ({ children }) => {
     return res;
   };
 
+  const loginWithGoogle = async ({ credential, role, company_name }) => {
+    try {
+      const res = await authService.googleAuth({ credential, role, company_name });
+      if (res.success) {
+        localStorage.setItem('token', res.token);
+        localStorage.setItem('user', JSON.stringify(res.user));
+        setToken(res.token);
+        setUser(res.user);
+        setProfile(res.profile);
+      }
+      return res;
+    } catch (err) {
+      if (err?.code === 'ACCOUNT_ROLE_CONFLICT') {
+        logout();
+      }
+      throw err;
+    }
+  };
+
+  const linkGoogleAccount = async ({ credential, password }) => {
+    const res = await authService.linkGoogleAccount({ credential, password });
+    if (res.success) {
+      localStorage.setItem('token', res.token);
+      localStorage.setItem('user', JSON.stringify(res.user));
+      setToken(res.token);
+      setUser(res.user);
+      setProfile(res.profile);
+    }
+    return res;
+  };
+
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setToken(null);
-    setUser(null);
-    setProfile(null);
+    clearSession();
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, token, loading, login, register, logout, fetchUserContext }}>
+    <AuthContext.Provider value={{
+      user,
+      profile,
+      token,
+      loading,
+      login,
+      register,
+      loginWithGoogle,
+      linkGoogleAccount,
+      logout,
+      fetchUserContext
+    }}>
       {children}
     </AuthContext.Provider>
   );

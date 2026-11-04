@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import Toast from '../../components/ui/Toast';
 import JobCreationStepGuard from '../../components/employer/JobCreationStepGuard';
 import { PageTransition, StaggerContainer, StaggerItem, FadeInSection } from '../../components/common/Motion';
+import useModalA11y from '../../hooks/useModalA11y';
 
 /**
  * EmployerJobDescriptionPage — Task 33: Employer Job Description Builder + AI JD Generator
@@ -75,25 +76,7 @@ export default function EmployerJobDescriptionPage() {
     };
   }, []);
 
-  // Body scroll-lock and Escape key listener when AI Preview modal is active
-  useEffect(() => {
-    if (!aiPreviewOpen) return;
-
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        setAiPreviewOpen(false);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = originalOverflow;
-    };
-  }, [aiPreviewOpen]);
+  useModalA11y(aiPreviewOpen, () => setAiPreviewOpen(false));
 
   // Fetch job details strictly from MySQL
   useEffect(() => {
@@ -925,10 +908,10 @@ export default function EmployerJobDescriptionPage() {
 
             {/* Modal Dialog: z-[1001], above the backdrop and all layout elements */}
             <div
-              className="relative z-[1001] bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[88vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-slate-100"
+              className="relative z-[1001] bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-slate-100"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="px-6 py-4 bg-[#eff4ff] border-b border-blue-100 flex items-center justify-between">
+              <div className="shrink-0 px-6 py-4 bg-[#eff4ff] border-b border-blue-100 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">⚡</span>
                   <h3 id="ai-preview-modal-title" className="font-bold text-sm text-[#0b1c30]">Generated Structured AI Preview</h3>
@@ -943,7 +926,7 @@ export default function EmployerJobDescriptionPage() {
                 </button>
               </div>
 
-              <div className="p-6 overflow-y-auto space-y-4 flex-1">
+              <div className="flex-1 min-h-0 p-6 overflow-y-auto space-y-4">
                 {/* Overview preview */}
                 <div>
                   <label className="text-[11px] font-bold uppercase tracking-wider text-[#444653] block mb-1">
@@ -1016,7 +999,7 @@ export default function EmployerJobDescriptionPage() {
                 </div>
               </div>
 
-              <div className="px-6 py-3.5 bg-white border-t border-slate-100 flex items-center justify-between gap-3">
+              <div className="shrink-0 px-6 py-3.5 bg-white border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
                 <button
                   type="button"
                   onClick={handleGenerateAI}

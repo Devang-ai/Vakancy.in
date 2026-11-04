@@ -363,9 +363,9 @@ export const CompaniesPage = () => {
       </section>
 
       {/* ========================================================================= */}
-      {/* 2. PROFILE SECONDARY NAVIGATION & SEARCH TOOLBAR (Stitch lines 95-116) */}
+      {/* 2. PROFILE SECONDARY NAVIGATION & SEARCH TOOLBAR (Non-sticky on mobile) */}
       {/* ========================================================================= */}
-      <nav className="w-full bg-white border-b border-slate-200/80 shadow-xs sticky top-16 z-30">
+      <nav className="w-full bg-white border-b border-slate-200/80 shadow-xs relative sm:sticky sm:top-16 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 py-2.5">
             {/* Scrollable Navigation Tabs */}

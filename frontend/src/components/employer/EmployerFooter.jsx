@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { SUPPORT_EMAIL, SUPPORT_MAILTO } from '../../config/constants';
 
 export default function EmployerFooter() {
   return (
@@ -16,9 +17,9 @@ export default function EmployerFooter() {
           <Link to="/terms-conditions" target="_blank" rel="noopener noreferrer" className="hover:text-[#0b1c30] transition-colors">Terms & Conditions</Link>
           <div className="flex items-center gap-1">
             <span className="text-slate-400">Need help?</span>
-            <Link to="/contact" target="_blank" rel="noopener noreferrer" className="text-[#00288e] hover:text-[#1e40af] transition-colors">
-              Contact us at help@vakancy.in
-            </Link>
+            <a href={SUPPORT_MAILTO} className="text-[#00288e] hover:text-[#1e40af] transition-colors font-semibold">
+              {SUPPORT_EMAIL}
+            </a>
           </div>
         </div>
       </div>

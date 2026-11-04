@@ -71,10 +71,11 @@ export default function EmployerCreateJobPage() {
     specialization: '',
     required_skills: [],
     notice_period: '30 Days',
+    salary_structure: 'Range',
     min_salary: '',
     max_salary: '',
     currency: 'INR',
-    salary_period: 'Per Year',
+    salary_period: 'Yearly',
     salary_type: 'CTC',
     benefits: [],
     application_deadline: ''
@@ -191,11 +192,12 @@ export default function EmployerCreateJobPage() {
             required_skills: parsedSkills,
             skill_input: '',
             notice_period: j.notice_period || '30 Days',
+            salary_structure: (j.salary_type === 'Fixed' || (j.min_salary != null && j.max_salary != null && Number(j.min_salary) === Number(j.max_salary))) ? 'Fixed' : 'Range',
             min_salary: j.min_salary != null ? String(j.min_salary) : '',
             max_salary: j.max_salary != null ? String(j.max_salary) : '',
             currency: j.currency || 'INR',
-            salary_period: j.salary_period || 'Per Year',
-            salary_type: j.salary_type || 'CTC',
+            salary_period: (j.salary_period === 'Per Year' || !j.salary_period) ? 'Yearly' : (j.salary_period === 'Per Month' ? 'Monthly' : j.salary_period),
+            salary_type: (j.salary_type === 'Fixed' || !j.salary_type) ? 'CTC' : j.salary_type,
             benefits: parsedBenefits,
             application_deadline: deadlineStr
           });
@@ -391,10 +393,12 @@ export default function EmployerCreateJobPage() {
       application_deadline: formData.application_deadline || null,
       notice_period: formData.notice_period,
       min_salary: formData.min_salary ? parseFloat(formData.min_salary) : null,
-      max_salary: formData.max_salary ? parseFloat(formData.max_salary) : null,
-      currency: formData.currency,
-      salary_period: formData.salary_period,
-      salary_type: formData.salary_type,
+      max_salary: formData.salary_structure === 'Fixed'
+        ? (formData.min_salary ? parseFloat(formData.min_salary) : null)
+        : (formData.max_salary ? parseFloat(formData.max_salary) : null),
+      currency: formData.currency || 'INR',
+      salary_period: formData.salary_period || 'Yearly',
+      salary_type: formData.salary_type || 'CTC',
       benefits: formData.benefits || [],
       status: originalStatus || 'draft'
     };
@@ -551,7 +555,7 @@ export default function EmployerCreateJobPage() {
         </section>
 
         {/* Title Section */}
-        <section className="w-full px-6 pt-6 pb-4">
+        <section className="w-full px-6 pt-6 pb-2">
           <div className="max-w-7xl mx-auto">
             <h1 className="text-2xl sm:text-3xl font-bold text-[#0b1c30] tracking-tight leading-tight">
               {isEditMode ? 'Edit Job Posting' : 'Create New Job Posting'}
@@ -559,6 +563,32 @@ export default function EmployerCreateJobPage() {
             <p className="text-xs sm:text-sm text-[#444653] mt-1 leading-relaxed">
               Fill in the job specifications to publish your open position on Vakancy.in.
             </p>
+          </div>
+        </section>
+
+        {/* Multi-Step Progress Indicator (Storyboard 3 Screen 4 Reference) */}
+        <section className="w-full px-4 sm:px-6 py-2">
+          <div className="max-w-7xl mx-auto bg-white p-3 sm:p-4 rounded-xl border border-slate-200/60 shadow-2xs">
+            <div className="flex items-center justify-between max-w-lg mx-auto relative">
+              <div className="absolute top-1/2 left-4 right-4 h-0.5 bg-slate-200 -translate-y-1/2 z-0" />
+              {[
+                { step: 1, label: 'Job Details', active: true },
+                { step: 2, label: 'Work & Location', active: false },
+                { step: 3, label: 'Compensation', active: false },
+                { step: 4, label: 'Review', active: false }
+              ].map((s) => (
+                <div key={s.step} className="relative z-10 flex flex-col items-center gap-1 bg-white px-1 sm:px-2">
+                  <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                    s.active ? 'bg-[#00288e] text-white shadow-xs ring-4 ring-blue-100' : 'bg-slate-100 text-slate-500 border border-slate-200'
+                  }`}>
+                    {s.step}
+                  </div>
+                  <span className={`text-[10px] sm:text-xs font-semibold ${s.active ? 'text-[#00288e]' : 'text-slate-500'}`}>
+                    {s.label}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -605,7 +635,7 @@ export default function EmployerCreateJobPage() {
                 </div>
 
                 {/* Job Category Autocomplete & Department */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-30">
                   <JobCategoryAutocomplete
                     selectedCategoryId={formData.category_id}
                     selectedCategoryName={formData.job_domain}
@@ -646,7 +676,7 @@ export default function EmployerCreateJobPage() {
                 </div>
 
                 {/* Required Skills (Master-Driven Catalog) */}
-                <div className="pt-2 border-t border-slate-100">
+                <div className="pt-2 border-t border-slate-100 relative z-10">
                   <RequiredSkillsSelector
                     selectedSkills={formData.required_skills}
                     onChange={(skills) => setFormData((prev) => ({ ...prev, required_skills: skills }))}
@@ -958,65 +988,138 @@ export default function EmployerCreateJobPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* Currency */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Salary Structure */}
                   <div className="flex flex-col gap-1">
-                    <label className="text-xs font-bold text-[#0b1c30]" htmlFor="currency">Currency</label>
-                    <CustomDropdown id="currency" name="currency" value={formData.currency} onChange={handleChange} options={[
-    { label: 'INR', value: 'INR' },
-    { label: 'USD', value: 'USD' },
-    { label: 'EUR', value: 'EUR' },
-    { label: 'GBP', value: 'GBP' }
-  ]} />
+                    <label className="text-xs font-bold text-[#0b1c30]" htmlFor="salary_structure">Salary Structure</label>
+                    <CustomDropdown
+                      id="salary_structure"
+                      name="salary_structure"
+                      value={formData.salary_structure || 'Range'}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData((prev) => ({
+                          ...prev,
+                          salary_structure: val,
+                          max_salary: val === 'Fixed' ? prev.min_salary : prev.max_salary
+                        }));
+                      }}
+                      options={[
+                        { label: 'Range (Min - Max)', value: 'Range' },
+                        { label: 'Fixed Amount', value: 'Fixed' }
+                      ]}
+                    />
+                  </div>
+
+                  {/* Salary Basis */}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-bold text-[#0b1c30]" htmlFor="salary_type">Salary Basis</label>
+                    <CustomDropdown
+                      id="salary_type"
+                      name="salary_type"
+                      value={formData.salary_type || 'CTC'}
+                      onChange={handleChange}
+                      options={[
+                        { label: 'CTC (Cost to Company)', value: 'CTC' },
+                        { label: 'Gross Salary', value: 'Gross' },
+                        { label: 'Net / In-Hand', value: 'In-Hand' }
+                      ]}
+                    />
                   </div>
 
                   {/* Salary Period */}
                   <div className="flex flex-col gap-1">
                     <label className="text-xs font-bold text-[#0b1c30]" htmlFor="salary_period">Salary Period</label>
-                    <CustomDropdown id="salary_period" name="salary_period" value={formData.salary_period} onChange={handleChange} options={[
-    { label: 'Yearly', value: 'Yearly' },
-    { label: 'Monthly', value: 'Monthly' },
-    { label: 'Hourly', value: 'Hourly' }
-  ]} />
+                    <CustomDropdown
+                      id="salary_period"
+                      name="salary_period"
+                      value={formData.salary_period || 'Yearly'}
+                      onChange={handleChange}
+                      options={[
+                        { label: 'Yearly (Per Annum)', value: 'Yearly' },
+                        { label: 'Monthly (Per Month)', value: 'Monthly' },
+                        { label: 'Hourly', value: 'Hourly' }
+                      ]}
+                    />
                   </div>
 
-                  {/* Salary Type */}
+                  {/* Currency */}
                   <div className="flex flex-col gap-1">
-                    <label className="text-xs font-bold text-[#0b1c30]" htmlFor="salary_type">Salary Type</label>
-                    <CustomDropdown id="salary_type" name="salary_type" value={formData.salary_type} onChange={handleChange} options={[
-    { label: 'Fixed', value: 'Fixed' },
-    { label: 'Range', value: 'Range' }
-  ]} />
+                    <label className="text-xs font-bold text-[#0b1c30]" htmlFor="currency">Currency</label>
+                    <CustomDropdown
+                      id="currency"
+                      name="currency"
+                      value={formData.currency || 'INR'}
+                      onChange={handleChange}
+                      options={[
+                        { label: '₹ INR', value: 'INR' },
+                        { label: '$ USD', value: 'USD' },
+                        { label: '€ EUR', value: 'EUR' },
+                        { label: '£ GBP', value: 'GBP' }
+                      ]}
+                    />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Amount Inputs */}
+                {formData.salary_structure === 'Fixed' ? (
                   <div className="flex flex-col gap-1">
-                    <label className="text-xs font-bold text-[#0b1c30]" htmlFor="min_salary">Minimum Salary</label>
+                    <label className="text-xs font-bold text-[#0b1c30]" htmlFor="min_salary">
+                      Fixed Salary Amount ({formData.currency || 'INR'})
+                    </label>
                     <input
                       id="min_salary"
                       name="min_salary"
                       type="number"
-                      placeholder="e.g. 600000"
+                      placeholder="e.g. 800000"
                       value={formData.min_salary}
-                      onChange={handleChange}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData((prev) => ({
+                          ...prev,
+                          min_salary: val,
+                          max_salary: val
+                        }));
+                      }}
                       className="w-full px-3.5 py-2.5 bg-[#eff4ff] text-[#0b1c30] rounded-xl text-xs font-medium focus:bg-white focus:ring-2 focus:ring-[#00288e] outline-none border border-transparent"
                     />
+                    <span className="text-[11px] text-[#444653]">
+                      Exact compensation offered ({formData.salary_type || 'CTC'} - {formData.salary_period || 'Yearly'})
+                    </span>
                   </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-bold text-[#0b1c30]" htmlFor="min_salary">
+                        Minimum Salary ({formData.currency || 'INR'})
+                      </label>
+                      <input
+                        id="min_salary"
+                        name="min_salary"
+                        type="number"
+                        placeholder="e.g. 600000"
+                        value={formData.min_salary}
+                        onChange={handleChange}
+                        className="w-full px-3.5 py-2.5 bg-[#eff4ff] text-[#0b1c30] rounded-xl text-xs font-medium focus:bg-white focus:ring-2 focus:ring-[#00288e] outline-none border border-transparent"
+                      />
+                    </div>
 
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-bold text-[#0b1c30]" htmlFor="max_salary">Maximum Salary</label>
-                    <input
-                      id="max_salary"
-                      name="max_salary"
-                      type="number"
-                      placeholder="e.g. 1200000"
-                      value={formData.max_salary}
-                      onChange={handleChange}
-                      className="w-full px-3.5 py-2.5 bg-[#eff4ff] text-[#0b1c30] rounded-xl text-xs font-medium focus:bg-white focus:ring-2 focus:ring-[#00288e] outline-none border border-transparent"
-                    />
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-bold text-[#0b1c30]" htmlFor="max_salary">
+                        Maximum Salary ({formData.currency || 'INR'})
+                      </label>
+                      <input
+                        id="max_salary"
+                        name="max_salary"
+                        type="number"
+                        placeholder="e.g. 1200000"
+                        value={formData.max_salary}
+                        onChange={handleChange}
+                        className="w-full px-3.5 py-2.5 bg-[#eff4ff] text-[#0b1c30] rounded-xl text-xs font-medium focus:bg-white focus:ring-2 focus:ring-[#00288e] outline-none border border-transparent"
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
               </StaggerItem>
 
               {/* SECTION 6: PERKS & BENEFITS */}
@@ -1110,12 +1213,12 @@ export default function EmployerCreateJobPage() {
         </FadeInSection>
 
         {/* STICKY BOTTOM WIZARD ACTION BAR */}
-        <section className="sticky bottom-0 w-full bg-white backdrop-blur-md px-6 py-3.5 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] z-[80] border-t border-slate-100">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+        <section className="sticky bottom-0 w-full bg-white backdrop-blur-md px-4 sm:px-6 py-3 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] z-[80] border-t border-slate-100">
+          <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+            <div className="flex items-center gap-3 w-full lg:w-auto justify-between lg:justify-start">
               <Link
                 to="/recruiter/jobs"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#444653] hover:text-[#0b1c30] transition-colors px-2.5 py-1.5 rounded-lg hover:bg-slate-100"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#444653] hover:text-[#0b1c30] transition-colors px-2 py-1.5 rounded-lg hover:bg-slate-100"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -1128,12 +1231,12 @@ export default function EmployerCreateJobPage() {
               </span>
             </div>
 
-            <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full lg:w-auto justify-end">
               <button
                 type="button"
                 onClick={() => saveJobData(false)}
                 disabled={isSavingDraft || isSubmitting}
-                className="px-4 py-2.5 rounded-xl bg-[#eff4ff] hover:bg-[#dce9ff] text-[#0b1c30] text-xs font-semibold transition-colors shadow-2xs cursor-pointer border border-blue-100/60"
+                className="w-full sm:w-auto text-center px-4 py-2.5 rounded-xl bg-[#eff4ff] hover:bg-[#dce9ff] text-[#0b1c30] text-xs font-semibold transition-colors shadow-2xs cursor-pointer border border-blue-100/60"
               >
                 {isSavingDraft ? 'Saving...' : isEditMode ? 'Save Changes' : 'Save Draft'}
               </button>
@@ -1142,10 +1245,11 @@ export default function EmployerCreateJobPage() {
                 type="button"
                 onClick={() => saveJobData(true)}
                 disabled={isSubmitting || isSavingDraft}
-                className="px-5 py-2.5 rounded-xl bg-[#00288e] text-white text-xs font-bold transition-all shadow-md hover:bg-[#1e40af] inline-flex items-center gap-2 cursor-pointer"
+                className="w-full sm:w-auto justify-center px-4 sm:px-5 py-2.5 rounded-xl bg-[#00288e] text-white text-xs font-bold transition-all shadow-md hover:bg-[#1e40af] inline-flex items-center gap-2 cursor-pointer"
               >
-                <span>{isSubmitting ? 'Saving Job...' : isEditMode ? 'Update & Continue to Job Description' : 'Save & Continue to Job Description'}</span>
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <span className="sm:hidden">{isSubmitting ? 'Saving...' : 'Next: Work & Location →'}</span>
+                <span className="hidden sm:inline">{isSubmitting ? 'Saving Job...' : isEditMode ? 'Update & Continue' : 'Save & Continue to Job Description'}</span>
+                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
               </button>

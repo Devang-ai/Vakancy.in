@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Briefcase, LogOut, User, Sparkles, Shield, Building, UserCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import NotificationsPopover from './NotificationsPopover';
+import BrandLogo from './common/BrandLogo';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -33,15 +34,7 @@ const Navbar = () => {
     <header className="sticky top-0 z-40 w-full glass-card border-b border-white/10 bg-slate-950/80 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand Logo */}
-        <Link to="/" className="flex items-center gap-2 group">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-teal-500 to-indigo-500 flex items-center justify-center text-white font-extrabold shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform">
-            <Briefcase className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-xl font-extrabold font-heading text-white tracking-tight">VAKANCY</span>
-            <span className="text-[10px] uppercase font-bold text-cyan-400 block tracking-widest -mt-1">Recruitment MVP</span>
-          </div>
-        </Link>
+        <BrandLogo variant="horizontal" size="md" onDark={true} />
 
         {/* Right Navigation */}
         <div className="flex items-center gap-3">

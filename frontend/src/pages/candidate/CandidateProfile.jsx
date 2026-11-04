@@ -7,6 +7,7 @@ import StatusBadge from '../../components/StatusBadge';
 import DependentLocationSelector from '../../components/common/DependentLocationSelector';
 import CustomDropdown from '../../components/common/CustomDropdown';
 import RequiredSkillsSelector from '../../components/common/RequiredSkillsSelector';
+import useModalA11y from '../../hooks/useModalA11y';
 
 const CandidateProfile = ({ isOnboarding = false, onComplete, rightCard }) => {
   const { user, profile, fetchUserContext } = useAuth();
@@ -41,6 +42,8 @@ const CandidateProfile = ({ isOnboarding = false, onComplete, rightCard }) => {
   const [uploadingResume, setUploadingResume] = useState(false);
   const [resumeToDelete, setResumeToDelete] = useState(null);
   const [resumeError, setResumeError] = useState('');
+
+  useModalA11y(!!resumeToDelete, () => setResumeToDelete(null));
   const uploadAbortController = useRef(null);
   const [resumeFile, setResumeFile] = useState(null);
   const [msg, setMsg] = useState({ type: '', text: '' });
@@ -1426,8 +1429,16 @@ const CandidateProfile = ({ isOnboarding = false, onComplete, rightCard }) => {
 
       {/* Resume Delete Confirmation Modal */}
       {resumeToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 text-center space-y-4">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setResumeToDelete(null)}
+        >
+          <div 
+            className="relative w-full max-w-sm max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] bg-white rounded-2xl shadow-xl p-6 text-center space-y-4 border border-slate-200 overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 mx-auto">
               <Trash2 className="w-6 h-6" />
             </div>
@@ -1437,12 +1448,14 @@ const CandidateProfile = ({ isOnboarding = false, onComplete, rightCard }) => {
             </div>
             <div className="flex items-center gap-3 justify-center pt-2">
               <button 
+                type="button"
                 onClick={() => setResumeToDelete(null)}
                 className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
               >
                 Cancel
               </button>
               <button 
+                type="button"
                 onClick={() => handleDeleteResume(resumeToDelete)}
                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
               >

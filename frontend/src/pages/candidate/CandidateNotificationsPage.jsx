@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import API from '../../services/api';
+import useModalA11y from '../../hooks/useModalA11y';
 
 export const CandidateNotificationsPage = () => {
   const { user } = useAuth();
@@ -24,6 +25,8 @@ export const CandidateNotificationsPage = () => {
   const [createAlertModalOpen, setCreateAlertModalOpen] = useState(false);
   const [newAlertForm, setNewAlertForm] = useState({ title: '', location: '', salary: '', frequency: 'Daily Digest' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  useModalA11y(createAlertModalOpen, () => setCreateAlertModalOpen(false));
   
   // Toast
   const [toast, setToast] = useState(null);
@@ -304,67 +307,78 @@ export const CandidateNotificationsPage = () => {
 
       {/* CREATE ALERT MODAL */}
       {createAlertModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0b1c30]/40 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in-up border border-[#00288e]/10">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-[#f8f9ff]">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setCreateAlertModalOpen(false)}
+        >
+          <div 
+            className="relative w-full max-w-md max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="shrink-0 p-5 border-b border-slate-100 flex items-center justify-between bg-[#f8f9ff]">
               <h2 className="text-base font-bold text-[#0b1c30]">Create New Job Alert</h2>
               <button
+                type="button"
                 onClick={() => setCreateAlertModalOpen(false)}
-                className="text-slate-400 hover:text-[#0b1c30] transition-colors"
+                className="text-slate-400 hover:text-[#0b1c30] transition-colors p-1 rounded"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
             
-            <form onSubmit={handleCreateAlert} className="p-6 flex flex-col gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-[#0b1c30]">Job Title / Keywords <span className="text-[#ba1a1a]">*</span></label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Software Engineer, React"
-                  value={newAlertForm.title}
-                  onChange={(e) => setNewAlertForm({ ...newAlertForm, title: e.target.value })}
-                  className="w-full bg-[#f8f9ff] px-3 py-2 rounded text-sm text-[#0b1c30] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00288e]/20 border border-slate-200 transition-all"
-                />
+            <form onSubmit={handleCreateAlert} className="flex-1 min-h-0 flex flex-col overflow-hidden">
+              <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-[#0b1c30]">Job Title / Keywords <span className="text-[#ba1a1a]">*</span></label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Software Engineer, React"
+                    value={newAlertForm.title}
+                    onChange={(e) => setNewAlertForm({ ...newAlertForm, title: e.target.value })}
+                    className="w-full bg-[#f8f9ff] px-3 py-2 rounded text-sm text-[#0b1c30] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00288e]/20 border border-slate-200 transition-all"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-[#0b1c30]">Location</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Remote, Bangalore"
+                    value={newAlertForm.location}
+                    onChange={(e) => setNewAlertForm({ ...newAlertForm, location: e.target.value })}
+                    className="w-full bg-[#f8f9ff] px-3 py-2 rounded text-sm text-[#0b1c30] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00288e]/20 border border-slate-200 transition-all"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-[#0b1c30]">Expected Salary</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. ₹15L - ₹25L"
+                    value={newAlertForm.salary}
+                    onChange={(e) => setNewAlertForm({ ...newAlertForm, salary: e.target.value })}
+                    className="w-full bg-[#f8f9ff] px-3 py-2 rounded text-sm text-[#0b1c30] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00288e]/20 border border-slate-200 transition-all"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-[#0b1c30]">Frequency</label>
+                  <select
+                    value={newAlertForm.frequency}
+                    onChange={(e) => setNewAlertForm({ ...newAlertForm, frequency: e.target.value })}
+                    className="w-full bg-[#f8f9ff] px-3 py-2 rounded text-sm text-[#0b1c30] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00288e]/20 border border-slate-200 transition-all"
+                  >
+                    <option value="Daily Digest">Daily Digest</option>
+                    <option value="Instant WhatsApp & Email">Instant WhatsApp & Email</option>
+                    <option value="Weekly Summary">Weekly Summary</option>
+                  </select>
+                </div>
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-[#0b1c30]">Location</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Remote, Bangalore"
-                  value={newAlertForm.location}
-                  onChange={(e) => setNewAlertForm({ ...newAlertForm, location: e.target.value })}
-                  className="w-full bg-[#f8f9ff] px-3 py-2 rounded text-sm text-[#0b1c30] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00288e]/20 border border-slate-200 transition-all"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-[#0b1c30]">Expected Salary</label>
-                <input
-                  type="text"
-                  placeholder="e.g. ₹15L - ₹25L"
-                  value={newAlertForm.salary}
-                  onChange={(e) => setNewAlertForm({ ...newAlertForm, salary: e.target.value })}
-                  className="w-full bg-[#f8f9ff] px-3 py-2 rounded text-sm text-[#0b1c30] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00288e]/20 border border-slate-200 transition-all"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-[#0b1c30]">Frequency</label>
-                <select
-                  value={newAlertForm.frequency}
-                  onChange={(e) => setNewAlertForm({ ...newAlertForm, frequency: e.target.value })}
-                  className="w-full bg-[#f8f9ff] px-3 py-2 rounded text-sm text-[#0b1c30] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00288e]/20 border border-slate-200 transition-all"
-                >
-                  <option value="Daily Digest">Daily Digest</option>
-                  <option value="Instant WhatsApp & Email">Instant WhatsApp & Email</option>
-                  <option value="Weekly Summary">Weekly Summary</option>
-                </select>
-              </div>
-
-              <div className="pt-4 flex justify-end gap-3 border-t border-slate-100 mt-2">
+              <div className="shrink-0 p-4 flex justify-end gap-3 border-t border-slate-100 bg-slate-50">
                 <button
                   type="button"
                   onClick={() => setCreateAlertModalOpen(false)}

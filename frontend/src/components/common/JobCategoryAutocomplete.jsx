@@ -185,7 +185,7 @@ export default function JobCategoryAutocomplete({
   const isCategorySelected = Boolean(selectedCategoryId || selectedCategoryName);
 
   return (
-    <div className="flex flex-col gap-1 relative" ref={containerRef}>
+    <div className={`flex flex-col gap-1 relative ${isOpen ? 'z-50' : 'z-10'}`} ref={containerRef}>
       <label className="text-xs font-bold text-[#0b1c30]">
         Job Category / Domain <span className="text-[#ba1a1a] font-bold">*</span>
       </label>
@@ -212,7 +212,7 @@ export default function JobCategoryAutocomplete({
         </div>
       ) : (
         /* Unselected State (Searchable Input Autocomplete) */
-        <div className="relative">
+        <div className={`relative ${isOpen ? 'z-50' : 'z-10'}`}>
           <input
             ref={inputRef}
             type="text"
@@ -237,7 +237,7 @@ export default function JobCategoryAutocomplete({
 
           {/* Autocomplete Suggestions Popup */}
           {isOpen && (
-            <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto py-1 animate-fade-in">
+            <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl z-[100] max-h-60 overflow-y-auto py-1 animate-fade-in">
               {isLoading ? (
                 <div className="px-4 py-3 text-xs text-[#444653] flex items-center gap-2">
                   <div className="w-3.5 h-3.5 border-2 border-[#00288e] border-t-transparent rounded-full animate-spin"></div>
