@@ -20,6 +20,7 @@ const CandidateJobDetailsPage = () => {
   const [isApplied, setIsApplied] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
+  const [candidateLogoError, setCandidateLogoError] = useState(false);
   const [similarJobs, setSimilarJobs] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -166,6 +167,7 @@ const CandidateJobDetailsPage = () => {
   }
 
   const companyName = job.company || job.company_name || 'Vakancy Employer';
+  const candidateLogoSrc = job.companyLogo || job.company_logo || job.logo || job.logo_url || null;
   const responsibilities = Array.isArray(job.responsibilities) ? job.responsibilities : [];
   const qualifications = Array.isArray(job.qualifications) ? job.qualifications : [];
   const perks = Array.isArray(job.perks) ? job.perks : [];
@@ -253,7 +255,22 @@ const CandidateJobDetailsPage = () => {
                 <div className="bg-white rounded-xl shadow-xs border border-slate-200/80 overflow-hidden">
                   <div className="px-6 py-6 border-b border-slate-100 flex flex-col gap-4">
                     <div className="flex items-start justify-between gap-4">
-                      <div className="flex flex-col gap-2">
+                      <div className="flex items-start gap-3.5 sm:gap-4 min-w-0">
+                        {candidateLogoSrc && !candidateLogoError ? (
+                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-white p-1 border border-slate-200/80 shadow-2xs shrink-0 flex items-center justify-center overflow-hidden">
+                            <img
+                              src={candidateLogoSrc}
+                              alt={companyName}
+                              onError={() => setCandidateLogoError(true)}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-[#00288e] flex items-center justify-center text-white text-lg font-bold shrink-0 tracking-wider">
+                            {(companyName || 'CO').slice(0, 2).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="flex flex-col gap-2 min-w-0">
                         <div className="flex items-center gap-2">
                            <h1 className="text-2xl font-bold text-[#0b1c30] tracking-tight">{job.title}</h1>
                            {isClosed && <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-[10px] font-bold uppercase rounded-full tracking-wider">Closed</span>}
@@ -299,6 +316,7 @@ const CandidateJobDetailsPage = () => {
                             </div>
                           )}
                         </div>
+                      </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <button

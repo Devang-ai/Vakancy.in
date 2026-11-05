@@ -31,7 +31,8 @@ export const CompanyCard = ({ company, variant = 'compact', className = '' }) =>
   } = company;
 
   const displayJobs = openingsCount || openJobs || (openJobsNum ? `${openJobsNum} Open Jobs` : 'Hiring');
-  const displayCode = code || name.slice(0, 3).toUpperCase();
+  const displayCode = code || (name ? name.slice(0, 3).toUpperCase() : 'CO');
+  const logo = company.logo || company.logo_url || company.company_logo || company.companyLogo || null;
 
   // --------------------------------------------------------------------------
   // Variant: Sidebar / List Item (Stitch Right Rail)
@@ -43,9 +44,15 @@ export const CompanyCard = ({ company, variant = 'compact', className = '' }) =>
         className={`p-3 bg-slate-50 hover:bg-slate-100 rounded-lg flex items-center justify-between border border-slate-200/70 transition-colors group ${className}`}
       >
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-lg bg-[#1e40af] text-white flex items-center justify-center font-bold text-xs flex-shrink-0 group-hover:bg-[#00288e] transition-colors">
-            {displayCode.slice(0, 2)}
-          </div>
+          {logo ? (
+            <div className="w-9 h-9 rounded-lg bg-white p-0.5 border border-slate-200/80 shadow-2xs flex items-center justify-center flex-shrink-0 overflow-hidden">
+              <img src={logo} alt={name} className="w-full h-full object-contain" />
+            </div>
+          ) : (
+            <div className="w-9 h-9 rounded-lg bg-[#1e40af] text-white flex items-center justify-center font-bold text-xs flex-shrink-0 group-hover:bg-[#00288e] transition-colors">
+              {displayCode.slice(0, 2)}
+            </div>
+          )}
           <div className="min-w-0">
             <h4 className="font-semibold text-sm text-slate-900 group-hover:text-[#00288e] transition-colors truncate">
               {name}
@@ -73,9 +80,15 @@ export const CompanyCard = ({ company, variant = 'compact', className = '' }) =>
           {/* Header Row */}
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-3.5 min-w-0">
-              <div className="w-12 h-12 rounded-xl bg-[#1e40af] text-white flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-xs group-hover:bg-[#00288e] transition-colors">
-                {displayCode.slice(0, 2)}
-              </div>
+              {logo ? (
+                <div className="w-12 h-12 rounded-xl bg-white p-1 border border-slate-200/80 shadow-2xs flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  <img src={logo} alt={name} className="w-full h-full object-contain" />
+                </div>
+              ) : (
+                <div className="w-12 h-12 rounded-xl bg-[#1e40af] text-white flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-xs group-hover:bg-[#00288e] transition-colors">
+                  {displayCode.slice(0, 2)}
+                </div>
+              )}
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <Link

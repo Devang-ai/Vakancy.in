@@ -12,7 +12,7 @@ const db = require('../config/db');
 
 const getPublicCompanies = async (req, res) => {
   try {
-    const employers = await db.query('SELECT id, company_name as name, industry, website FROM EMPLOYERS');
+    const employers = await db.query('SELECT id, company_name as name, industry, website, logo_url, about FROM EMPLOYERS');
     const jobs = await db.query('SELECT id, employer_id, status FROM JOB WHERE status = "open"');
 
     const companies = employers.map((emp) => {
@@ -22,6 +22,10 @@ const getPublicCompanies = async (req, res) => {
         name: emp.name,
         industry: emp.industry || 'Technology & Services',
         website: emp.website || null,
+        logo_url: emp.logo_url || null,
+        logo: emp.logo_url || null,
+        companyLogo: emp.logo_url || null,
+        company_logo: emp.logo_url || null,
         openJobsNum: openCount,
         openingsCount: `${openCount} Open Jobs`,
       };
@@ -40,7 +44,7 @@ const getPublicCompanies = async (req, res) => {
 const getPublicCompanyById = async (req, res) => {
   try {
     const { id } = req.params;
-    const employers = await db.query('SELECT id, company_name as name, industry, website FROM EMPLOYERS WHERE id = ?', [id]);
+    const employers = await db.query('SELECT id, company_name as name, industry, website, logo_url, about FROM EMPLOYERS WHERE id = ?', [id]);
     if (!employers || employers.length === 0) {
       return res.status(404).json({ success: false, message: 'Company profile not found.' });
     }

@@ -132,6 +132,7 @@ export const JobDetailsPage = () => {
   useModalA11y(showAuthModal, () => setShowAuthModal(false));
   const [toast, setToast] = useState(null);
   const [copiedToast, setCopiedToast] = useState(false);
+  const [logoError, setLogoError] = useState(false);
   const [selectedToken, setSelectedToken] = useState('Distributed Systems');
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'requirements' | 'company'
 
@@ -390,8 +391,15 @@ export const JobDetailsPage = () => {
     skills = [],
     qualifications = [],
     perks = [],
-    company_about = ''
+        company_about = '',
+    company_logo,
+    companyLogo,
+    logo,
+    logo_url
   } = job || {};
+
+  const displayLogo = companyLogo || company_logo || logo || logo_url || job?.companyLogo || job?.company_logo || null;
+  const initials = (company || 'Company').slice(0, 2).toUpperCase();
 
   const formattedSalary = formatAnnualSalary(job);
   const displayLocations = locations && locations.length > 0 ? locations : [location];
@@ -473,9 +481,20 @@ export const JobDetailsPage = () => {
           <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
             {/* Left: Avatar & Title Block */}
             <div className="flex items-start gap-4 sm:gap-5 min-w-0">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-[#00288e] flex items-center justify-center text-white text-xl sm:text-2xl font-bold shadow-sm shrink-0 tracking-wider">
-                {company?.slice(0, 2).toUpperCase()}
-              </div>
+              {displayLogo && !logoError ? (
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-white p-1.5 border border-slate-200/80 shadow-xs shrink-0 flex items-center justify-center overflow-hidden">
+                  <img
+                    src={displayLogo}
+                    alt={company}
+                    onError={() => setLogoError(true)}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-[#00288e] flex items-center justify-center text-white text-xl sm:text-2xl font-bold shadow-sm shrink-0 tracking-wider">
+                  {initials}
+                </div>
+              )}
 
               <div className="flex flex-col gap-1 min-w-0">
                 {/* Job Title */}
@@ -745,11 +764,26 @@ export const JobDetailsPage = () => {
               {/* About The Employer Card */}
               <section className="bg-white rounded-xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
                 <div className="flex items-start justify-between gap-4 mb-4">
-                  <div>
-                    <span className="text-[10px] uppercase text-slate-400 font-bold tracking-wider">
-                      About The Employer
-                    </span>
-                    <h2 className="text-lg font-bold text-slate-900">{company}</h2>
+                  <div className="flex items-center gap-3.5">
+                    {displayLogo && !logoError ? (
+                      <div className="w-12 h-12 rounded-xl bg-white p-1 border border-slate-200/80 shadow-2xs shrink-0 flex items-center justify-center overflow-hidden">
+                        <img
+                          src={displayLogo}
+                          alt={company}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 rounded-xl bg-[#00288e] flex items-center justify-center text-white text-base font-bold shadow-xs shrink-0 tracking-wider">
+                        {initials}
+                      </div>
+                    )}
+                    <div>
+                      <span className="text-[10px] uppercase text-slate-400 font-bold tracking-wider">
+                        About The Employer
+                      </span>
+                      <h2 className="text-lg font-bold text-slate-900">{company}</h2>
+                    </div>
                   </div>
                 </div>
 

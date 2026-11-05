@@ -347,17 +347,29 @@ export const CompanyDetailPage = () => {
             {/* Left: Identity Dossier */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 sm:gap-6">
               {/* Brand Avatar */}
-              <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl bg-[#1e40af] text-white flex items-center justify-center shadow-md flex-shrink-0">
-                <span className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-                  {company.code.slice(0, 2)}
-                </span>
-                <div
-                  className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-full bg-white flex items-center justify-center shadow-xs border border-slate-100"
-                  title="Verified Enterprise Partner"
-                >
-                  <CheckCircle2 className="w-4 h-4 text-[#00288e] fill-blue-50" />
+              {(company.logo || company.logo_url || company.company_logo || company.companyLogo) ? (
+                <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl bg-white p-2 border border-slate-200 shadow-md flex-shrink-0 flex items-center justify-center overflow-hidden">
+                  <img src={company.logo || company.logo_url || company.company_logo || company.companyLogo} alt={company.name} className="w-full h-full object-contain" />
+                  <div
+                    className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-full bg-white flex items-center justify-center shadow-xs border border-slate-100"
+                    title="Verified Enterprise Partner"
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-[#00288e] fill-blue-50" />
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl bg-[#1e40af] text-white flex items-center justify-center shadow-md flex-shrink-0">
+                  <span className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+                    {(company.code || company.name || 'CO').slice(0, 2).toUpperCase()}
+                  </span>
+                  <div
+                    className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-full bg-white flex items-center justify-center shadow-xs border border-slate-100"
+                    title="Verified Enterprise Partner"
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-[#00288e] fill-blue-50" />
+                  </div>
+                </div>
+              )}
 
               {/* Title, Badges & Meta */}
               <div className="flex flex-col gap-1 min-w-0">
