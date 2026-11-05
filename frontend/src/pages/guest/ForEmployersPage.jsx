@@ -360,9 +360,11 @@ export const ForEmployersPage = () => {
                   {/* Main recruitment visual container */}
                   <div className="relative rounded-2xl overflow-hidden border border-slate-200/90 shadow-lg bg-white aspect-[4/3] sm:aspect-[16/11]">
                     <img
-                      src="/images/employer_partnership_consulting.jpg"
-                      alt="International recruitment partnership and corporate consulting"
-                      className="w-full h-full object-cover"
+                      src="/images/employer_hiring_team.jpg"
+                      alt="Professional corporate hiring team collaborating on talent acquisition in modern conference room"
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover object-[center_35%]"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a]/35 via-transparent to-transparent pointer-events-none" />
                   </div>

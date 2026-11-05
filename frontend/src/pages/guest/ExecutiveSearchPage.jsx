@@ -319,9 +319,11 @@ export const ExecutiveSearchPage = () => {
               <div className="md:hidden w-full relative">
                 <div className="w-full h-44 sm:h-52 relative overflow-hidden">
                   <img
-                    src="/images/executive_leadership_consulting.jpg"
-                    alt="Vakancy Executive Search Boardroom Consultation"
-                    className="w-full h-full object-cover object-[center_30%]"
+                    src="/images/executive_search_mandate.jpg"
+                    alt="Senior executive search committee reviewing confidential leadership mandate in boardroom"
+                    className="w-full h-full object-cover object-[center_35%]"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0a1122]/60 via-transparent to-transparent pointer-events-none" />
                   {/* Floating Brand Badge */}
@@ -389,9 +391,11 @@ export const ExecutiveSearchPage = () => {
                   style={{ clipPath: 'polygon(3.5% 0%, 100% 0%, 100% 100%, 19.5% 100%)' }}
                 >
                   <img
-                    src="/images/executive_leadership_consulting.jpg"
-                    alt="Vakancy Executive Search Boardroom Consultation"
-                    className="w-full h-full object-cover object-[center_right]"
+                    src="/images/executive_search_mandate.jpg"
+                    alt="Senior executive search committee reviewing confidential leadership mandate in boardroom"
+                    className="w-full h-full object-cover object-[center_35%]"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0a1122]/20 via-transparent to-transparent pointer-events-none" />
                 </div>
@@ -461,9 +465,11 @@ export const ExecutiveSearchPage = () => {
               <FadeInSection>
                 <div className="relative w-full aspect-[21/9] rounded-3xl overflow-hidden shadow-xl border border-slate-700/60 bg-[#1e293b]">
                   <img
-                    src="/images/executive_skyline_advisory.jpg"
-                    alt="Vakancy Executive Search Methodology and Global Advisory"
-                    className="w-full h-full object-cover"
+                    src="/images/executive_assessment_interview.jpg"
+                    alt="In-depth leadership assessment meeting between senior search partner and executive candidate"
+                    className="w-full h-full object-cover object-[center_35%]"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div className="absolute inset-0 bg-blue-900/20 mix-blend-overlay pointer-events-none" />
                 </div>
@@ -555,9 +561,11 @@ export const ExecutiveSearchPage = () => {
                 </p>
                 <div className="relative w-full aspect-[4/3] rounded-3xl overflow-hidden shadow-xl border border-slate-700/60 hidden lg:block">
                   <img
-                    src="/images/employer_partnership_consulting.jpg"
-                    alt="Strategic Executive Consultation and Leadership Review"
-                    className="w-full h-full object-cover"
+                    src="/images/executive_talent_mapping.jpg"
+                    alt="Executive search consultants analyzing talent market mapping and organizational leadership charts"
+                    className="w-full h-full object-cover object-[center_35%]"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div className="absolute inset-0 bg-blue-900/15 mix-blend-overlay pointer-events-none" />
                 </div>

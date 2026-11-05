@@ -171,11 +171,25 @@ export const AboutPage = () => {
             {/* Right: Abstract Ecosystem Visual */}
             <div className="lg:col-span-5 hidden lg:block relative h-[420px] w-full">
               <FadeInSection delay={200} className="w-full h-full relative">
-                {/* Central Hub Node */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-blue-600/25 rounded-2xl border border-blue-500/40 backdrop-blur-md flex items-center justify-center z-20 shadow-[0_0_35px_rgba(37,99,235,0.3)]">
-                  <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center shadow-md p-1.5">
-                    <BrandLogo variant="symbol-globe" size="sm" to={null} priority={false} />
+                {/* Central Global Network Hub Node */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 rounded-full bg-gradient-to-br from-blue-600/30 via-indigo-600/20 to-sky-500/30 border border-blue-400/50 backdrop-blur-md flex items-center justify-center z-20 shadow-[0_0_40px_rgba(37,99,235,0.45)] group">
+                  <div className="relative w-20 h-20 rounded-full bg-gradient-to-tr from-[#00288e] to-sky-600 flex items-center justify-center shadow-inner overflow-hidden border border-blue-300/40">
+                    {/* Globe Grid lines SVG */}
+                    <svg className="w-14 h-14 text-sky-200/90 animate-[spin_40s_linear_infinite]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.2" opacity="0.8" />
+                      <line x1="2" y1="12" x2="22" y2="12" stroke="currentColor" strokeWidth="1" opacity="0.7" />
+                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="currentColor" strokeWidth="1.2" opacity="0.9" />
+                      <path d="M4.5 7.5h15" stroke="currentColor" strokeWidth="0.8" opacity="0.5" />
+                      <path d="M4.5 16.5h15" stroke="currentColor" strokeWidth="0.8" opacity="0.5" />
+                    </svg>
+                    {/* Glowing pulse core */}
+                    <div className="absolute inset-0 bg-radial from-sky-400/25 via-transparent to-transparent pointer-events-none" />
                   </div>
+                  {/* Subtle orbiting pulse pin */}
+                  <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-blue-500 border border-white/80"></span>
+                  </span>
                 </div>
 
                 {/* Connecting Radar Rings */}
@@ -238,7 +252,7 @@ export const AboutPage = () => {
                 Our Vision
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                To be a trusted career platform for meaningful opportunities across industries in India.
+                To be a trusted global recruitment platform for meaningful career opportunities across industries worldwide.
               </p>
             </div>
 
@@ -341,9 +355,11 @@ export const AboutPage = () => {
                 </p>
                 <div className="relative rounded-2xl overflow-hidden aspect-[4/3] shadow-md border border-blue-200/80 hidden sm:block">
                   <img
-                    src="/images/global_talent_collaboration.jpg"
-                    alt="Cross-border recruitment collaboration and talent solutions"
-                    className="w-full h-full object-cover"
+                    src="/images/about_recruitment_operations.jpg"
+                    alt="Diverse recruitment operations team managing structured hiring workflows across global markets"
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover object-[center_35%]"
                   />
                 </div>
               </RevealOnScroll>

@@ -285,9 +285,10 @@ export const HomePage = () => {
               <FadeInSection delay={200}>
                 <div className="relative w-full aspect-[4/3] max-h-[380px] rounded-3xl overflow-hidden shadow-xl border border-slate-200/80 bg-white">
                   <img
-                    src="/images/global_recruitment_interview.jpg"
-                    alt="International recruitment interview and global talent acquisition"
-                    className="w-full h-full object-cover"
+                    src="/images/homepage_recruitment_interview.jpg"
+                    alt="Professional recruitment interview and international talent acquisition discussion"
+                    className="w-full h-full object-cover object-[center_35%]"
+                    fetchPriority="high"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a]/30 via-transparent to-transparent pointer-events-none" />
                 </div>
@@ -350,10 +351,11 @@ export const HomePage = () => {
           <div className="relative mt-4 sm:mt-6 rounded-2xl overflow-hidden p-4 sm:p-5 text-white flex items-center justify-between shadow-xs border border-blue-900/20">
             <div className="absolute inset-0 z-0 pointer-events-none">
               <img
-                src="/images/global_talent_collaboration.jpg"
-                alt="Global team collaboration"
+                src="/images/recruitment_coordination_support.jpg"
+                alt="HR recruitment team evaluating candidate profiles and coordinating interviews"
                 loading="lazy"
-                className="w-full h-full object-cover object-center opacity-20"
+                decoding="async"
+                className="w-full h-full object-cover object-[center_30%] opacity-20"
               />
               <div className="absolute inset-0 bg-gradient-to-r from-[#00288e] via-[#00288e]/95 to-[#1e40af]/90 mix-blend-multiply" />
             </div>
@@ -631,9 +633,11 @@ export const HomePage = () => {
               <FadeInSection>
                 <div className="relative rounded-3xl overflow-hidden shadow-lg border border-slate-200/80 aspect-[4/3] bg-white">
                   <img
-                    src="/images/about_global_teamwork.jpg"
-                    alt="Vakancy Global Recruitment Support"
-                    className="w-full h-full object-cover"
+                    src="/images/global_talent_collaboration.jpg"
+                    alt="Vakancy Global Recruitment Support and International Operations"
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover object-[center_35%]"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a]/30 via-transparent to-transparent pointer-events-none" />
                 </div>
