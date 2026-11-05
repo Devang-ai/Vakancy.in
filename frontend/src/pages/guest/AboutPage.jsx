@@ -21,8 +21,14 @@ import {
 } from 'lucide-react';
 import { PageTransition, RevealOnScroll, StaggerContainer, StaggerItem, FadeInSection } from '../../components/common/Motion';
 import BrandLogo from '../../components/common/BrandLogo';
+import useSEO from '../../hooks/useSEO';
 
 export const AboutPage = () => {
+  useSEO({
+    title: 'About Us — Global Recruitment Ecosystem | Vakancy.in',
+    description: 'Learn about Vakancy.in’s mission to connect professionals and organizations across India and international markets with transparent standards.',
+    canonical: '/about'
+  });
   const whatWeDoCards = [
     {
       icon: Search,
@@ -264,8 +270,8 @@ export const AboutPage = () => {
             </div>
             <div className="w-full md:w-64 lg:w-72 shrink-0 aspect-[16/9] md:aspect-[4/3] max-h-[180px] rounded-xl overflow-hidden shadow-xs border border-blue-200/60 bg-white">
               <img
-                src="/images/recruitment_office.jpg"
-                alt="Vakancy Recruitment Workspace"
+                src="/images/about_global_teamwork.jpg"
+                alt="Global talent acquisition and collaborative teamwork"
                 loading="lazy"
                 className="w-full h-full object-cover"
               />
@@ -335,8 +341,8 @@ export const AboutPage = () => {
                 </p>
                 <div className="relative rounded-2xl overflow-hidden aspect-[4/3] shadow-md border border-blue-200/80 hidden sm:block">
                   <img
-                    src="/images/recruitment_office.jpg"
-                    alt="Vakancy Office Workspace"
+                    src="/images/global_talent_collaboration.jpg"
+                    alt="Cross-border recruitment collaboration and talent solutions"
                     className="w-full h-full object-cover"
                   />
                 </div>

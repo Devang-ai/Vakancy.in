@@ -31,6 +31,7 @@ import authService from '../../services/authService';
 import { PageTransition, RevealOnScroll } from '../../components/common/Motion';
 import GoogleAuthButton from '../../components/auth/GoogleAuthButton';
 import BrandLogo from '../../components/common/BrandLogo';
+import { getUserFriendlyErrorMessage } from '../../utils/errorUtils';
 
 export const LoginPage = () => {
   const { login } = useAuth();
@@ -174,7 +175,7 @@ export const LoginPage = () => {
         setError(res?.message || 'Authentication failed. Please verify your credentials.');
       }
     } catch (err) {
-      setError(err?.message || 'Unable to sign in. Please verify your email/phone and password.');
+      setError(getUserFriendlyErrorMessage(err, 'Unable to sign in. Please verify your email/phone and password.'));
     } finally {
       setLoading(false);
     }
@@ -223,7 +224,7 @@ export const LoginPage = () => {
         const remaining = err?.secondsRemaining || err?.response?.data?.secondsRemaining || 60;
         setCooldown(remaining);
       }
-      setError(err?.message || err?.response?.data?.message || 'Failed to request verification code. Please try again later.');
+      setError(getUserFriendlyErrorMessage(err, 'Failed to request verification code. Please try again later.'));
     } finally {
       setLoading(false);
     }
@@ -250,7 +251,7 @@ export const LoginPage = () => {
         const remaining = err?.secondsRemaining || err?.response?.data?.secondsRemaining || 60;
         setCooldown(remaining);
       }
-      setError(err?.message || err?.response?.data?.message || 'Failed to resend verification code.');
+      setError(getUserFriendlyErrorMessage(err, 'Failed to resend verification code.'));
     } finally {
       setLoading(false);
     }
@@ -316,7 +317,7 @@ export const LoginPage = () => {
         setError(res.message || 'Verification failed. Please check the code.');
       }
     } catch (err) {
-      setError(err?.message || err?.response?.data?.message || 'Verification failed. Please check the code and try again.');
+      setError(getUserFriendlyErrorMessage(err, 'Verification failed. Please check the code and try again.'));
     } finally {
       setLoading(false);
     }
@@ -353,7 +354,7 @@ export const LoginPage = () => {
         setError(res.message || 'Failed to reset password.');
       }
     } catch (err) {
-      setError(err?.message || err?.response?.data?.message || 'Failed to reset password. Please try again.');
+      setError(getUserFriendlyErrorMessage(err, 'Failed to reset password. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -391,7 +392,7 @@ export const LoginPage = () => {
 
               <RevealOnScroll delay={200}>
                 <div className="relative w-full aspect-[4/3] rounded-[2rem] overflow-hidden shadow-2xl border border-slate-700/50">
-                  <img src="/images/executive_meeting.jpg" alt="Corporate Environment" className="w-full h-full object-cover" />
+                  <img src="/images/auth_corporate_portal.jpg" alt="Vakancy.in Enterprise Recruitment Workspace" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                   <div className="absolute inset-0 bg-blue-900/20 mix-blend-overlay"></div>
                 </div>
               </RevealOnScroll>

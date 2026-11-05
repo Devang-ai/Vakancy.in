@@ -1,0 +1,22 @@
+User-agent: *
+Allow: /
+Allow: /jobs
+Allow: /jobs/*
+Allow: /companies
+Allow: /companies/*
+Allow: /for-employers
+Allow: /executive-search
+Allow: /about
+Allow: /contact
+Allow: /privacy
+Allow: /terms
+
+# Disallow private dashboards and authenticated areas
+Disallow: /candidate/
+Disallow: /employer/
+Disallow: /recruiter/
+Disallow: /admin/
+Disallow: /leads
+
+Sitemap: https://vakancy.in/sitemap.xml
+Sitemap: https://api.vakancy.in/api/seo/sitemap.xml

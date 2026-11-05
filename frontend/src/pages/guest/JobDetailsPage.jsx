@@ -41,6 +41,7 @@ import EmptyState from '../../components/ui/EmptyState';
 import API from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import useModalA11y from '../../hooks/useModalA11y';
+import useSEO from '../../hooks/useSEO';
 
 /**
  * Format salary to full annual Indian amount (e.g. ₹5,00,000 – ₹7,00,000 / year)
@@ -214,6 +215,7 @@ export const JobDetailsPage = () => {
     let isMounted = true;
     const fetchJobData = async () => {
       setIsLoading(true);
+      setLogoError(false);
       try {
         const data = await jobService.getJobById(id);
         if (isMounted) {
@@ -233,20 +235,79 @@ export const JobDetailsPage = () => {
     };
   }, [id]);
 
-  // Handle Share action
+  // Dynamic Schema.org JobPosting & Meta Tags
+  const pageJobTitle = job?.title || 'Open Position';
+  const pageJobCompany = job?.company || job?.company_name || 'Hiring Organization';
+  const pageJobDesc = job?.description
+    ? job.description.slice(0, 160).replace(/\s+/g, ' ')
+    : 'Apply directly on Vakancy.in';
+
+  useSEO({
+    title: job ? `${pageJobTitle} at ${pageJobCompany} | Vakancy.in` : 'Job Details | Vakancy.in',
+    description: `${pageJobTitle} opening at ${pageJobCompany}. ${pageJobDesc}`,
+    canonical: `/jobs/${id}`,
+    ogType: 'article',
+    ogImage: job?.companyLogo || job?.company_logo || 'https://vakancy.in/assets/brand/vakancy-og-share.png',
+    schema: job ? {
+      '@context': 'https://schema.org',
+      '@type': 'JobPosting',
+      'title': pageJobTitle,
+      'description': job.description || pageJobDesc,
+      'datePosted': job.created_at || new Date().toISOString(),
+      'validThrough': job.application_deadline || undefined,
+      'employmentType': (job.employmentType || job.employment_type || 'FULL_TIME').toUpperCase().replace('-', '_'),
+      'hiringOrganization': {
+        '@type': 'Organization',
+        'name': pageJobCompany,
+        'sameAs': job.company_website || undefined,
+        'logo': (typeof (job.companyLogo || job.company_logo) === 'string' && !(job.companyLogo || job.company_logo).startsWith('data:'))
+          ? (job.companyLogo || job.company_logo)
+          : undefined
+      },
+      'jobLocation': {
+        '@type': 'Place',
+        'address': {
+          '@type': 'PostalAddress',
+          'addressLocality': job.location || job.city || 'India',
+          'addressCountry': job.country || 'IN'
+        }
+      },
+      'baseSalary': (job.min_salary && job.max_salary) ? {
+        '@type': 'MonetaryAmount',
+        'currency': job.currency || 'INR',
+        'value': {
+          '@type': 'QuantitativeValue',
+          'minValue': job.min_salary,
+          'maxValue': job.max_salary,
+          'unitText': 'YEAR'
+        }
+      } : undefined
+    } : undefined
+  });
+
+  // Handle Share action (Unified Native Share + Clipboard + WhatsApp)
   const handleShare = () => {
-    if (navigator.share && job) {
+    const shareUrl = window.location.href;
+    const shareTitle = job ? `${job.title} at ${job.company || 'Vakancy.in'}` : 'Vakancy.in Job Opportunity';
+    const shareText = `Explore this verified career opportunity on Vakancy.in: ${shareTitle}`;
+
+    if (navigator.share) {
       navigator
         .share({
-          title: `${job.title} at ${job.company}`,
-          text: `Review this high-scale opening on Vakancy.in: ${job.title}`,
-          url: window.location.href,
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
         })
         .catch(() => {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        setCopiedToast(true);
+        setTimeout(() => setCopiedToast(false), 3000);
+      }).catch(() => {
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`, '_blank');
+      });
     } else {
-      navigator.clipboard.writeText(window.location.href);
-      setCopiedToast(true);
-      setTimeout(() => setCopiedToast(false), 3000);
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`, '_blank');
     }
   };
 

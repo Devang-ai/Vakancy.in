@@ -5,9 +5,12 @@
   # Forward any legacy relative /api calls directly to Node.js backend
   RewriteRule ^api/(.*)$ https://api.vakancy.in/api/$1 [R=307,L]
 
+  # Social Media Crawlers (WhatsApp, Facebook, Twitter, LinkedIn, Telegram, Discord) -> Server-Side Previews
+  RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|Facebot|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Slackbot|SkypeUriPreview|Discordbot) [NC]
+  RewriteRule ^jobs/([a-zA-Z0-9_-]+)/?$ https://api.vakancy.in/api/seo/job-preview/$1 [R=302,L]
+
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule . /index.html [L]
 </IfModule>
-

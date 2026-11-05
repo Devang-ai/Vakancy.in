@@ -11,6 +11,7 @@ const EmployerLayout = lazy(() => import('./components/layout/EmployerLayout'));
 // Route Protection
 import ProtectedRoute from './components/common/ProtectedRoute';
 import ScrollToTop from './components/common/ScrollToTop';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Guest Portal Pages (Phase 1 Foundation)
 const HomePage = lazy(() => import('./pages/guest/HomePage'));
@@ -81,8 +82,9 @@ function App() {
       <NotificationProvider>
         <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <ScrollToTop />
-          <Suspense fallback={<RouteLoading />}>
-          <Routes>
+          <ErrorBoundary>
+            <Suspense fallback={<RouteLoading />}>
+              <Routes>
             {/* PHASE 1: Guest / Public Portal Routes */}
             <Route element={<GuestLayout />}>
               <Route path="/" element={<HomePage />} />
@@ -333,6 +335,7 @@ function App() {
 
           </Routes>
           </Suspense>
+          </ErrorBoundary>
         </Router>
       </NotificationProvider>
     </AuthProvider>

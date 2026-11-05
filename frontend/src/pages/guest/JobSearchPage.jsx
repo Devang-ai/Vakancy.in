@@ -46,11 +46,18 @@ import Toast from '../../components/ui/Toast';
 import CustomDropdown from '../../components/common/CustomDropdown';
 import API from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import useSEO from '../../hooks/useSEO';
 
 export const JobSearchPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  useSEO({
+    title: 'Explore Jobs & Career Opportunities | Vakancy.in',
+    description: 'Search verified job openings across software engineering, marketing, finance, healthcare, and overseas roles with direct employer applications.',
+    canonical: '/jobs'
+  });
 
   // Search input states (synced with URL query)
   const initialSearch = searchParams.get('search') || '';

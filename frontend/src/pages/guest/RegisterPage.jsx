@@ -230,7 +230,7 @@ export const RegisterPage = () => {
 
               <RevealOnScroll delay={200}>
                 <div className="relative w-full aspect-[4/3] rounded-[2rem] overflow-hidden shadow-2xl border border-slate-700/50">
-                  <img src="/images/recruitment_office.jpg" alt="Vakancy HQ" className="w-full h-full object-cover" />
+                  <img src="/images/auth_verified_talent.jpg" alt="Vakancy.in Verified Career & Recruitment Portal" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                   <div className="absolute inset-0 bg-emerald-900/20 mix-blend-overlay"></div>
                 </div>
               </RevealOnScroll>

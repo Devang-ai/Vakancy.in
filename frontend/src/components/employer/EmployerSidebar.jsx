@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import BrandLogo from '../common/BrandLogo';
 
 /**
  * Standardized Employer Workspace Sidebar
@@ -64,19 +65,12 @@ export default function EmployerSidebar({ sidebarOpen, setSidebarOpen, logoUrl: 
         <div className="flex flex-col flex-1 min-h-0">
           {/* 1. Brand & Header */}
           <div className="h-16 px-4 flex items-center justify-between bg-white border-b border-slate-100">
-            <Link to="/recruiter" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-[#00288e] flex items-center justify-center text-white font-bold text-base shadow-sm">
-                V
-              </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-base text-[#0b1c30] leading-tight tracking-tight">
-                  Vakancy<span className="text-[#006a61]">.in</span>
-                </span>
-                <span className="text-[10px] uppercase text-[#00288e] font-bold tracking-wider">
-                  Employer Workspace
-                </span>
-              </div>
-            </Link>
+            <div className="flex flex-col">
+              <BrandLogo to="/recruiter" size="sm" />
+              <span className="text-[10px] uppercase text-[#00288e] font-bold tracking-wider pl-8 -mt-1">
+                Employer Workspace
+              </span>
+            </div>
 
             {/* Mobile close button */}
             <button

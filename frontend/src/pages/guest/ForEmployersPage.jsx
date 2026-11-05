@@ -15,13 +15,20 @@ import {
   Layers,
   Sparkles,
   BarChart2,
-  HelpCircle
+  HelpCircle,
+  Globe
 } from 'lucide-react';
 import { PageTransition, RevealOnScroll, StaggerContainer, StaggerItem, FadeInSection } from '../../components/common/Motion';
 import { RecruitmentAvatar } from '../../components/common/RecruitmentAvatar';
 import { RecruitmentSupportIllustration } from '../../components/common/RecruitmentIllustrations';
+import useSEO from '../../hooks/useSEO';
 
 export const ForEmployersPage = () => {
+  useSEO({
+    title: 'Hiring Solutions & Global Talent Acquisition | For Employers | Vakancy.in',
+    description: 'Post jobs, generate AI-assisted job descriptions, and recruit top professionals across India and global markets with Vakancy.in.',
+    canonical: '/for-employers'
+  });
   const challenges = [
     {
       icon: Target,
@@ -83,6 +90,14 @@ export const ForEmployersPage = () => {
       description: 'Create, edit, and maintain structured job openings detailing required competencies, qualification criteria, compensation structure, and direct applicant review.',
       badge: 'Active Job Control',
       features: ['Role qualification criteria', 'Applicant intake review', 'Real-time posting status'],
+    },
+    {
+      icon: Sparkles,
+      tag: 'AI Recruitment Technology',
+      title: 'AI-Assisted Job Descriptions',
+      description: 'Generate structured, clear, and comprehensive job descriptions with intelligent drafting. Build compliant role responsibilities and key qualification requirements in minutes.',
+      badge: 'AI Powered',
+      features: ['Automated draft generation', 'Structured qualification criteria', 'Editable role specifications'],
     },
     {
       icon: ShieldCheck,
@@ -175,18 +190,18 @@ export const ForEmployersPage = () => {
             {/* Left: Headline & Actions */}
             <div className="lg:col-span-7 flex flex-col items-start text-left max-w-2xl">
               <RevealOnScroll delay={50}>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-[#00288e] text-xs font-bold mb-3">
-                  <Building2 className="w-3.5 h-3.5" />
-                  <span>For Employers</span>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100/70 border border-blue-200/80 text-[#00288e] text-xs font-bold mb-3">
+                  <Globe className="w-3.5 h-3.5" />
+                  <span>Global & Domestic Talent Acquisition</span>
                 </div>
                 <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-[#0f172a] tracking-tight leading-[1.15] mb-3 sm:mb-5">
-                  Hire people who move your <span className="text-[#00288e]">business forward.</span>
+                  Hire top talent across <span className="text-[#00288e]">India and global markets.</span>
                 </h1>
               </RevealOnScroll>
 
               <RevealOnScroll delay={200}>
                 <p className="text-sm sm:text-lg text-slate-600 leading-relaxed mb-6 sm:mb-7 max-w-xl">
-                  Post jobs, reach qualified candidates and build your ideal team with Vakancy.in.
+                  Publish verified job openings, accelerate drafting with AI-assisted job descriptions, and recruit qualified professionals across domestic, Middle East, and international locations.
                 </p>
               </RevealOnScroll>
 
@@ -217,8 +232,8 @@ export const ForEmployersPage = () => {
               <FadeInSection delay={200}>
                 <div className="relative w-full aspect-[4/3] max-h-[380px] rounded-3xl overflow-hidden shadow-xl border border-slate-200/80 bg-white">
                   <img
-                    src="/images/employer_dashboard.jpg"
-                    alt="Vakancy Employer Workspace"
+                    src="/images/employer_international_hiring.jpg"
+                    alt="International hiring consultation and corporate recruitment"
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a]/30 via-transparent to-transparent pointer-events-none" />
@@ -345,8 +360,8 @@ export const ForEmployersPage = () => {
                   {/* Main recruitment visual container */}
                   <div className="relative rounded-2xl overflow-hidden border border-slate-200/90 shadow-lg bg-white aspect-[4/3] sm:aspect-[16/11]">
                     <img
-                      src="/images/recruitment_office.jpg"
-                      alt="Vakancy Employer Hiring Workspace"
+                      src="/images/employer_partnership_consulting.jpg"
+                      alt="International recruitment partnership and corporate consulting"
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a]/35 via-transparent to-transparent pointer-events-none" />

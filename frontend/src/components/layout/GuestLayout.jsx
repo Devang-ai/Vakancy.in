@@ -74,10 +74,10 @@ export const GuestLayout = () => {
                   key={link.to}
                   to={link.to}
                   className={({ isActive }) =>
-                    `text-sm font-semibold transition-all py-1 border-b-2 ${
+                    `relative py-1 px-1 text-[15px] font-semibold transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00288e] rounded-md motion-reduce:transition-none ${
                       isActive
-                        ? 'text-[#00288e] border-[#00288e]'
-                        : 'text-slate-600 hover:text-[#00288e] border-transparent'
+                        ? 'text-[#00288e] after:content-[""] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-[#00288e] after:rounded-full'
+                        : 'text-slate-600 hover:text-[#00288e] after:content-[""] after:absolute after:bottom-0 after:left-0 after:w-0 hover:after:w-full after:h-0.5 after:bg-[#00288e] after:transition-all after:duration-200 after:rounded-full'
                     }`
                   }
                 >
@@ -220,10 +220,11 @@ export const GuestLayout = () => {
             {/* Col 1: Brand & Tagline */}
             <div className="flex flex-col gap-3">
               <div className="flex items-center">
-                <BrandLogo variant="global-full" size="lg" to="/" />
+                <BrandLogo variant="v-wordmark" size="lg" to="/" />
               </div>
               <p className="text-sm text-slate-500 leading-relaxed">
-                Find and Hire Great Talent.
+                Global Recruitment Solutions & Overseas Talent Acquisition.
+                Find and Hire Exceptional Talent Worldwide.
               </p>
               <p className="text-xs text-slate-400 pt-2">
                 © {new Date().getFullYear()} Vakancy.in. All rights reserved.

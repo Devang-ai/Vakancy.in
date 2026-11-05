@@ -22,15 +22,55 @@ import {
   TrendingUp,
   PieChart,
   Palette,
-  Truck
+  Truck,
+  Globe
 } from 'lucide-react';
 import { JobCard } from '../../components/common/JobCard';
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 import { jobService } from '../../services/jobService';
 import { PageTransition, RevealOnScroll, StaggerContainer, StaggerItem, FadeInSection } from '../../components/common/Motion';
+import useSEO from '../../hooks/useSEO';
 
 export const HomePage = () => {
   const navigate = useNavigate();
+
+  // Dynamic SEO & Structured Data
+  useSEO({
+    title: 'Vakancy.in — Global Recruitment & Talent Acquisition Platform',
+    description: 'Connecting India & global talent with world-class opportunities. Discover verified domestic and overseas jobs, AI-assisted job descriptions, and executive search.',
+    canonical: '/',
+    schema: {
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'Organization',
+          '@id': 'https://vakancy.in/#organization',
+          'name': 'Vakancy.in',
+          'url': 'https://vakancy.in',
+          'logo': 'https://vakancy.in/assets/brand/vakancy-wordmark.png',
+          'description': 'Global recruitment, international hiring, and talent acquisition platform.',
+          'sameAs': [
+            'https://linkedin.com/company/vakancy-in',
+            'https://twitter.com/vakancy_in'
+          ]
+        },
+        {
+          '@type': 'WebSite',
+          '@id': 'https://vakancy.in/#website',
+          'url': 'https://vakancy.in',
+          'name': 'Vakancy.in',
+          'publisher': {
+            '@id': 'https://vakancy.in/#organization'
+          },
+          'potentialAction': {
+            '@type': 'SearchAction',
+            'target': 'https://vakancy.in/jobs?search={search_term_string}',
+            'query-input': 'required name=search_term_string'
+          }
+        }
+      ]
+    }
+  });
 
   // Search state
   const [keyword, setKeyword] = useState('');
@@ -179,15 +219,19 @@ export const HomePage = () => {
             {/* Left: Text & Search Form */}
             <div className="lg:col-span-7 flex flex-col items-start text-left max-w-2xl">
               <RevealOnScroll delay={50}>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100/70 border border-blue-200/80 text-[#00288e] text-xs font-bold tracking-wide uppercase mb-3.5">
+                  <Globe className="w-3.5 h-3.5 text-[#00288e]" />
+                  <span>Global Talent Acquisition & Recruitment</span>
+                </div>
                 <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-[#0f172a] tracking-tight leading-tight sm:leading-[1.15] mb-3 sm:mb-4">
-                  Find the right opportunity,{' '}
-                  <span className="text-[#00288e] block sm:inline">connect with the right talent.</span>
+                  Connecting India & Global Talent{' '}
+                  <span className="text-[#00288e] block sm:inline">with World-Class Opportunities.</span>
                 </h1>
               </RevealOnScroll>
 
               <RevealOnScroll delay={150}>
                 <p className="text-xs sm:text-base text-slate-600 leading-relaxed mb-5 sm:mb-6 max-w-xl">
-                  Discover verified career opportunities across industries or recruit qualified talent with structured hiring workflows.
+                  Discover verified domestic and international career opportunities or recruit vetted global talent across the Middle East, India, and emerging markets through structured hiring workflows.
                 </p>
               </RevealOnScroll>
 
@@ -241,8 +285,8 @@ export const HomePage = () => {
               <FadeInSection delay={200}>
                 <div className="relative w-full aspect-[4/3] max-h-[380px] rounded-3xl overflow-hidden shadow-xl border border-slate-200/80 bg-white">
                   <img
-                    src="/images/candidate_interview.jpg"
-                    alt="Professional workplace and candidate interview"
+                    src="/images/global_recruitment_interview.jpg"
+                    alt="International recruitment interview and global talent acquisition"
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a]/30 via-transparent to-transparent pointer-events-none" />
@@ -306,8 +350,8 @@ export const HomePage = () => {
           <div className="relative mt-4 sm:mt-6 rounded-2xl overflow-hidden p-4 sm:p-5 text-white flex items-center justify-between shadow-xs border border-blue-900/20">
             <div className="absolute inset-0 z-0 pointer-events-none">
               <img
-                src="/images/employer_dashboard.jpg"
-                alt=""
+                src="/images/global_talent_collaboration.jpg"
+                alt="Global team collaboration"
                 loading="lazy"
                 className="w-full h-full object-cover object-center opacity-20"
               />
@@ -447,6 +491,80 @@ export const HomePage = () => {
         </div>
       </section>
 
+      {/* INTELLIGENT RECRUITMENT TECHNOLOGY (AI JD & AI Resume Highlights) */}
+      <section className="w-full py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-blue-50/60 via-white to-indigo-50/40 border-b border-slate-200/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <RevealOnScroll className="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-100 text-[#00288e] text-xs font-bold uppercase tracking-wider mb-3">
+              <Sparkles className="w-3.5 h-3.5 text-[#00288e]" />
+              <span>Intelligent Recruitment Technology</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0f172a] tracking-tight">
+              Smarter Workflows for Employers & Candidates
+            </h2>
+            <p className="text-sm sm:text-base text-slate-600 mt-2.5 sm:mt-3 leading-relaxed">
+              Accelerate your recruitment cycle with built-in AI tools designed for precision, clarity, and faster hiring outcomes.
+            </p>
+          </RevealOnScroll>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto">
+            {/* Employer AI Card */}
+            <div className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full pointer-events-none -mr-4 -mt-4 transition-transform group-hover:scale-110" />
+              <div className="relative z-10">
+                <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#00288e] flex items-center justify-center mb-5 font-bold shadow-2xs">
+                  <FileText className="w-6 h-6 text-[#00288e]" />
+                </div>
+                <span className="text-xs font-bold uppercase tracking-wider text-[#00288e]">For Employers</span>
+                <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1 mb-3">
+                  AI-Assisted Job Descriptions
+                </h3>
+                <p className="text-sm text-slate-600 leading-relaxed mb-6">
+                  Create clear, market-ready job descriptions in minutes. Structure key responsibilities, qualifications, and role expectations effortlessly to attract qualified candidates.
+                </p>
+              </div>
+              <div className="relative z-10 pt-4 border-t border-slate-100 flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-500">Structured & compliant drafts</span>
+                <Link
+                  to="/for-employers"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#00288e] hover:bg-[#1e40af] text-white text-xs sm:text-sm font-bold transition-colors shadow-xs"
+                >
+                  <span>Explore AI JD</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Candidate AI Card */}
+            <div className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-bl-full pointer-events-none -mr-4 -mt-4 transition-transform group-hover:scale-110" />
+              <div className="relative z-10">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-5 font-bold shadow-2xs">
+                  <Sparkles className="w-6 h-6 text-indigo-600" />
+                </div>
+                <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">For Candidates</span>
+                <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1 mb-3">
+                  AI Resume Builder
+                </h3>
+                <p className="text-sm text-slate-600 leading-relaxed mb-6">
+                  Generate professional, ATS-friendly resumes tailored to your target industry. Showcase your experience and competencies with structured templates and smart suggestions.
+                </p>
+              </div>
+              <div className="relative z-10 pt-4 border-t border-slate-100 flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-500">ATS-optimized resume export</span>
+                <Link
+                  to="/candidate/ai-builder"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold transition-colors shadow-xs"
+                >
+                  <span>Build AI Resume</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* 5. EMPLOYER EXPERIENCE PREVIEW (Deep Navy Section - Restoring Visual Rhythm) */}
       <section className="relative w-full py-12 sm:py-18 lg:py-24 bg-[#0f172a] text-white overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/25 via-[#0f172a] to-[#0f172a] pointer-events-none" />
@@ -513,8 +631,8 @@ export const HomePage = () => {
               <FadeInSection>
                 <div className="relative rounded-3xl overflow-hidden shadow-lg border border-slate-200/80 aspect-[4/3] bg-white">
                   <img
-                    src="/images/recruitment_office.jpg"
-                    alt="Vakancy Recruitment Workspace"
+                    src="/images/about_global_teamwork.jpg"
+                    alt="Vakancy Global Recruitment Support"
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a]/30 via-transparent to-transparent pointer-events-none" />

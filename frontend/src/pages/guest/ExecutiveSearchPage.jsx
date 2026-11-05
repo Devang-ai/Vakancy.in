@@ -16,8 +16,14 @@ import {
 } from 'lucide-react';
 import { PageTransition, RevealOnScroll, StaggerContainer, StaggerItem, FadeInSection } from '../../components/common/Motion';
 import API from '../../services/api';
+import useSEO from '../../hooks/useSEO';
 
 export const ExecutiveSearchPage = () => {
+  useSEO({
+    title: 'Executive Search & Leadership Advisory | Vakancy.in',
+    description: 'Retained executive search, C-suite appointments, and cross-border leadership advisory for sensitive and confidential corporate mandates.',
+    canonical: '/executive-search'
+  });
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -313,8 +319,8 @@ export const ExecutiveSearchPage = () => {
               <div className="md:hidden w-full relative">
                 <div className="w-full h-44 sm:h-52 relative overflow-hidden">
                   <img
-                    src="/images/executive_meeting.jpg"
-                    alt="Vakancy Executive Search Boardroom"
+                    src="/images/executive_leadership_consulting.jpg"
+                    alt="Vakancy Executive Search Boardroom Consultation"
                     className="w-full h-full object-cover object-[center_30%]"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0a1122]/60 via-transparent to-transparent pointer-events-none" />
@@ -383,8 +389,8 @@ export const ExecutiveSearchPage = () => {
                   style={{ clipPath: 'polygon(3.5% 0%, 100% 0%, 100% 100%, 19.5% 100%)' }}
                 >
                   <img
-                    src="/images/executive_meeting.jpg"
-                    alt="Vakancy Executive Search Boardroom"
+                    src="/images/executive_leadership_consulting.jpg"
+                    alt="Vakancy Executive Search Boardroom Consultation"
                     className="w-full h-full object-cover object-[center_right]"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0a1122]/20 via-transparent to-transparent pointer-events-none" />
@@ -455,8 +461,8 @@ export const ExecutiveSearchPage = () => {
               <FadeInSection>
                 <div className="relative w-full aspect-[21/9] rounded-3xl overflow-hidden shadow-xl border border-slate-700/60 bg-[#1e293b]">
                   <img
-                    src="/images/recruitment_office.jpg"
-                    alt="Vakancy Executive Search Methodology"
+                    src="/images/executive_skyline_advisory.jpg"
+                    alt="Vakancy Executive Search Methodology and Global Advisory"
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-blue-900/20 mix-blend-overlay pointer-events-none" />
@@ -549,8 +555,8 @@ export const ExecutiveSearchPage = () => {
                 </p>
                 <div className="relative w-full aspect-[4/3] rounded-3xl overflow-hidden shadow-xl border border-slate-700/60 hidden lg:block">
                   <img
-                    src="/images/executive_meeting.jpg"
-                    alt="Executive Consultation"
+                    src="/images/employer_partnership_consulting.jpg"
+                    alt="Strategic Executive Consultation and Leadership Review"
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-blue-900/15 mix-blend-overlay pointer-events-none" />

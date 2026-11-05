@@ -15,8 +15,14 @@ import {
 import API from '../../services/api';
 import { SUPPORT_EMAIL, SUPPORT_MAILTO, PLATFORM_NAME } from '../../config/constants';
 import { PageTransition, RevealOnScroll } from '../../components/common/Motion';
+import useSEO from '../../hooks/useSEO';
 
 export const ContactPage = () => {
+  useSEO({
+    title: 'Contact Support & Employer Advisory | Vakancy.in',
+    description: 'Get in touch with the Vakancy recruitment team for candidate support, hiring inquiries, or executive search consultation.',
+    canonical: '/contact'
+  });
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -206,6 +212,16 @@ export const ContactPage = () => {
                   <span>Verified {PLATFORM_NAME} Communications</span>
                 </div>
               </div>
+            </div>
+
+            {/* Global Communication Desk Visual */}
+            <div className="rounded-3xl overflow-hidden shadow-md border border-slate-200/80 bg-white aspect-[16/9] hidden sm:block">
+              <img
+                src="/images/contact_global_desk.jpg"
+                alt="Vakancy Global Support Desk"
+                loading="lazy"
+                className="w-full h-full object-cover"
+              />
             </div>
 
             {/* Quick Links Help Card */}

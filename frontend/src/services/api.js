@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getUserFriendlyErrorMessage } from '../utils/errorUtils';
 
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '/api',
@@ -33,9 +34,10 @@ API.interceptors.response.use((response) => {
     payload = { message: payload };
   }
   if (payload && typeof payload === 'object') {
-    if (!payload.message && error.message) {
-      payload.message = error.message;
-    }
+    // Sanitize any raw HTML or status 503 dumps into clean friendly message
+    const cleanMessage = getUserFriendlyErrorMessage(error, payload.message || 'An unexpected error occurred');
+    payload.message = cleanMessage;
+
     if (!payload.response && error.response) {
       payload.response = error.response;
     }

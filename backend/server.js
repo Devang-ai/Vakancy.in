@@ -36,6 +36,7 @@ const companyRoutes = require('./routes/companyRoutes');
 const masterRoutes = require('./routes/masterRoutes');
 const fileRoutes = require('./routes/fileRoutes');
 const executiveShareRoutes = require('./routes/executiveShareRoutes');
+const seoRoutes = require('./routes/seoRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -183,6 +184,7 @@ app.use('/api/job-categories', (req, res, next) => {
 app.use('/api/files', fileRoutes);
 app.use('/api/executive-search', executiveShareRoutes);
 app.use('/api/shared', executiveShareRoutes);
+app.use('/api/seo', seoRoutes);
 
 // Global Error Handler
 app.use(errorHandler);
