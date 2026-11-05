@@ -5,6 +5,7 @@ import API from '../../services/api';
 import useModalA11y from '../../hooks/useModalA11y';
 
 import Toast from '../../components/common/Toast';
+import BrandLogo from '../../components/common/BrandLogo';
 /**
  * CandidatePrivacyPage
  * Stitch Screen ID: 11ebd6d066f34432843c2e1e703a7a81
@@ -214,14 +215,7 @@ export const CandidatePrivacyPage = () => {
       <header className="fixed top-0 w-full z-50 bg-[#f8f9ff]/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] border-b border-slate-200/60">
         <div className="h-16 max-w-[80rem] mx-auto px-6 flex items-center justify-between">
           <div className="flex items-center gap-8">
-            <Link to="/candidate/dashboard" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-[#00288e] flex items-center justify-center">
-                <span className="text-white font-bold text-sm">V</span>
-              </div>
-              <span className="text-lg font-bold text-[#00288e] tracking-tight">
-                Vacancy<span className="text-[#006a61]">.in</span>
-              </span>
-            </Link>
+            <BrandLogo to="/candidate/dashboard" size="sm" />
 
             <nav className="hidden lg:flex items-center gap-6 text-sm font-semibold">
               <Link to="/candidate/jobs" className="text-[#444653] hover:text-[#0b1c30] transition-colors">
@@ -1574,12 +1568,7 @@ export const CandidatePrivacyPage = () => {
             {/* Col 1 */}
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-[#00288e] flex items-center justify-center">
-                  <span className="text-white font-bold text-xs">V</span>
-                </div>
-                <span className="text-base font-bold text-[#00288e] tracking-tight">
-                  Vacancy<span className="text-[#006a61]">.in</span>
-                </span>
+                <BrandLogo to="/" size="sm" />
               </div>
               <p className="text-xs text-[#444653]">Find the right job. Find the right talent.</p>
               <div className="flex flex-wrap items-center gap-2 pt-1">

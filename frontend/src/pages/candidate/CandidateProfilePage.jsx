@@ -734,7 +734,7 @@ export default function CandidateProfilePage() {
                     type="date"
                     value={personalForm.dob}
                     onChange={(e) => setPersonalForm({ ...personalForm, dob: e.target.value })}
-                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#00288e]"
+                    className="w-full min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#00288e] appearance-none [-webkit-appearance:none] [color-scheme:light] cursor-pointer"
                   />
                 </div>
 
@@ -1669,7 +1669,7 @@ export default function CandidateProfilePage() {
                       type="date"
                       value={expForm.from_date}
                       onChange={(e) => setExpForm({ ...expForm, from_date: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#00288e]"
+                      className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#00288e] appearance-none [-webkit-appearance:none] [color-scheme:light] cursor-pointer"
                     />
                   </div>
                   <div>
@@ -1679,7 +1679,7 @@ export default function CandidateProfilePage() {
                       disabled={expForm.is_currently_working}
                       value={expForm.to_date}
                       onChange={(e) => setExpForm({ ...expForm, to_date: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#00288e] disabled:bg-slate-100"
+                      className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#00288e] disabled:bg-slate-100 appearance-none [-webkit-appearance:none] [color-scheme:light] cursor-pointer"
                     />
                   </div>
                 </div>

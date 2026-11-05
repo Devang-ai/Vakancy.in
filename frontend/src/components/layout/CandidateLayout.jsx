@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { LayoutDashboard, User, Briefcase, Award, BookOpen, PenTool, Languages, FileText, Send, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import BrandLogo from '../common/BrandLogo';
 
 export const CandidateLayout = () => {
   const { logout } = useAuth();
@@ -23,11 +24,8 @@ export const CandidateLayout = () => {
     <div className="min-h-screen bg-surface-950 text-slate-100 flex flex-col md:flex-row">
       {/* Sidebar */}
       <aside className="w-full md:w-64 bg-surface-900 border-r border-white/8 flex flex-col hidden md:flex h-screen sticky top-0">
-        <div className="p-6 border-b border-white/8 flex items-center space-x-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-brand-500/20">
-            V
-          </div>
-          <span className="font-heading font-semibold text-lg text-white">Vakancy</span>
+        <div className="p-6 border-b border-white/8 flex items-center justify-between">
+          <BrandLogo to="/candidate/dashboard" size="sm" onDark={true} />
         </div>
         
         <nav className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">

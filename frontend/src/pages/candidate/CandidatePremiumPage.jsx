@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import useModalA11y from '../../hooks/useModalA11y';
 
 import Toast from '../../components/common/Toast';
+import BrandLogo from '../../components/common/BrandLogo';
 /**
  * CandidatePremiumPage
  * Stitch Screen ID: e2fefc3b367c4a7683ab03e4bc823af3
@@ -59,16 +60,8 @@ const STITCH_PREMIUM_PROFILE_FALLBACK = {
 const CandidateSidebar = () => (
   <aside className="fixed left-0 top-0 h-full w-64 bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between">
     <div className="flex flex-col">
-      <div className="h-16 px-6 flex items-center gap-2 bg-white">
-        <Link to="/candidate/dashboard" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-[#00288e] flex items-center justify-center">
-            <span className="text-white font-bold text-sm">V</span>
-          </div>
-          <div className="flex flex-col leading-tight">
-            <span className="text-sm font-bold text-[#0b1c30] tracking-tight">Vakancy.in</span>
-            <span className="text-[10px] font-semibold text-[#444653] uppercase tracking-wider">Candidate Portal</span>
-          </div>
-        </Link>
+      <div className="h-16 px-6 flex items-center justify-between bg-white border-b border-slate-100">
+        <BrandLogo to="/candidate/dashboard" size="sm" />
       </div>
 
       <div className="px-3 pt-4">

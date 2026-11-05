@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import CandidateProfile from './CandidateProfile';
 import API from '../../services/api';
 import { ArrowLeft, CheckCircle2, FileCheck2 } from 'lucide-react';
+import BrandLogo from '../../components/common/BrandLogo';
 
 export default function CandidateOnboardingPage() {
   const { profile, fetchUserContext } = useAuth();
@@ -92,16 +93,14 @@ export default function CandidateOnboardingPage() {
   return (
     <div className="min-h-screen bg-[#f8f9ff] flex flex-col font-sans">
       {/* Top Header */}
-      <header className="bg-white px-6 py-4 flex items-center shrink-0 border-b border-slate-200">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-[#00288e] flex items-center justify-center">
-            <span className="text-white font-bold text-sm">V</span>
-          </div>
-          <div className="flex flex-col leading-tight">
-            <span className="text-sm font-bold text-[#0b1c30] tracking-tight">Vakancy.in</span>
-            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">CANDIDATE PORTAL</span>
-          </div>
-        </Link>
+      <header className="bg-white px-4 sm:px-6 py-3.5 flex items-center justify-between shrink-0 border-b border-slate-200 shadow-2xs">
+        <div className="flex items-center gap-3">
+          <BrandLogo variant="v-wordmark" size="md" to="/" />
+          <span className="h-5 w-px bg-slate-200 hidden sm:inline-block" />
+          <span className="text-[11px] font-bold text-[#00288e] tracking-wider uppercase px-2 py-0.5 rounded-md bg-blue-50 border border-blue-100 hidden sm:inline-block">
+            Candidate Portal
+          </span>
+        </div>
       </header>
 
       {/* Main Content */}

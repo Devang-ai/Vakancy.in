@@ -85,11 +85,31 @@ const CandidateProfile = ({ isOnboarding = false, onComplete, rightCard }) => {
       const res = await API.get('/candidates/me');
       if (res.success && res.candidate) {
         setCandData(res.candidate);
+        const locParts = (res.candidate.current_location || '').split(',').map(s => s.trim()).filter(Boolean);
+        let locCity = '';
+        let locState = '';
+        let locCountry = 'India';
+        if (locParts.length >= 3) {
+          locCity = locParts[0];
+          locState = locParts[1];
+          locCountry = locParts.slice(2).join(', ');
+        } else if (locParts.length === 2) {
+          locState = locParts[0];
+          locCountry = locParts[1];
+        } else if (locParts.length === 1) {
+          locCountry = locParts[0];
+        }
+
         setPersonal({
           name: res.candidate.name || '',
           dob: res.candidate.dob ? res.candidate.dob.slice(0, 10) : '',
           current_location: res.candidate.current_location || '',
-          profile_type: res.candidate.profile_type || 'experienced'
+          profile_type: (res.candidate.profile_type === 'fresher' || res.candidate.profile_type === 'experienced')
+            ? res.candidate.profile_type
+            : 'experienced',
+          locCountry: res.candidate.country || locCountry,
+          locState: res.candidate.state || locState,
+          locCity: res.candidate.city || locCity
         });
         setProfInfo({
           professional_headline: res.candidate.professional_headline || '',
@@ -320,6 +340,10 @@ const CandidateProfile = ({ isOnboarding = false, onComplete, rightCard }) => {
   const handleAddExp = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!newExp.organization) return;
+    if (newExp.from_date && newExp.to_date && newExp.to_date < newExp.from_date) {
+      setMsg({ type: 'error', text: 'To Date cannot be earlier than From Date' });
+      return;
+    }
     setSubmitting(true);
     try {
       let res;
@@ -687,7 +711,7 @@ const CandidateProfile = ({ isOnboarding = false, onComplete, rightCard }) => {
                   type="date"
                   value={personal.dob || ''}
                   onChange={(e) => setPersonal({ ...personal, dob: e.target.value })}
-                  className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-[#00288e] outline-none text-xs text-slate-700"
+                  className="w-full min-h-[44px] pl-10 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:border-[#00288e] outline-none text-sm text-slate-700 appearance-none [-webkit-appearance:none] [color-scheme:light] cursor-pointer"
                 />
               </div>
             </div>
@@ -699,13 +723,13 @@ const CandidateProfile = ({ isOnboarding = false, onComplete, rightCard }) => {
                 city={personal.locCity || ''}
                 showLocality={false}
                 onChangeLocation={({ country, state, city }) => {
-                  setPersonal({ 
-                    ...personal, 
+                  setPersonal(prev => ({ 
+                    ...prev, 
                     locCountry: country, 
                     locState: state, 
                     locCity: city,
                     current_location: [city, state, country].filter(Boolean).join(', ')
-                  });
+                  }));
                 }}
               />
             </div>
@@ -717,8 +741,7 @@ const CandidateProfile = ({ isOnboarding = false, onComplete, rightCard }) => {
                 onChange={(e) => setPersonal({ ...personal, profile_type: e.target.value })}
                 options={[
                   { value: 'fresher', label: 'Fresher' },
-                  { value: 'experienced', label: 'Experienced' },
-                  { value: 'additional', label: 'Additional Info' }
+                  { value: 'experienced', label: 'Experienced' }
                 ]}
               />
             </div>
@@ -1014,7 +1037,7 @@ const CandidateProfile = ({ isOnboarding = false, onComplete, rightCard }) => {
                     required
                     value={newExp.from_date}
                     onChange={(e) => setNewExp({ ...newExp, from_date: e.target.value })}
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-[#00288e] outline-none text-xs text-slate-700 [color-scheme:light] cursor-pointer"
+                    className="w-full min-h-[44px] pl-10 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:border-[#00288e] outline-none text-sm text-slate-700 [color-scheme:light] appearance-none [-webkit-appearance:none] cursor-pointer"
                   />
                 </div>
               </div>
@@ -1026,7 +1049,7 @@ const CandidateProfile = ({ isOnboarding = false, onComplete, rightCard }) => {
                     type="date"
                     value={newExp.to_date}
                     onChange={(e) => setNewExp({ ...newExp, to_date: e.target.value })}
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-[#00288e] outline-none text-xs text-slate-700 [color-scheme:light] cursor-pointer"
+                    className="w-full min-h-[44px] pl-10 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:border-[#00288e] outline-none text-sm text-slate-700 [color-scheme:light] appearance-none [-webkit-appearance:none] cursor-pointer"
                   />
                 </div>
               </div>

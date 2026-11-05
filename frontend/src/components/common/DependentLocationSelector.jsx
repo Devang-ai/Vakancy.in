@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import API from '../../services/api';
 
 /**
  * DependentLocationSelector
@@ -67,19 +68,20 @@ export default function DependentLocationSelector({
 
   // Fetch countries list on mount
   useEffect(() => {
+    let canceled = false;
     const fetchCountries = async () => {
       try {
-        const res = await fetch('/api/locations/countries');
-        const data = await res.json();
-        if (data.success && Array.isArray(data.countries)) {
+        const data = await API.get('/locations/countries');
+        if (!canceled && data?.success && Array.isArray(data.countries)) {
           const normalized = data.countries.map(c => typeof c === 'string' ? { id: c, name: c } : c);
           setCountriesList(normalized);
         }
       } catch (_) {
-        setCountriesList([]);
+        if (!canceled) setCountriesList([]);
       }
     };
     fetchCountries();
+    return () => { canceled = true; };
   }, []);
 
   // Fetch states when country or country_id changes
@@ -94,13 +96,10 @@ export default function DependentLocationSelector({
     const fetchStates = async () => {
       setIsFetchingStates(true);
       try {
-        const queryParam = countryIdStr
-          ? `country_id=${encodeURIComponent(countryIdStr)}`
-          : `country=${encodeURIComponent(countryNameStr)}`;
-        const res = await fetch(`/api/locations/states?${queryParam}`);
-        const data = await res.json();
+        const params = countryIdStr ? { country_id: countryIdStr } : { country: countryNameStr };
+        const data = await API.get('/locations/states', { params });
         if (!canceled) {
-          if (data.success && Array.isArray(data.states)) {
+          if (data?.success && Array.isArray(data.states)) {
             const normalized = data.states.map(s => (typeof s === 'string' ? { id: s, name: s } : s));
             setStatesList(normalized);
           } else {
@@ -129,16 +128,13 @@ export default function DependentLocationSelector({
     const fetchCities = async () => {
       setIsFetchingCities(true);
       try {
-        const stateParam = stateIdStr
-          ? `state_region_id=${encodeURIComponent(stateIdStr)}`
-          : `state=${encodeURIComponent(stateNameStr)}`;
-        const countryParam = countryIdStr
-          ? `country_id=${encodeURIComponent(countryIdStr)}`
-          : `country=${encodeURIComponent(countryNameStr)}`;
-        const res = await fetch(`/api/locations/cities?${stateParam}&${countryParam}`);
-        const data = await res.json();
+        const params = {
+          ...(stateIdStr ? { state_region_id: stateIdStr } : { state: stateNameStr }),
+          ...(countryIdStr ? { country_id: countryIdStr } : { country: countryNameStr }),
+        };
+        const data = await API.get('/locations/cities', { params });
         if (!canceled) {
-          if (data.success && Array.isArray(data.cities)) {
+          if (data?.success && Array.isArray(data.cities)) {
             const normalized = data.cities.map(c => (typeof c === 'string' ? { id: c, name: c } : c));
             setCitiesList(normalized);
           } else {

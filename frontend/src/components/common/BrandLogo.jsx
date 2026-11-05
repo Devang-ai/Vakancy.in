@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 
 /**
@@ -39,23 +38,23 @@ const NATURAL_DIMENSIONS = {
 
 const SIZE_PRESETS = {
   xs: {
-    'v-wordmark': 'h-6 sm:h-7',
-    horizontal: 'h-6 sm:h-7',
+    'v-wordmark': 'h-6.5 sm:h-7',
+    horizontal: 'h-6.5 sm:h-7',
     'v-symbol': 'h-6 w-6'
   },
   sm: {
-    'v-wordmark': 'h-7 sm:h-8',
-    horizontal: 'h-7 sm:h-8',
+    'v-wordmark': 'h-7.5 sm:h-8',
+    horizontal: 'h-7.5 sm:h-8',
     'v-symbol': 'h-7 w-7 sm:h-8 sm:w-8'
   },
   md: {
-    'v-wordmark': 'h-8 sm:h-9 lg:h-10',
-    horizontal: 'h-8 sm:h-9 lg:h-10',
+    'v-wordmark': 'h-8.5 sm:h-9.5 lg:h-10.5',
+    horizontal: 'h-8.5 sm:h-9.5 lg:h-10.5',
     'v-symbol': 'h-8 w-8 sm:h-9 sm:w-9'
   },
   lg: {
-    'v-wordmark': 'h-10 sm:h-11 lg:h-12',
-    horizontal: 'h-10 sm:h-11 lg:h-12',
+    'v-wordmark': 'h-10.5 sm:h-11.5 lg:h-12.5',
+    horizontal: 'h-10.5 sm:h-11.5 lg:h-12.5',
     'v-symbol': 'h-10 w-10 sm:h-12 sm:w-12'
   },
   xl: {
@@ -99,14 +98,14 @@ export const BrandLogo = ({
         height={NATURAL_DIMENSIONS['v-wordmark'].height}
         loading={priority ? 'eager' : 'lazy'}
         decoding="async"
-        className={`h-7 sm:h-8 md:h-9 lg:h-10 w-auto max-w-full object-contain shrink-0 select-none transition-opacity ${className}`}
+        className={`h-8 sm:h-8.5 md:h-9.5 lg:h-10.5 w-auto max-w-full object-contain shrink-0 select-none transition-opacity ${className}`}
       />
     );
   } else {
     const canonicalKey =
       variant === 'symbol-v' ? 'v-symbol' :
-      (variant === 'v-symbol') ? 'v-symbol' :
-      'v-wordmark';
+        (variant === 'v-symbol') ? 'v-symbol' :
+          'v-wordmark';
 
     const assetPath = onDark && canonicalKey === 'v-wordmark'
       ? ASSET_PATHS['v-wordmark-white']
