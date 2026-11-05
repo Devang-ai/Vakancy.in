@@ -98,3 +98,4 @@ export const getUserFriendlyErrorMessage = (error, fallback = 'Something went wr
 export default {
   getUserFriendlyErrorMessage
 };
+
