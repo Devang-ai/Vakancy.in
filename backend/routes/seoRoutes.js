@@ -29,12 +29,44 @@ router.get('/job-preview/:id', async (req, res) => {
   try {
     let job = null;
     try {
-      const [rows] = await db.query(
-        'SELECT id, title, company, company_name, description, location, city, state, country, workplaceType, workMode, employmentType, min_salary, max_salary, currency, created_at FROM job WHERE id = ? LIMIT 1',
-        [id]
-      );
-      if (rows && rows.length > 0) {
-        job = rows[0];
+      const querySql = `
+        SELECT 
+          j.id,
+          j.title,
+          j.department,
+          j.description,
+          j.location,
+          j.city,
+          j.state,
+          j.country,
+          j.workplace_type,
+          j.workplace_type AS workplaceType,
+          j.employment_type,
+          j.employment_type AS employmentType,
+          j.min_salary,
+          j.max_salary,
+          j.currency,
+          j.salary_period,
+          j.status,
+          j.is_archived,
+          j.is_internal_only,
+          j.created_at,
+          COALESCE(e.company_name, c.name, j.manual_company_name, 'Vakancy Client') AS company_name,
+          COALESCE(e.company_name, c.name, j.manual_company_name, 'Vakancy Client') AS company,
+          e.logo_url AS company_logo
+        FROM JOB j
+        LEFT JOIN EMPLOYERS e ON j.employer_id = e.id
+        LEFT JOIN CLIENT c ON j.client_id = c.id
+        WHERE j.id = ?
+        LIMIT 1
+      `;
+      const rows = await db.query(querySql, [id]);
+      if (Array.isArray(rows) && rows.length > 0) {
+        const candidateJob = rows[0];
+        // Only display preview for active public jobs; do not expose internal/archived/draft jobs
+        if (candidateJob.is_archived !== 1 && candidateJob.is_internal_only !== 1 && (!candidateJob.status || ['open', 'active'].includes(candidateJob.status))) {
+          job = candidateJob;
+        }
       }
     } catch (dbErr) {
       console.warn('DB query error in /seo/job-preview/:id:', dbErr.message);
@@ -106,6 +138,10 @@ router.get('/job-preview/:id', async (req, res) => {
       };
     }
 
+    const shareImage = (job.company_logo && typeof job.company_logo === 'string' && !job.company_logo.startsWith('data:'))
+      ? job.company_logo
+      : defaultShareImage;
+
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -121,7 +157,7 @@ router.get('/job-preview/:id', async (req, res) => {
   <meta property="og:url" content="${escapeHtml(targetUrl)}">
   <meta property="og:title" content="${escapeHtml(metaTitle)}">
   <meta property="og:description" content="${escapeHtml(metaDesc)}">
-  <meta property="og:image" content="${escapeHtml(defaultShareImage)}">
+  <meta property="og:image" content="${escapeHtml(shareImage)}">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
 
@@ -129,7 +165,7 @@ router.get('/job-preview/:id', async (req, res) => {
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${escapeHtml(metaTitle)}">
   <meta name="twitter:description" content="${escapeHtml(metaDesc)}">
-  <meta name="twitter:image" content="${escapeHtml(defaultShareImage)}">
+  <meta name="twitter:image" content="${escapeHtml(shareImage)}">
 
   <!-- Schema.org JSON-LD -->
   <script type="application/ld+json">

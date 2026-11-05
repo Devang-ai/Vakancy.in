@@ -1136,7 +1136,11 @@ async function autoMigrateTables(connection) {
     for (const col of jobColumns) {
       try {
         await connection.query(`ALTER TABLE \`JOB\` ADD COLUMN \`${col.name}\` ${col.type}`);
-      } catch (_) {}
+      } catch (e1) {
+        try {
+          await connection.query(`ALTER TABLE \`job\` ADD COLUMN \`${col.name}\` ${col.type}`);
+        } catch (_) {}
+      }
     }
 
     // 4. Run versioned migrations if any
@@ -1211,13 +1215,31 @@ async function initDB() {
 
     if (process.env.NODE_ENV !== 'test') {
       try {
-        const [jobTable] = await connection.query("SHOW TABLES LIKE 'JOB'");
-        if (!jobTable || jobTable.length === 0) {
-          console.log(`[DB Auto-Init] Table 'JOB' missing in ${database}. Automatically creating 39 tables and initial seed data...`);
-          await autoMigrateTables(connection);
+        const isProduction = process.env.NODE_ENV === 'production' || 
+                             String(database).includes('u777632951') || 
+                             String(host).includes('hostinger');
+
+        // Case-insensitive table check using information_schema to prevent duplicate auto-init on Linux MySQL
+        const [existingTables] = await connection.query(
+          "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? AND LOWER(TABLE_NAME) IN ('job', 'users') LIMIT 2",
+          [database]
+        );
+
+        const hasJobOrUsersTable = existingTables && existingTables.length > 0;
+
+        if (!hasJobOrUsersTable) {
+          if (isProduction && process.env.ALLOW_AUTO_MIGRATE !== 'true') {
+            console.warn(`[DB Safety] Tables 'job'/'users' not detected by exact check in production database '${database}'. Auto-migration and initial seed are disabled for production safety.`);
+          } else {
+            console.log(`[DB Auto-Init] Initializing schema for '${database}'...`);
+            await autoMigrateTables(connection);
+          }
+        } else {
+          // Tables already exist; do not re-run full initialization or seeding
+          console.log(`[DB Safety] Verified existing tables in '${database}' (${existingTables.map(t => t.TABLE_NAME).join(', ')}).`);
         }
       } catch (migErr) {
-        console.warn('[DB Auto-Init] Table check notice:', migErr.message);
+        console.warn('[DB Auto-Init] Table verification notice:', migErr.message);
       }
     }
 

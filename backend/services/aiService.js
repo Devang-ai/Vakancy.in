@@ -621,13 +621,16 @@ async function callGeminiAPI(prompt, type, context = {}) {
   }
 
   const candidateModels = [
-    'gemini-flash-lite-latest',
-    'gemini-3.5-flash',
-    'gemini-3.6-flash',
-    'gemini-flash-latest'
+    'gemini-1.5-flash',
+    'gemini-1.5-flash-latest',
+    'gemini-2.0-flash',
+    'gemini-1.5-pro'
   ];
   let lastError = null;
   let lastClassified = null;
+
+  const isResume = type === 'ats_resume_builder';
+  const tokenLimit = isResume ? 8192 : 4096;
 
   for (const modelName of candidateModels) {
     for (let attempt = 1; attempt <= 2; attempt++) {
@@ -636,15 +639,16 @@ async function callGeminiAPI(prompt, type, context = {}) {
         const client = aiClient;
         if (!client) throw new Error('Gemini client not initialized');
 
-                const model = client.getGenerativeModel({
+        const model = client.getGenerativeModel({
           model: modelName,
           generationConfig: {
             responseMimeType: 'application/json',
-            maxOutputTokens: 2048
+            maxOutputTokens: tokenLimit,
+            temperature: isResume ? 0.2 : 0.4
           }
         });
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error(`Gemini API request timed out for ${modelName}`)), 30000)
+          setTimeout(() => reject(new Error(`Gemini API request timed out for ${modelName}`)), 35000)
         );
         const generatePromise = model.generateContent(prompt);
         const result = await Promise.race([generatePromise, timeoutPromise]);
@@ -695,6 +699,10 @@ async function callGeminiAPI(prompt, type, context = {}) {
               }
             } catch (e) {
               console.warn('⚠️ Gemini JSON parse error for ats_resume_builder:', e.message);
+              // Do not return raw text for ats_resume_builder if JSON was corrupted or truncated
+              lastError = 'Unterminated or malformed JSON from model';
+              lastClassified = { errorCode: 'TRUNCATED_RESPONSE', message: 'AI response was incomplete. Retrying with fallback model...', isTerminal: false };
+              break; // Try next candidate model
             }
           }
 
@@ -725,9 +733,11 @@ async function callGeminiAPI(prompt, type, context = {}) {
           };
         }
 
-        // For transient errors like 503 / Rate limit, retry once after short delay
+        // For transient errors like 503 (SERVICE_UNAVAILABLE) or 429 (QUOTA_OR_RATE_LIMIT), perform bounded exponential backoff
         if ((lastClassified.errorCode === 'SERVICE_UNAVAILABLE' || lastClassified.errorCode === 'QUOTA_OR_RATE_LIMIT') && attempt === 1) {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          const backoffMs = Math.min(1000 * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 250), 3000);
+          console.log(`[AI DEBUG] ⏳ Bounded exponential backoff: waiting ${backoffMs}ms before attempt 2 for ${modelName}...`);
+          await new Promise((resolve) => setTimeout(resolve, backoffMs));
           continue;
         }
         break; // break inner attempt loop to try next candidate model
@@ -927,7 +937,7 @@ Return ONLY valid JSON with this exact structure:
     }
   }
 
-  if (!parsed || typeof parsed !== 'object') {
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
     return {
       isValid: false,
       error: true,
@@ -936,9 +946,19 @@ Return ONLY valid JSON with this exact structure:
     };
   }
 
+  // Schema verification: require at least a non-empty summary or valid section
+  if (!parsed.summary || typeof parsed.summary !== 'string' || parsed.summary.trim().length === 0) {
+    return {
+      isValid: false,
+      error: true,
+      errorCode: 'INCOMPLETE_RESPONSE',
+      message: 'AI response was incomplete. Existing profile data has been preserved.'
+    };
+  }
+
   // Safety assertions: ensure core candidate identity and non-fabricatable facts are exact
   parsed.name = name;
-  if (!parsed.contact) parsed.contact = {};
+  if (!parsed.contact || typeof parsed.contact !== 'object') parsed.contact = {};
   parsed.contact.email = email;
   parsed.contact.phone = phone;
   parsed.contact.location = location;
@@ -947,6 +967,11 @@ Return ONLY valid JSON with this exact structure:
   // Enforce DB-only skills and languages
   parsed.skills = skills;
   parsed.languages = languages;
+
+  // Validate array types to avoid UI breakage
+  if (!Array.isArray(parsed.experience)) parsed.experience = [];
+  if (!Array.isArray(parsed.projects)) parsed.projects = [];
+  if (!Array.isArray(parsed.education)) parsed.education = [];
 
   // Cleanup: Ensure no hallucinated 'Core Skills' or 'Skills' section was appended to the summary
   if (parsed.summary && typeof parsed.summary === 'string') {

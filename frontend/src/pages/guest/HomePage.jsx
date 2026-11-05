@@ -37,7 +37,7 @@ export const HomePage = () => {
   // Dynamic SEO & Structured Data
   useSEO({
     title: 'Vakancy.in — Global Recruitment & Talent Acquisition Platform',
-    description: 'Connecting India & global talent with world-class opportunities. Discover verified domestic and overseas jobs, AI-assisted job descriptions, and executive search.',
+    description: 'Connecting talent with opportunities worldwide. Discover global career opportunities and recruitment solutions for employers and professionals.',
     canonical: '/',
     schema: {
       '@context': 'https://schema.org',
@@ -219,19 +219,19 @@ export const HomePage = () => {
             {/* Left: Text & Search Form */}
             <div className="lg:col-span-7 flex flex-col items-start text-left max-w-2xl">
               <RevealOnScroll delay={50}>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100/70 border border-blue-200/80 text-[#00288e] text-xs font-bold tracking-wide uppercase mb-3.5">
-                  <Globe className="w-3.5 h-3.5 text-[#00288e]" />
-                  <span>Global Talent Acquisition & Recruitment</span>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50/90 border border-blue-200/70 text-[#00288e] text-[11px] sm:text-xs font-bold tracking-wider uppercase mb-3 sm:mb-3.5 shadow-2xs w-fit">
+                  <Globe className="w-3.5 h-3.5 text-[#00288e] shrink-0" />
+                  <span>GLOBAL RECRUITMENT SOLUTIONS</span>
                 </div>
-                <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-[#0f172a] tracking-tight leading-tight sm:leading-[1.15] mb-3 sm:mb-4">
-                  Connecting India & Global Talent{' '}
-                  <span className="text-[#00288e] block sm:inline">with World-Class Opportunities.</span>
+                <h1 className="text-[32px] sm:text-4xl lg:text-[54px] xl:text-[58px] font-extrabold text-[#0f172a] tracking-tight leading-[1.12] mb-3 sm:mb-4 font-heading">
+                  Connecting Talent with{' '}
+                  <span className="text-[#00288e]">Opportunities Worldwide</span>
                 </h1>
               </RevealOnScroll>
 
               <RevealOnScroll delay={150}>
-                <p className="text-xs sm:text-base text-slate-600 leading-relaxed mb-5 sm:mb-6 max-w-xl">
-                  Discover verified domestic and international career opportunities or recruit vetted global talent across the Middle East, India, and emerging markets through structured hiring workflows.
+                <p className="text-sm sm:text-base text-slate-600 leading-relaxed mb-5 sm:mb-6 max-w-xl font-normal">
+                  Discover global career opportunities and recruitment solutions for employers and professionals worldwide.
                 </p>
               </RevealOnScroll>
 
@@ -254,7 +254,7 @@ export const HomePage = () => {
 
                   <button
                     type="submit"
-                    className="inline-flex items-center justify-center bg-[#00288e] hover:bg-[#1e40af] text-white text-xs sm:text-sm font-bold px-5 sm:px-7 py-2.5 sm:py-3 rounded-xl transition-colors shadow-xs shrink-0 cursor-pointer min-h-[42px] sm:min-h-[44px]"
+                    className="inline-flex items-center justify-center bg-[#00288e] hover:bg-[#1e40af] text-white text-xs sm:text-sm font-bold px-5 sm:px-7 py-2.5 sm:py-3 rounded-xl transition-colors shadow-xs shrink-0 cursor-pointer min-h-[44px]"
                   >
                     Search Jobs
                   </button>
@@ -264,17 +264,17 @@ export const HomePage = () => {
                 <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-3.5 sm:mt-5 w-full max-w-xl">
                   <Link
                     to="/jobs"
-                    className="py-2.5 sm:py-3.5 px-3 sm:px-5 bg-white hover:bg-slate-50 border border-slate-200/90 rounded-xl sm:rounded-2xl shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2 text-xs sm:text-sm font-bold text-slate-800 hover:text-[#00288e] group cursor-pointer min-h-[42px] sm:min-h-[48px]"
+                    className="py-2.5 sm:py-3.5 px-3 sm:px-5 bg-white hover:bg-slate-50 border border-slate-200/90 rounded-xl sm:rounded-2xl shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2 text-xs sm:text-sm font-bold text-slate-800 hover:text-[#00288e] group cursor-pointer min-h-[44px]"
                   >
                     <Briefcase className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00288e] group-hover:scale-110 transition-transform shrink-0" />
                     <span>Find Jobs</span>
                   </Link>
                   <Link
                     to="/for-employers"
-                    className="py-2.5 sm:py-3.5 px-3 sm:px-5 bg-white hover:bg-slate-50 border border-slate-200/90 rounded-xl sm:rounded-2xl shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2 text-xs sm:text-sm font-bold text-slate-800 hover:text-[#00288e] group cursor-pointer min-h-[42px] sm:min-h-[48px]"
+                    className="py-2.5 sm:py-3.5 px-3 sm:px-5 bg-white hover:bg-slate-50 border border-slate-200/90 rounded-xl sm:rounded-2xl shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2 text-xs sm:text-sm font-bold text-slate-800 hover:text-[#00288e] group cursor-pointer min-h-[44px]"
                   >
                     <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00288e] group-hover:scale-110 transition-transform shrink-0" />
-                    <span>Hire Talent</span>
+                    <span>For Employers</span>
                   </Link>
                 </div>
               </RevealOnScroll>
