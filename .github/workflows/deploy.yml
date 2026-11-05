@@ -56,7 +56,7 @@ jobs:
           server: 46.202.161.94
           username: u777632951.vakancy.in
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-          server-dir: public_html/
+          server-dir: ./
           local-dir: frontend/dist/
           dangerous-clean-slate: false
 
@@ -67,6 +67,6 @@ jobs:
           server: 46.202.161.94
           username: u777632951.vakancy.in
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-          server-dir: public_html/admin/
+          server-dir: admin/
           local-dir: admin-frontend/dist/
           dangerous-clean-slate: false
