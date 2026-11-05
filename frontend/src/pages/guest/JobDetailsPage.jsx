@@ -1,3 +1,4 @@
+// Vakancy Production Job Details Page - CI/CD Release
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
 import {
