@@ -10,10 +10,10 @@ import { Link } from 'react-router-dom';
  * - Standalone Symbol: V-arrow brand icon (1:1, 1254x1254) for favicons & compact badges
  *
  * Features:
- * - Strict aspect ratio preservation (no stretch, skew, or facial/letter distortion)
+ * - Strict aspect ratio preservation (no stretch, skew, or letter distortion)
  * - Explicit width/height metadata to prevent Cumulative Layout Shift (CLS)
+ * - Guaranteed valid Tailwind classes and responsive max-width bounds to prevent mobile blowouts
  * - Accessible focus rings with visible outline for keyboard users
- * - Full compliance with WCAG contrast and responsive sizing standards
  */
 
 const ASSET_PATHS = {
@@ -38,28 +38,28 @@ const NATURAL_DIMENSIONS = {
 
 const SIZE_PRESETS = {
   xs: {
-    'v-wordmark': 'h-6.5 sm:h-7',
-    horizontal: 'h-6.5 sm:h-7',
+    'v-wordmark': 'h-6 sm:h-7 max-w-[110px] sm:max-w-[130px]',
+    horizontal: 'h-6 sm:h-7 max-w-[110px] sm:max-w-[130px]',
     'v-symbol': 'h-6 w-6'
   },
   sm: {
-    'v-wordmark': 'h-7.5 sm:h-8',
-    horizontal: 'h-7.5 sm:h-8',
+    'v-wordmark': 'h-7 sm:h-8 max-w-[130px] sm:max-w-[145px]',
+    horizontal: 'h-7 sm:h-8 max-w-[130px] sm:max-w-[145px]',
     'v-symbol': 'h-7 w-7 sm:h-8 sm:w-8'
   },
   md: {
-    'v-wordmark': 'h-8.5 sm:h-9.5 lg:h-10.5',
-    horizontal: 'h-8.5 sm:h-9.5 lg:h-10.5',
+    'v-wordmark': 'h-8 sm:h-9 max-w-[150px] sm:max-w-[170px]',
+    horizontal: 'h-8 sm:h-9 max-w-[150px] sm:max-w-[170px]',
     'v-symbol': 'h-8 w-8 sm:h-9 sm:w-9'
   },
   lg: {
-    'v-wordmark': 'h-10.5 sm:h-11.5 lg:h-12.5',
-    horizontal: 'h-10.5 sm:h-11.5 lg:h-12.5',
+    'v-wordmark': 'h-9 sm:h-10 max-w-[170px] sm:max-w-[200px]',
+    horizontal: 'h-9 sm:h-10 max-w-[170px] sm:max-w-[200px]',
     'v-symbol': 'h-10 w-10 sm:h-12 sm:w-12'
   },
   xl: {
-    'v-wordmark': 'h-14 sm:h-16 lg:h-20',
-    horizontal: 'h-14 sm:h-16 lg:h-20',
+    'v-wordmark': 'h-12 sm:h-14 max-w-[240px] sm:max-w-[280px]',
+    horizontal: 'h-12 sm:h-14 max-w-[240px] sm:max-w-[280px]',
     'v-symbol': 'h-14 w-14 sm:h-16 sm:w-16'
   }
 };
@@ -86,9 +86,10 @@ export const BrandLogo = ({
   let content;
 
   if (variant === 'responsive') {
-    // Responsive: Shows full horizontal V-arrow wordmark on BOTH mobile & desktop.
-    // Mobile: compact h-7 to h-8 (Vakancy.in remains fully readable).
-    // Desktop: moderately larger h-9 to h-10 for high-clarity enterprise presence.
+    // Responsive: Dedicated for public header.
+    // Mobile: compact h-7 to h-8 (approx 85-96px width, max 135px).
+    // Desktop: moderately increased h-10 to h-[42px] (~120-126px width, approx 20-25% larger than baseline h-8)
+    // Perfectly utilizes left navigation space without height blowouts.
     const selectedAsset = onDark ? ASSET_PATHS['v-wordmark-white'] : ASSET_PATHS['v-wordmark'];
     content = (
       <img
@@ -98,7 +99,7 @@ export const BrandLogo = ({
         height={NATURAL_DIMENSIONS['v-wordmark'].height}
         loading={priority ? 'eager' : 'lazy'}
         decoding="async"
-        className={`h-8 sm:h-8.5 md:h-9.5 lg:h-10.5 w-auto max-w-full object-contain shrink-0 select-none transition-opacity ${className}`}
+        className={`h-7 sm:h-8 md:h-9 lg:h-10 xl:h-[42px] w-auto max-w-[135px] sm:max-w-[155px] md:max-w-[175px] lg:max-w-[200px] object-contain shrink-0 select-none transition-all ${className}`}
       />
     );
   } else {
@@ -112,7 +113,7 @@ export const BrandLogo = ({
       : (ASSET_PATHS[canonicalKey] || ASSET_PATHS['v-wordmark']);
 
     const dims = NATURAL_DIMENSIONS[canonicalKey] || NATURAL_DIMENSIONS['v-wordmark'];
-    const sizeClass = currentSize[canonicalKey] || currentSize['v-wordmark'] || 'h-8 sm:h-9 lg:h-10';
+    const sizeClass = currentSize[canonicalKey] || currentSize['v-wordmark'] || 'h-8 sm:h-9 max-w-[150px]';
 
     content = (
       <img
@@ -122,7 +123,7 @@ export const BrandLogo = ({
         height={dims.height}
         loading={priority ? 'eager' : 'lazy'}
         decoding="async"
-        className={`${sizeClass} w-auto max-w-full object-contain shrink-0 select-none transition-opacity ${className}`}
+        className={`${sizeClass} w-auto max-w-full object-contain shrink-0 select-none transition-all ${className}`}
       />
     );
   }

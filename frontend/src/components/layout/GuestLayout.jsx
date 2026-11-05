@@ -220,10 +220,10 @@ export const GuestLayout = () => {
             {/* Col 1: Brand & Tagline */}
             <div className="flex flex-col gap-3">
               <div className="flex items-center">
-                <BrandLogo variant="v-wordmark" size="lg" to="/" />
+                <BrandLogo variant="v-wordmark" size="md" to="/" />
               </div>
               <p className="text-sm text-slate-500 leading-relaxed">
-                Global Recruitment Solutions & Overseas Talent Acquisition.
+                Global Recruitment Solutions & International Hiring Opportunities.
                 Find and Hire Exceptional Talent Worldwide.
               </p>
               <p className="text-xs text-slate-400 pt-2">

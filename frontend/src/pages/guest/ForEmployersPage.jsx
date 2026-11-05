@@ -25,7 +25,7 @@ import useSEO from '../../hooks/useSEO';
 
 export const ForEmployersPage = () => {
   useSEO({
-    title: 'Hiring Solutions & Global Talent Acquisition | For Employers | Vakancy.in',
+    title: 'Global Recruitment & Hiring Solutions | For Employers | Vakancy.in',
     description: 'Post jobs, generate AI-assisted job descriptions, and recruit top professionals across India and global markets with Vakancy.in.',
     canonical: '/for-employers'
   });
@@ -192,7 +192,7 @@ export const ForEmployersPage = () => {
               <RevealOnScroll delay={50}>
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100/70 border border-blue-200/80 text-[#00288e] text-xs font-bold mb-3">
                   <Globe className="w-3.5 h-3.5" />
-                  <span>Global & Domestic Talent Acquisition</span>
+                  <span>GLOBAL RECRUITMENT & HIRING SOLUTIONS</span>
                 </div>
                 <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-[#0f172a] tracking-tight leading-[1.15] mb-3 sm:mb-5">
                   Hire top talent across <span className="text-[#00288e]">India and global markets.</span>
@@ -201,7 +201,7 @@ export const ForEmployersPage = () => {
 
               <RevealOnScroll delay={200}>
                 <p className="text-sm sm:text-lg text-slate-600 leading-relaxed mb-6 sm:mb-7 max-w-xl">
-                  Publish verified job openings, accelerate drafting with AI-assisted job descriptions, and recruit qualified professionals across domestic, Middle East, and international locations.
+                  Publish verified job openings, accelerate drafting with AI-assisted job descriptions, and recruit qualified professionals across India, the Middle East, and international locations.
                 </p>
               </RevealOnScroll>
 
@@ -361,7 +361,7 @@ export const ForEmployersPage = () => {
                   <div className="relative rounded-2xl overflow-hidden border border-slate-200/90 shadow-lg bg-white aspect-[4/3] sm:aspect-[16/11]">
                     <img
                       src="/images/employer_hiring_team.jpg"
-                      alt="Professional corporate hiring team collaborating on talent acquisition in modern conference room"
+                      alt="Professional corporate hiring team collaborating on global recruitment in modern conference room"
                       loading="lazy"
                       decoding="async"
                       className="w-full h-full object-cover object-[center_35%]"

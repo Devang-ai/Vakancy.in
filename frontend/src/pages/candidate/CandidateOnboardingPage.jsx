@@ -95,7 +95,7 @@ export default function CandidateOnboardingPage() {
       {/* Top Header */}
       <header className="bg-white px-4 sm:px-6 py-3.5 flex items-center justify-between shrink-0 border-b border-slate-200 shadow-2xs">
         <div className="flex items-center gap-3">
-          <BrandLogo variant="v-wordmark" size="md" to="/" />
+          <BrandLogo variant="v-wordmark" size="sm" to="/" />
           <span className="h-5 w-px bg-slate-200 hidden sm:inline-block" />
           <span className="text-[11px] font-bold text-[#00288e] tracking-wider uppercase px-2 py-0.5 rounded-md bg-blue-50 border border-blue-100 hidden sm:inline-block">
             Candidate Portal

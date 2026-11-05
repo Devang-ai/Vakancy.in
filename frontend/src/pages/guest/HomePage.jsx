@@ -36,7 +36,7 @@ export const HomePage = () => {
 
   // Dynamic SEO & Structured Data
   useSEO({
-    title: 'Vakancy.in — Global Recruitment & Talent Acquisition Platform',
+    title: 'Vakancy.in — Global Recruitment & Career Opportunities Platform',
     description: 'Connecting talent with opportunities worldwide. Discover global career opportunities and recruitment solutions for employers and professionals.',
     canonical: '/',
     schema: {
@@ -48,7 +48,7 @@ export const HomePage = () => {
           'name': 'Vakancy.in',
           'url': 'https://vakancy.in',
           'logo': 'https://vakancy.in/assets/brand/vakancy-wordmark.png',
-          'description': 'Global recruitment, international hiring, and talent acquisition platform.',
+          'description': 'Global recruitment, international hiring, and career opportunities platform.',
           'sameAs': [
             'https://linkedin.com/company/vakancy-in',
             'https://twitter.com/vakancy_in'
@@ -147,7 +147,7 @@ export const HomePage = () => {
       name: 'Human Resources',
       shortLabel: 'HR & People',
       icon: Users,
-      description: 'Talent acquisition, HR operations & people strategy.',
+      description: 'Recruitment, HR operations & people strategy.',
     },
     {
       name: 'Operations & Logistics',
@@ -221,9 +221,9 @@ export const HomePage = () => {
               <RevealOnScroll delay={50}>
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50/90 border border-blue-200/70 text-[#00288e] text-[11px] sm:text-xs font-bold tracking-wider uppercase mb-3 sm:mb-3.5 shadow-2xs w-fit">
                   <Globe className="w-3.5 h-3.5 text-[#00288e] shrink-0" />
-                  <span>GLOBAL RECRUITMENT SOLUTIONS</span>
+                  <span>GLOBAL HIRING & CAREER OPPORTUNITIES</span>
                 </div>
-                <h1 className="text-[32px] sm:text-4xl lg:text-[54px] xl:text-[58px] font-extrabold text-[#0f172a] tracking-tight leading-[1.12] mb-3 sm:mb-4 font-heading">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[54px] xl:text-[58px] font-extrabold text-[#0f172a] tracking-tight leading-[1.18] sm:leading-[1.16] lg:leading-[1.14] mb-4 sm:mb-5 font-heading">
                   Connecting Talent with{' '}
                   <span className="text-[#00288e]">Opportunities Worldwide</span>
                 </h1>
@@ -286,7 +286,7 @@ export const HomePage = () => {
                 <div className="relative w-full aspect-[4/3] max-h-[380px] rounded-3xl overflow-hidden shadow-xl border border-slate-200/80 bg-white">
                   <img
                     src="/images/homepage_recruitment_interview.jpg"
-                    alt="Professional recruitment interview and international talent acquisition discussion"
+                    alt="Professional recruitment interview and international hiring discussion"
                     className="w-full h-full object-cover object-[center_35%]"
                     fetchPriority="high"
                   />

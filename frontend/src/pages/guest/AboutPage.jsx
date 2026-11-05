@@ -285,7 +285,7 @@ export const AboutPage = () => {
             <div className="w-full md:w-64 lg:w-72 shrink-0 aspect-[16/9] md:aspect-[4/3] max-h-[180px] rounded-xl overflow-hidden shadow-xs border border-blue-200/60 bg-white">
               <img
                 src="/images/about_global_teamwork.jpg"
-                alt="Global talent acquisition and collaborative teamwork"
+                alt="Global recruitment and collaborative teamwork"
                 loading="lazy"
                 className="w-full h-full object-cover"
               />
