@@ -34,13 +34,14 @@ describe('Backend Diagnoses & Fixes Verification Suite', () => {
       const fs = require('fs');
       const aiServiceCode = fs.readFileSync(require.resolve('../services/aiService'), 'utf8');
 
-      // Invalid models must be gone
-      assert.strictEqual(aiServiceCode.includes("'gemini-3.5-flash'"), false, 'gemini-3.5-flash must be removed');
-      assert.strictEqual(aiServiceCode.includes("'gemini-flash-lite-latest'"), false, 'gemini-flash-lite-latest must be removed');
+      // Retired 404 models must be gone
+      assert.strictEqual(aiServiceCode.includes("'gemini-1.5-flash'"), false, 'gemini-1.5-flash must be removed (404)');
+      assert.strictEqual(aiServiceCode.includes("'gemini-2.0-flash'"), false, 'gemini-2.0-flash must be removed (404)');
 
-      // Verified models must be present
-      assert.strictEqual(aiServiceCode.includes("'gemini-1.5-flash'"), true, 'gemini-1.5-flash must be present');
-      assert.strictEqual(aiServiceCode.includes("'gemini-2.0-flash'"), true, 'gemini-2.0-flash must be present');
+      // Live verified models must be present
+      assert.strictEqual(aiServiceCode.includes("'gemini-3.1-flash-lite'"), true, 'gemini-3.1-flash-lite must be present');
+      assert.strictEqual(aiServiceCode.includes("'gemini-3.5-flash'"), true, 'gemini-3.5-flash must be present');
+      assert.strictEqual(aiServiceCode.includes("'gemini-3.6-flash'"), true, 'gemini-3.6-flash must be present');
     });
 
     it('Correctly classifies 503 SERVICE_UNAVAILABLE as retryable', () => {

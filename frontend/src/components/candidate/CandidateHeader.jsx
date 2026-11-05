@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { User, LogOut, Bell, Menu, Search } from 'lucide-react';
@@ -10,6 +10,7 @@ export default function CandidateHeader({ title, subtitle, isMobileOpen, setIsMo
   const { user, profile } = useAuth();
   const { unreadCount } = useNotifications();
   const navigate = useNavigate();
+  const location = useLocation();
   const displayName = profile?.name || user?.name || user?.email?.split('@')[0] || 'Candidate';
   const roleName = profile?.professional_headline || profile?.current_designation || 'Job Seeker';
 
@@ -60,19 +61,21 @@ export default function CandidateHeader({ title, subtitle, isMobileOpen, setIsMo
         </div>
       </div>
 
-      {/* Center: Desktop Header Search Bar (Storyboard reference) */}
-      <form onSubmit={handleSearchSubmit} className="hidden xl:flex items-center flex-1 max-w-sm mx-6">
-        <div className="relative w-full">
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={headerSearch}
-            onChange={(e) => setHeaderSearch(e.target.value)}
-            placeholder="Search jobs, companies or skills..."
-            className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#00288e] transition-all"
-          />
-        </div>
-      </form>
+      {/* Center: Desktop Header Search Bar (Hidden on /candidate/jobs to avoid duplicate search inputs) */}
+      {!location.pathname.startsWith('/candidate/jobs') && (
+        <form onSubmit={handleSearchSubmit} className="hidden xl:flex items-center flex-1 max-w-sm mx-6">
+          <div className="relative w-full">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={headerSearch}
+              onChange={(e) => setHeaderSearch(e.target.value)}
+              placeholder="Search jobs, companies or skills..."
+              className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#00288e] transition-all"
+            />
+          </div>
+        </form>
+      )}
 
       {/* Right: Actions Cluster (Notifications + User Avatar) */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
