@@ -26,7 +26,7 @@ import useSEO from '../../hooks/useSEO';
 export const AboutPage = () => {
   useSEO({
     title: 'About Us — Global Recruitment Ecosystem | Vakancy.in',
-    description: 'Learn about Vakancy.in’s mission to connect professionals and organizations across India and international markets with transparent standards.',
+    description: 'Vakancy.in connects professionals and organizations worldwide through accessible career opportunities, structured recruitment processes, and modern hiring solutions.',
     canonical: '/about'
   });
   const whatWeDoCards = [
@@ -57,7 +57,7 @@ export const AboutPage = () => {
     },
     {
       title: 'Improving access to opportunities',
-      description: 'Connecting job seekers to genuine career roles across India with clear descriptions and simple application workflows.',
+      description: 'Connecting job seekers to genuine career roles worldwide with clear descriptions and simple application workflows.',
     },
     {
       title: 'Helping employers present roles clearly',

@@ -26,7 +26,7 @@ import useSEO from '../../hooks/useSEO';
 export const ForEmployersPage = () => {
   useSEO({
     title: 'Global Recruitment & Hiring Solutions | For Employers | Vakancy.in',
-    description: 'Post jobs, generate AI-assisted job descriptions, and recruit top professionals across India and global markets with Vakancy.in.',
+    description: 'Post jobs, generate AI-assisted job descriptions, and recruit top professionals worldwide with Vakancy.in.',
     canonical: '/for-employers'
   });
   const challenges = [
@@ -195,13 +195,13 @@ export const ForEmployersPage = () => {
                   <span>GLOBAL RECRUITMENT & HIRING SOLUTIONS</span>
                 </div>
                 <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-[#0f172a] tracking-tight leading-[1.15] mb-3 sm:mb-5">
-                  Hire top talent across <span className="text-[#00288e]">India and global markets.</span>
+                  Hire top talent <span className="text-[#00288e]">across the globe.</span>
                 </h1>
               </RevealOnScroll>
 
               <RevealOnScroll delay={200}>
                 <p className="text-sm sm:text-lg text-slate-600 leading-relaxed mb-6 sm:mb-7 max-w-xl">
-                  Publish verified job openings, accelerate drafting with AI-assisted job descriptions, and recruit qualified professionals across India, the Middle East, and international locations.
+                  Publish verified job openings, accelerate drafting with AI-assisted job descriptions, and recruit qualified professionals worldwide.
                 </p>
               </RevealOnScroll>
 

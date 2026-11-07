@@ -134,7 +134,7 @@ export const PrivacyPage = () => {
               </h2>
               <div className="max-w-none text-slate-600 text-sm sm:text-base leading-relaxed space-y-4">
                 <p>
-                  Vakancy.in provides an online technology and recruitment platform designed to connect career candidates with prospective employers and recruitment support services across India.
+                  Vakancy.in provides an online technology and recruitment platform designed to connect career candidates with prospective employers and recruitment support services worldwide.
                 </p>
                 <p>
                   This Privacy Policy describes our practices regarding the collection, handling, and protection of personal and organizational information submitted through the Vakancy.in website, candidate portal, and employer workspaces.

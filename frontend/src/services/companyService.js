@@ -1095,7 +1095,7 @@ function generateCompanyDossier(c) {
     isVerified: c.isVerified ?? true,
     tier: c.tier || 'Verified Enterprise',
     statusBadge: 'Verified Enterprise Partner',
-    tagline: c.tagline || `Leading corporate enterprise hiring technology and product talent across India.`,
+    tagline: c.tagline || `Leading corporate enterprise hiring technology and product talent globally.`,
     industry: c.industry,
     location: c.location,
     employees: c.employees || '1,000+ Employees',

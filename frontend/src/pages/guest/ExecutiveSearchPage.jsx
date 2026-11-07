@@ -700,7 +700,7 @@ export const ExecutiveSearchPage = () => {
                         required
                         value={formData.company}
                         onChange={handleChange}
-                        placeholder="e.g. TechCorp India"
+                        placeholder="e.g. Acme Corporation"
                         className="w-full px-4 py-3 rounded-xl bg-[#0f172a] border border-slate-700 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
                       />
                     </div>

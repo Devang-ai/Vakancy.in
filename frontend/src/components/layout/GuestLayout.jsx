@@ -284,7 +284,7 @@ export const GuestLayout = () => {
 
           <div className="border-t border-slate-200/80 pt-6 flex items-center justify-between gap-4 text-xs text-slate-500">
             <p className="text-left text-xs text-slate-500 leading-relaxed">
-              Vakancy.in recruitment platform powering careers and hiring across India.
+              Vakancy.in connects professionals and employers worldwide through global recruitment solutions, career opportunities, and structured hiring workflows.
             </p>
             <div className="flex items-center shrink-0">
               <BrandLogo

@@ -153,7 +153,7 @@ const AdminBanners = () => {
                   required
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="e.g. Pan-India Mega Tech Hiring Drive 2026"
+                  placeholder="e.g. Global Tech Hiring Drive 2026"
                   className="w-full p-2.5 rounded-xl bg-slate-950 border border-white/10 text-xs text-white"
                 />
               </div>

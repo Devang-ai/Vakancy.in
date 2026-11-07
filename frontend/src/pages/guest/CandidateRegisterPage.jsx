@@ -189,7 +189,7 @@ export const CandidateRegisterPage = () => {
                 </h1>
 
                 <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-                  India's high-velocity tech &amp; leadership talent network. No blind listings, no ghosting recruiters. Direct hiring corridors into vetted top-tier companies.
+                  A high-velocity global tech &amp; leadership talent network. No blind listings, no ghosting recruiters. Direct hiring corridors into vetted top-tier companies.
                 </p>
               </div>
 

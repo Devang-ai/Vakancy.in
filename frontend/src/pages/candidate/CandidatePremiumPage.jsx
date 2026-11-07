@@ -860,7 +860,7 @@ export default function CandidatePremiumPage() {
                           <svg className="w-5 h-5 text-[#00288e] fill-current shrink-0 mt-0.5" viewBox="0 0 24 24">
                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                           </svg>
-                          <span><strong>Full India Tech Benchmark Analyzer</strong> (₹50L - ₹1.5Cr percentiles)</span>
+                          <span><strong>Full Tech Compensation Benchmark Analyzer</strong> (₹50L - ₹1.5Cr percentiles)</span>
                         </div>
                         <div className="flex items-start gap-2 text-[#0b1c30] text-sm">
                           <svg className="w-5 h-5 text-[#00288e] fill-current shrink-0 mt-0.5" viewBox="0 0 24 24">

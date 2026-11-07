@@ -1624,7 +1624,7 @@ export const CandidatePrivacyPage = () => {
           </div>
 
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-[#444653]">
-            <p>Vakancy.in recruitment platform powering careers across India and global markets.</p>
+            <p>Vakancy.in recruitment platform connecting talent with career opportunities worldwide.</p>
             <div className="flex items-center gap-3">
               <Link to="/candidate/settings" className="hover:text-[#00288e]">Security Settings</Link>
               <span>•</span>

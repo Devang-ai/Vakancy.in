@@ -71,7 +71,7 @@ const AdminLocations = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold text-white font-heading">Locations & Regional Directory</h1>
-          <p className="text-xs text-slate-400">Manage standardized cities, states, and regional employment hubs across India</p>
+          <p className="text-xs text-slate-400">Manage standardized cities, states, and regional employment hubs worldwide</p>
         </div>
         <button
           onClick={handleOpenCreate}
